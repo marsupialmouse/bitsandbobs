@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BitsAndBobs.Api.Tests/BitsAndBobs.Api.Tests.csproj" />
+  <Project Path="BitsAndBobs.Api/BitsAndBobs.Api.csproj" />
+  <Project Path="BitsAndBobs.AppHost/BitsAndBobs.AppHost.csproj" />
+  <Project Path="BitsAndBobs.ServiceDefaults/BitsAndBobs.ServiceDefaults.csproj" />
+</Solution>
