@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\BitsAndBobs.Api\BitsAndBobs.Api.csproj" />
+      <ProjectReference Include="..\BitsAndBobs\BitsAndBobs.csproj" />
     </ItemGroup>
 
   <Target Name="RestoreNpm" BeforeTargets="Build" Condition=" '$(DesignTimeBuild)' != 'true' ">

@@ -2,10 +2,10 @@ using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var api = builder.AddProject<BitsAndBobs_Api>("api").WithExternalHttpEndpoints();
+var api = builder.AddProject<BitsAndBobs>("api").WithExternalHttpEndpoints();
 
 builder
-    .AddViteApp("ui", "../BitsAndBobs.UI", packageManager: "yarn")
+    .AddViteApp("ui", "../BitsAndBobs/clientapp", packageManager: "yarn")
     .WithReference(api)
     .WaitFor(api);
 
