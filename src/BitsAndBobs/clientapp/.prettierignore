@@ -1,5 +1,8 @@
 node_modules
-build
 dist
+public
 coverage
 default.conf.template
+.husky
+yarn.lock
+.prettierignore
