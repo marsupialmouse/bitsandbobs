@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv, mergeConfig } from 'vite'
 import { defineConfig as defineTestConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react-swc'
-import autoprefixer from 'autoprefixer'
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 const testConfig = defineTestConfig({
@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   const config = defineConfig({
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     server: {
       port: parseInt(env.PORT),
       proxy: {
@@ -33,11 +33,6 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/api/, ''),
           secure: false,
         },
-      },
-    },
-    css: {
-      postcss: {
-        plugins: [autoprefixer({})],
       },
     },
     resolve: {

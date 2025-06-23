@@ -14,4 +14,8 @@
       <ProjectReference Include="..\BitsAndBobs.ServiceDefaults\BitsAndBobs.ServiceDefaults.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="clientapp\src\assets\" />
+    </ItemGroup>
+
 </Project>
