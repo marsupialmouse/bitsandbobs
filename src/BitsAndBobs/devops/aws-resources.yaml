@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Resources used by the Bits & Bobs application
+Parameters:
+  Environment:
+    Type: String
+    Default: Development
+    Description: The environment for which the resources are being created
+    AllowedValues:
+      - Development
+      - Staging
+      - Production
+Resources:
+  DynamoDbTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${Environment}-BitsAndBobs"
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: NormalisedEmailAddress
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: UsersByNormalisedEmailAddress
+          KeySchema:
+            - AttributeName: NormalisedEmailAddress
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+Outputs:
+  DynamoDbTableName:
+    Value: !Ref DynamoDbTable
+

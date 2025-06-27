@@ -1,12 +1,18 @@
+using Amazon;
 using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var api = builder.AddProject<BitsAndBobs>("api").WithExternalHttpEndpoints();
+var awsConfig = builder.AddAWSSDKConfig().WithProfile("dev").WithRegion(RegionEndpoint.APSoutheast2);
+var awsResources = builder.AddAWSCloudFormationTemplate("BitsAndBobs", "../BitsAndBobs/devops/aws-resources.yaml")
+                          .WithReference(awsConfig)
+                          .WithParameter("Environment", "Development")
+                          .WithTag("Project", "BitsAndBobs");
+
+var api = builder.AddProject<BitsAndBobs>("api").WithReference(awsResources).WithExternalHttpEndpoints();
 
 builder
     .AddViteApp("ui", "../BitsAndBobs/clientapp", packageManager: "yarn")
-    .WithReference(api)
     .WaitFor(api);
 
 builder.Build().Run();
