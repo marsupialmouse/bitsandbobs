@@ -10,18 +10,19 @@ public class User : BitsAndBobsTableItem
     /// <summary>
     /// Gets or sets the primary key for this user.
     /// </summary>
+    [DynamoDBIgnore]
     public string Id { get; private set;  } = Guid.NewGuid().ToString("n");
 
-    protected override string PK
+    public override string PK
     {
         get => GetPk(Id);
-        set => Id = value[5..];
+        protected set => Id = value[5..];
     }
 
-    protected override string SK
+    public override string SK
     {
         get => SortKey;
-        set { }
+        protected set { }
     }
 
     /// <summary>
@@ -75,4 +76,3 @@ public class User : BitsAndBobsTableItem
     /// </summary>
     public override string ToString() => Username;
 }
-

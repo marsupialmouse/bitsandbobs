@@ -27,6 +27,13 @@ builder.Services.AddSingleton<IDynamoDBContext>(services => new DynamoDBContextB
 
 
 builder.Services.AddIdentityCore<User>().AddDefaultTokenProviders();
+builder.Services.AddScoped<IUserStore<User>, UserStore>(services =>
+    new UserStore(
+        services.GetRequiredService<IAmazonDynamoDB>(),
+        services.GetRequiredService<IDynamoDBContext>(),
+        $"{builder.Environment.EnvironmentName}-BitsAndBobs"
+    )
+);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

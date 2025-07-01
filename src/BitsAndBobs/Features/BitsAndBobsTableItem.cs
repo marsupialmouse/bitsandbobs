@@ -6,8 +6,8 @@ namespace BitsAndBobs.Features;
 public abstract class BitsAndBobsTableItem
 {
     [DynamoDBHashKey]
-    protected abstract string PK { get; set; }
+    public abstract string PK { get; protected set; }
 
     [DynamoDBRangeKey]
-    protected abstract string SK { get; set; }
+    public abstract string SK { get; protected set; }
 }

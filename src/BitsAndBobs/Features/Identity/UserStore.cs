@@ -1,5 +1,6 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.Model;
 using Microsoft.AspNetCore.Identity;
 
 namespace BitsAndBobs.Features.Identity;
@@ -8,19 +9,78 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
 {
     private readonly IAmazonDynamoDB _db;
     private readonly IDynamoDBContext _context;
+    private readonly string _tableName;
 
-    public UserStore(IAmazonDynamoDB db, IDynamoDBContext context)
+    public UserStore(IAmazonDynamoDB db, IDynamoDBContext context, string tableName)
     {
         _db = db;
         _context = context;
+        _tableName = tableName;
     }
 
     public async Task<IdentityResult> CreateAsync(User user, CancellationToken cancellationToken)
     {
-        await _context.SaveAsync(user, cancellationToken);
+        try
+        {
+            const string uniqueItemCondition = "attribute_not_exists(PK) AND attribute_not_exists(SK)";
 
-        return IdentityResult.Success;
+            var items = new List<TransactWriteItem>
+            {
+                new()
+                {
+                    Put = new Put
+                    {
+                        TableName = _tableName,
+                        Item = _context.ToDocument(user).ToAttributeMap(),
+                        ConditionExpression = uniqueItemCondition
+                    }
+                },
+                new()
+                {
+                    Put = new Put
+                    {
+                        TableName = _tableName,
+                        Item = GetReservedEmailItem(user),
+                        ConditionExpression = uniqueItemCondition
+                    }
+                },
+                new()
+                {
+                    Put = new Put
+                    {
+                        TableName = _tableName,
+                        Item = GetReservedUsernameItem(user),
+                        ConditionExpression = uniqueItemCondition
+                    }
+                }
+            };
+
+            await _db.TransactWriteItemsAsync(
+                new TransactWriteItemsRequest { TransactItems = items },
+                cancellationToken
+            );
+
+            return IdentityResult.Success;
+        }
+        catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        {
+            return IdentityResult.Failed(new IdentityError { Code = "DuplicateUser", Description = "User already exists" });
+        }
     }
+
+    private static Dictionary<string, AttributeValue> GetReservedEmailItem(User user) =>
+        GetReservedUserItem(user, $"email#{user.NormalizedEmailAddress!}");
+
+    private static Dictionary<string, AttributeValue> GetReservedUsernameItem(User user) =>
+        GetReservedUserItem(user, $"username#{user.NormalizedUsername!}");
+
+    private static Dictionary<string, AttributeValue> GetReservedUserItem(User user, string pk) =>
+        new()
+        {
+            { "PK", new AttributeValue { S = pk } },
+            { "SK", new AttributeValue { S = "Reserved" } },
+            { "UserId", new AttributeValue { S = user.PK } }
+        };
 
     public Task<IdentityResult> UpdateAsync(User user, CancellationToken cancellationToken) => throw new NotImplementedException();
 

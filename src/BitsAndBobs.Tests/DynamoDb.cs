@@ -166,8 +166,16 @@ public sealed class DynamoDb : IAsyncDisposable
         return _container.DisposeAsync();
     }
 
-    public sealed class Table(string name, DynamoDb dynamo) : IAsyncDisposable
+    public sealed class Table(string name, string namePrefix, DynamoDb dynamo) : IAsyncDisposable
     {
+        /// <summary>
+        /// The table name including an prefix
+        /// </summary>
+        public string FullName { get; } = $"{namePrefix}{name}";
+
+        /// <summary>
+        /// The table name (as it is on the attributes of the model classes
+        /// </summary>
         public string Name { get; } = name;
         public DynamoDb Dynamo { get; } = dynamo;
 
@@ -179,7 +187,7 @@ public sealed class DynamoDb : IAsyncDisposable
         {
             await dynamoDb.Client.CreateTableAsync(request, cancellationToken);
 
-            return new Table(request.TableName.Replace(dynamoDb.TablePrefix, ""), dynamoDb);
+            return new Table(request.TableName.Replace(dynamoDb.TablePrefix, ""), dynamoDb.TablePrefix, dynamoDb);
         }
 
         public async ValueTask DisposeAsync() =>
