@@ -34,6 +34,7 @@ public class User : BitsAndBobsTableItem
     /// <summary>
     /// Gets or sets the normalized username for this user.
     /// </summary>
+    [DynamoDBGlobalSecondaryIndexHashKey("UsersByNormalizedUsername")]
     public string? NormalizedUsername { get; set; }
 
     /// <summary>
@@ -45,6 +46,8 @@ public class User : BitsAndBobsTableItem
     /// <summary>
     /// Gets or sets the normalized email address for this user.
     /// </summary>
+    [DynamoDBGlobalSecondaryIndexHashKey("UsersByNormalizedEmailAddress")]
+
     public string? NormalizedEmailAddress { get; set; }
 
     /// <summary>

@@ -19,9 +19,9 @@ Resources:
           AttributeType: S
         - AttributeName: SK
           AttributeType: S
-        - AttributeName: NormalisedEmailAddress
+        - AttributeName: NormalizedEmailAddress
           AttributeType: S
-        - AttributeName: NormalisedUsername
+        - AttributeName: NormalizedUsername
           AttributeType: S
       KeySchema:
         - AttributeName: PK
@@ -29,15 +29,15 @@ Resources:
         - AttributeName: SK
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: UsersByNormalisedEmailAddress
+        - IndexName: UsersByNormalizedEmailAddress
           KeySchema:
-            - AttributeName: NormalisedEmailAddress
+            - AttributeName: NormalizedEmailAddress
               KeyType: HASH
           Projection:
             ProjectionType: ALL
-        - IndexName: UsersByNormalisedUsername
+        - IndexName: UsersByNormalizedUsername
           KeySchema:
-            - AttributeName: NormalisedUsername
+            - AttributeName: NormalizedUsername
               KeyType: HASH
           Projection:
             ProjectionType: ALL

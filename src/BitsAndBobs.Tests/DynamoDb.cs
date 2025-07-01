@@ -1,5 +1,6 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Runtime;
 using Testcontainers.DynamoDb;
@@ -186,6 +187,8 @@ public sealed class DynamoDb : IAsyncDisposable
         )
         {
             await dynamoDb.Client.CreateTableAsync(request, cancellationToken);
+
+
 
             return new Table(request.TableName.Replace(dynamoDb.TablePrefix, ""), dynamoDb.TablePrefix, dynamoDb);
         }

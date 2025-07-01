@@ -1,5 +1,6 @@
 using Amazon.DynamoDBv2.DataModel;
 using BitsAndBobs.Features.Identity;
+using Microsoft.AspNetCore.Identity;
 using NUnit.Framework;
 using Shouldly;
 
@@ -17,14 +18,8 @@ public class UserStoreTests
 
         result.Succeeded.ShouldBeTrue();
         var retrievedUser = await GetUser(user.Id);
-        retrievedUser.Username.ShouldBe(user.Username);
-        retrievedUser.NormalizedUsername.ShouldBe(user.NormalizedUsername);
-        retrievedUser.EmailAddress.ShouldBe(user.EmailAddress);
-        retrievedUser.NormalizedEmailAddress.ShouldBe(user.NormalizedEmailAddress);
-        retrievedUser.EmailAddressConfirmed.ShouldBe(user.EmailAddressConfirmed);
-        retrievedUser.PasswordHash.ShouldBe(user.PasswordHash);
-        retrievedUser.SecurityStamp.ShouldBe(user.SecurityStamp);
-        retrievedUser.ConcurrencyStamp.ShouldBe(user.ConcurrencyStamp);
+        retrievedUser.ShouldNotBeNull();
+        UsersShouldMatch(retrievedUser, user);
     }
 
     [Test]
@@ -74,6 +69,132 @@ public class UserStoreTests
         result2.Succeeded.ShouldBeFalse();
         result2.Errors.ShouldNotBeNull();
         result2.Errors.ShouldContain(e => e.Description.Contains("already exists"));
+    }
+
+    [Test]
+    public async Task ShouldGetUserByIdWhenUserExists()
+    {
+        var user1 = CreateUser();
+        var user2 = CreateUser();
+        var store = CreateUserStore();
+        Task<IdentityResult>[] userTasks =
+        [
+            store.CreateAsync(user1, CancellationToken.None), store.CreateAsync(user2, CancellationToken.None),
+        ];
+        await Task.WhenAll(userTasks);
+
+        var user = await store.FindByIdAsync(user2.Id, CancellationToken.None);
+
+        user.ShouldNotBeNull();
+        UsersShouldMatch(user, user2);
+    }
+
+    [Test]
+    public async Task ShouldReturnNullUserWhenUserDoesNotExist()
+    {
+        var user1 = CreateUser();
+        var user2 = CreateUser();
+        var store = CreateUserStore();
+        Task<IdentityResult>[] userTasks =
+        [
+            store.CreateAsync(user1, CancellationToken.None), store.CreateAsync(user2, CancellationToken.None),
+        ];
+        await Task.WhenAll(userTasks);
+
+        var user = await store.FindByIdAsync(Guid.NewGuid().ToString("n"), CancellationToken.None);
+
+        user.ShouldBeNull();
+    }
+
+
+    [Test]
+    public async Task ShouldGetUserByEmailWhenUserExists()
+    {
+        var user1 = CreateUser();
+        var user2 = CreateUser();
+        var user3 = CreateUser();
+        var store = CreateUserStore();
+        Task<IdentityResult>[] userTasks =
+        [
+            store.CreateAsync(user1, CancellationToken.None), store.CreateAsync(user2, CancellationToken.None),
+            store.CreateAsync(user3, CancellationToken.None)
+        ];
+        await Task.WhenAll(userTasks);
+
+        var user = await store.FindByEmailAsync(user2.NormalizedEmailAddress!, CancellationToken.None);
+
+        user.ShouldNotBeNull();
+        UsersShouldMatch(user, user2);
+    }
+
+    [Test]
+    public async Task ShouldReturnNullUserWhenNormalizedEmailAddressDoesNotExist()
+    {
+        var user1 = CreateUser();
+        var user2 = CreateUser();
+        var user3 = CreateUser();
+        var store = CreateUserStore();
+        Task<IdentityResult>[] userTasks =
+        [
+            store.CreateAsync(user1, CancellationToken.None), store.CreateAsync(user2, CancellationToken.None),
+            store.CreateAsync(user3, CancellationToken.None)
+        ];
+        await Task.WhenAll(userTasks);
+
+        var user = await store.FindByEmailAsync(user2.NormalizedEmailAddress!.ToLowerInvariant(), CancellationToken.None);
+
+        user.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ShouldGetUserByUsernameWhenUserExists()
+    {
+        var user1 = CreateUser();
+        var user2 = CreateUser();
+        var user3 = CreateUser();
+        var store = CreateUserStore();
+        Task<IdentityResult>[] userTasks =
+        [
+            store.CreateAsync(user1, CancellationToken.None), store.CreateAsync(user2, CancellationToken.None),
+            store.CreateAsync(user3, CancellationToken.None)
+        ];
+        await Task.WhenAll(userTasks);
+
+        var user = await store.FindByNameAsync(user2.NormalizedUsername!, CancellationToken.None);
+
+        user.ShouldNotBeNull();
+        UsersShouldMatch(user, user2);
+    }
+
+    [Test]
+    public async Task ShouldReturnNullUserWhenNormalizedUsernameDoesNotExist()
+    {
+        var user1 = CreateUser();
+        var user2 = CreateUser();
+        var user3 = CreateUser();
+        var store = CreateUserStore();
+        Task<IdentityResult>[] userTasks =
+        [
+            store.CreateAsync(user1, CancellationToken.None), store.CreateAsync(user2, CancellationToken.None),
+            store.CreateAsync(user3, CancellationToken.None)
+        ];
+        await Task.WhenAll(userTasks);
+
+        var user = await store.FindByNameAsync(user2.NormalizedUsername!.ToLowerInvariant(), CancellationToken.None);
+
+        user.ShouldBeNull();
+    }
+
+    private static void UsersShouldMatch(User user, User user2)
+    {
+        user.Username.ShouldBe(user2.Username);
+        user.NormalizedUsername.ShouldBe(user2.NormalizedUsername);
+        user.EmailAddress.ShouldBe(user2.EmailAddress);
+        user.NormalizedEmailAddress.ShouldBe(user2.NormalizedEmailAddress);
+        user.EmailAddressConfirmed.ShouldBe(user2.EmailAddressConfirmed);
+        user.PasswordHash.ShouldBe(user2.PasswordHash);
+        user.SecurityStamp.ShouldBe(user2.SecurityStamp);
+        user.ConcurrencyStamp.ShouldBe(user2.ConcurrencyStamp);
     }
 
     private static UserStore CreateUserStore() => new(Testing.Dynamo.Client, Testing.Dynamo.Context, Testing.BitsAndBobsTable.FullName);

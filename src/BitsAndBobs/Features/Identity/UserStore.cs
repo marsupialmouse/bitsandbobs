@@ -1,5 +1,6 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.AspNetCore.Identity;
 
@@ -86,11 +87,30 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
 
     public Task<IdentityResult> DeleteAsync(User user, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-    public Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken) => throw new NotImplementedException();
+    public Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken) => _context.LoadAsync<User>(
+        User.GetPk(userId), User.SortKey,
+        cancellationToken
+    )!;
 
-    public Task<User?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken) => throw new NotImplementedException();
+    public async Task<User?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+    {
+        var query = _context.QueryAsync<User>(
+            normalizedUserName,
+            new QueryConfig { IndexName = "UsersByNormalizedUsername" }
+        );
 
-    public Task<User?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken) => throw new NotImplementedException();
+        return (await query.GetRemainingAsync(cancellationToken)).SingleOrDefault();
+    }
+
+    public async Task<User?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
+    {
+        var query = _context.QueryAsync<User>(
+            normalizedEmail,
+            new QueryConfig { IndexName = "UsersByNormalizedEmailAddress" }
+        );
+
+        return (await query.GetRemainingAsync(cancellationToken)).SingleOrDefault();
+    }
 
     public Task<string> GetUserIdAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.Id);
     public Task<string?> GetUserNameAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.Username)!;
