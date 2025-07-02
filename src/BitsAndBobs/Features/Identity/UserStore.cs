@@ -1,18 +1,20 @@
+using System.Collections.Concurrent;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.AspNetCore.Identity;
 
 namespace BitsAndBobs.Features.Identity;
 
-public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordStore<User>
+public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserSecurityStampStore<User>
 {
     private const string UniqueItemCondition = "attribute_not_exists(PK) AND attribute_not_exists(SK)";
 
     private readonly IAmazonDynamoDB _db;
     private readonly IDynamoDBContext _context;
     private readonly string _tableName;
+
+    private readonly ConcurrentDictionary<string, UserMemo> _uniqueAttributesCache = new();
 
     public UserStore(IAmazonDynamoDB db, IDynamoDBContext context, string tableName)
     {
@@ -25,6 +27,8 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
     {
         try
         {
+            UpdateVersion(user);
+
             var items = new List<TransactWriteItem>
             {
                 new()
@@ -45,6 +49,8 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
                 cancellationToken
             );
 
+            CacheUniqueAttributes(user);
+
             return IdentityResult.Success;
         }
         catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
@@ -53,80 +59,174 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
         }
     }
 
-    public Task<IdentityResult> UpdateAsync(User user, CancellationToken cancellationToken) => throw new NotImplementedException();
+    public async Task<IdentityResult> UpdateAsync(User user, CancellationToken cancellationToken)
+    {
+        if (!_uniqueAttributesCache.TryGetValue(user.Id, out var userMemo))
+            throw new InvalidOperationException("User not found in cache.");
+
+        try
+        {
+            var currentVersion = user.Version;
+            UpdateVersion(user);
+
+            var items = new List<TransactWriteItem>
+            {
+                new()
+                {
+                    Put = new Put
+                    {
+                        TableName = _tableName,
+                        Item = _context.ToDocument(user).ToAttributeMap(),
+                        ConditionExpression = "attribute_exists(PK) AND attribute_exists(SK) AND Version = :currentVersion",
+                        ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                        {
+                            { ":currentVersion", new AttributeValue(currentVersion) },
+                        },
+                    },
+                },
+            };
+
+            if (userMemo.NormalizedEmailAddress != user.NormalizedEmailAddress)
+            {
+                items.Add(new TransactWriteItem { Delete = GetReservedEmailDelete(userMemo) });
+                items.Add(new TransactWriteItem { Put = GetReservedEmailPut(user) });
+            }
+
+            if (userMemo.NormalizedUsername != user.NormalizedUsername)
+            {
+                items.Add(new TransactWriteItem { Delete = GetReservedUsernameDelete(userMemo) });
+                items.Add(new TransactWriteItem { Put = GetReservedUsernamePut(user) });
+            }
+
+            await _db.TransactWriteItemsAsync(
+                new TransactWriteItemsRequest { TransactItems = items },
+                cancellationToken
+            );
+
+            return IdentityResult.Success;
+        }
+        catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        {
+            return IdentityResult.Failed(
+                new IdentityError
+                {
+                    Code = "ConcurrencyFailure",
+                    Description = "Optimistic concurrency failure, object has been modified.",
+                }
+            );
+        }
+    }
+
+    public async Task<IdentityResult> DeleteAsync(User user, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var items = new List<TransactWriteItem>
+            {
+                new()
+                {
+                    Delete = new Delete
+                    {
+                        TableName = _tableName,
+                        Key = new Dictionary<string, AttributeValue>
+                        {
+                            { nameof(user.PK), new AttributeValue(user.PK) },
+                            { nameof(user.SK), new AttributeValue(user.SK) },
+                        },
+                    },
+                },
+                new() { Delete = GetReservedEmailDelete(user) },
+                new() { Delete = GetReservedUsernameDelete(user) },
+            };
+
+            await _db.TransactWriteItemsAsync(
+                new TransactWriteItemsRequest { TransactItems = items },
+                cancellationToken
+            );
+
+            _uniqueAttributesCache.TryRemove(user.Id, out _);
+
+            return IdentityResult.Success;
+        }
+        catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        {
+            return IdentityResult.Failed(
+                new IdentityError
+                {
+                    Code = "ConcurrencyFailure",
+                    Description = "Optimistic concurrency failure, object has been modified.",
+                }
+            );
+        }
+    }
 
     private Put GetReservedEmailPut(User user) => GetReservedItemPut(user, GetReservedEmailKeyAttributes);
+
     private Put GetReservedUsernamePut(User user) => GetReservedItemPut(user, GetReservedUsernameKeyAttributes);
 
     private Put GetReservedItemPut(User user, Func<User, Dictionary<string, AttributeValue>> getKeyAttributes)
     {
         var item = getKeyAttributes(user);
 
-        item["UserId"] = new AttributeValue { S = user.PK };
+        item["UserId"] = new AttributeValue(user.PK);
 
         return new Put
         {
             TableName = _tableName,
-            Item = getKeyAttributes(user),
-            ConditionExpression = UniqueItemCondition
+            Item = item,
+            ConditionExpression = UniqueItemCondition,
         };
     }
 
-    private Delete GetReservedEmailDelete(User user) => GetReservedItemDelete(user, GetReservedEmailKeyAttributes);
-    private Delete GetReservedUsernameDelete(User user) => GetReservedItemDelete(user, GetReservedUsernameKeyAttributes);
+    private Delete GetReservedEmailDelete(User user) => GetReservedItemDelete(user.PK, GetReservedEmailKeyAttributes(user));
+    private Delete GetReservedEmailDelete(UserMemo user) => GetReservedItemDelete(user.PK, GetReservedEmailKeyAttributes(user));
 
-    private Delete GetReservedItemDelete(User user, Func<User, Dictionary<string, AttributeValue>> getKeyAttributes) =>
+    private Delete GetReservedUsernameDelete(User user) => GetReservedItemDelete(user.PK, GetReservedUsernameKeyAttributes(user));
+    private Delete GetReservedUsernameDelete(UserMemo user) => GetReservedItemDelete(user.PK, GetReservedUsernameKeyAttributes(user));
+
+    private Delete GetReservedItemDelete(string userPk, Dictionary<string, AttributeValue> keyAttributes) =>
         new()
         {
             TableName = _tableName,
-            Key = getKeyAttributes(user),
+            Key = keyAttributes,
+            ConditionExpression = "UserId = :userId",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":userId", new AttributeValue(userPk) },
+            },
         };
 
     private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(User user) =>
-        GetReservedKeyAttributes($"email#{user.NormalizedEmailAddress!}");
+        GetReservedEmailKeyAttributes(user.NormalizedEmailAddress);
+
+    private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(UserMemo user) =>
+        GetReservedEmailKeyAttributes(user.NormalizedEmailAddress);
+
+    private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(string? normalizedEmailAddress) =>
+        GetReservedKeyAttributes($"email#{normalizedEmailAddress}");
 
     private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(User user) =>
-        GetReservedKeyAttributes($"username#{user.NormalizedUsername!}");
+        GetReservedUsernameKeyAttributes(user.NormalizedUsername);
+
+    private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(UserMemo user) =>
+        GetReservedUsernameKeyAttributes(user.NormalizedUsername);
+
+    private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(string? normalizedUsername) =>
+        GetReservedKeyAttributes($"username#{normalizedUsername}");
 
     private static Dictionary<string, AttributeValue> GetReservedKeyAttributes(string pk) =>
         new()
         {
-            { "PK", new AttributeValue { S = pk } },
-            { "SK", new AttributeValue { S = "Reserved" } },
+            { "PK", new AttributeValue(pk) },
+            { "SK", new AttributeValue("Reserved") },
         };
 
-    public async Task<IdentityResult> DeleteAsync(User user, CancellationToken cancellationToken)
+    public async Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
-        await _db.TransactWriteItemsAsync(
-            new TransactWriteItemsRequest
-            {
-                TransactItems = new List<TransactWriteItem>
-                {
-                    new()
-                    {
-                        Delete = new Delete
-                        {
-                            TableName = _tableName,
-                            Key = new Dictionary<string, AttributeValue>
-                            {
-                                { "PK", new AttributeValue { S = user.PK } },
-                                { "SK", new AttributeValue { S = User.SortKey } }
-                            }
-                        },
-                    },
-                    new() { Delete = GetReservedEmailDelete(user) },
-                    new() { Delete = GetReservedUsernameDelete(user) },
-                },
-            },
-            cancellationToken
-        );
-        return IdentityResult.Success;
+        var user = await _context.LoadAsync<User>(User.GetPk(userId), User.SortKey, cancellationToken);
+        CacheUniqueAttributes(user);
+        return user;
     }
-
-    public Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken) => _context.LoadAsync<User>(
-        User.GetPk(userId), User.SortKey,
-        cancellationToken
-    )!;
 
     public async Task<User?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
     {
@@ -135,7 +235,9 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
             new QueryConfig { IndexName = "UsersByNormalizedUsername" }
         );
 
-        return (await query.GetRemainingAsync(cancellationToken)).SingleOrDefault();
+        var user = (await query.GetRemainingAsync(cancellationToken)).SingleOrDefault();
+        CacheUniqueAttributes(user);
+        return user;
     }
 
     public async Task<User?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
@@ -145,7 +247,9 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
             new QueryConfig { IndexName = "UsersByNormalizedEmailAddress" }
         );
 
-        return (await query.GetRemainingAsync(cancellationToken)).SingleOrDefault();
+        var user = (await query.GetRemainingAsync(cancellationToken)).SingleOrDefault();
+        CacheUniqueAttributes(user);
+        return user;
     }
 
     public Task<string> GetUserIdAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.Id);
@@ -156,6 +260,7 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
     public Task<bool> GetEmailConfirmedAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.EmailAddressConfirmed);
     public Task<string?> GetPasswordHashAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.PasswordHash);
     public Task<bool> HasPasswordAsync(User user, CancellationToken cancellationToken) => Task.FromResult(!string.IsNullOrEmpty(user.PasswordHash));
+    public Task<string?> GetSecurityStampAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.SecurityStamp);
 
     public Task SetUserNameAsync(User user, string? userName, CancellationToken cancellationToken)
     {
@@ -193,7 +298,35 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
         return Task.CompletedTask;
     }
 
+    public Task SetSecurityStampAsync(User user, string stamp, CancellationToken cancellationToken)
+    {
+        user.SecurityStamp = stamp;
+        return Task.CompletedTask;
+    }
+
+    private static void UpdateVersion(User user) => user.Version = Guid.NewGuid().ToString("n");
+
+    private void CacheUniqueAttributes(User? user)
+    {
+        if (user is null)
+            return;
+
+        _uniqueAttributesCache.AddOrUpdate(
+            user.Id,
+            static (_, u) => new UserMemo(u),
+            static (_, _, u) => new UserMemo(u),
+            user
+        );
+    }
+
     public void Dispose()
     {
+    }
+
+    private record UserMemo(string PK, string? NormalizedEmailAddress, string? NormalizedUsername)
+    {
+        public UserMemo(User user) : this(user.PK, user.NormalizedEmailAddress, user.NormalizedUsername)
+        {
+        }
     }
 }

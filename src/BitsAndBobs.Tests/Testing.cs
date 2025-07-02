@@ -47,6 +47,8 @@ public class Testing
 
     public static DynamoDb.Table BitsAndBobsTable => _bitsAndBobsTable!;
     public static DynamoDb Dynamo => _dynamo!;
+    public static IAmazonDynamoDB DynamoClient => _dynamo!.Client;
+    public static IDynamoDBContext DynamoContext => _dynamo!.Context;
 
     [OneTimeTearDown]
     public async Task TearDown()

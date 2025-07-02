@@ -1,4 +1,3 @@
-using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
 using BitsAndBobs.Features.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -191,8 +190,8 @@ public class UserStoreTests
     {
         var user = CreateUser();
         var store = CreateUserStore();
-
         await store.CreateAsync(user, CancellationToken.None);
+
         var result = await store.DeleteAsync(user, CancellationToken.None);
 
         result.Succeeded.ShouldBeTrue();
@@ -205,24 +204,12 @@ public class UserStoreTests
     {
         var user = CreateUser();
         var store = CreateUserStore();
-
         await store.CreateAsync(user, CancellationToken.None);
+
         var result = await store.DeleteAsync(user, CancellationToken.None);
 
         result.Succeeded.ShouldBeTrue();
-        var emailRecord = await Testing.Dynamo.Client.GetItemAsync(
-                              new GetItemRequest
-                              {
-                                  TableName = Testing.BitsAndBobsTable.FullName,
-                                  Key = new Dictionary<string, AttributeValue>
-                                  {
-                                      { "PK", new AttributeValue { S = $"email#{user.NormalizedEmailAddress}" } },
-                                      { "SK", new AttributeValue { S = "Reserved" } },
-                                  },
-                              },
-                              CancellationToken.None
-                          );
-        emailRecord.Item.ShouldBeNull();
+        (await GetEmailRecord(user.NormalizedEmailAddress!)).ShouldBeNull();
     }
 
     [Test]
@@ -230,27 +217,137 @@ public class UserStoreTests
     {
         var user = CreateUser();
         var store = CreateUserStore();
-
         await store.CreateAsync(user, CancellationToken.None);
+
         var result = await store.DeleteAsync(user, CancellationToken.None);
 
         result.Succeeded.ShouldBeTrue();
-        var emailRecord = await Testing.Dynamo.Client.GetItemAsync(
-                              new GetItemRequest
-                              {
-                                  TableName = Testing.BitsAndBobsTable.FullName,
-                                  Key = new Dictionary<string, AttributeValue>
-                                  {
-                                      { "PK", new AttributeValue { S = $"username#{user.NormalizedUsername}" } },
-                                      { "SK", new AttributeValue { S = "Reserved" } },
-                                  },
-                              },
-                              CancellationToken.None
-                          );
-        emailRecord.Item.ShouldBeNull();
+        (await GetUsernameRecord(user.NormalizedUsername!)).ShouldBeNull();
     }
 
-    private static void UsersShouldMatch(User user, User user2)
+    [Test]
+    public async Task ShouldUpdateUser()
+    {
+        var user = CreateUser();
+        var store = CreateUserStore();
+        await store.CreateAsync(user, CancellationToken.None);
+        user.EmailAddressConfirmed = !user.EmailAddressConfirmed;
+        user.PasswordHash = "new-hashed-password";
+        user.SecurityStamp = Guid.NewGuid().ToString();
+
+        var result = await store.UpdateAsync(user, CancellationToken.None);
+
+        result.Succeeded.ShouldBeTrue();
+        var retrievedUser = await GetUser(user.Id);
+        UsersShouldMatch(retrievedUser, user, true);
+    }
+
+    [Test]
+    public async Task ShouldNotUpdateUserWhenConcurrencyCheckFails()
+    {
+        var user = CreateUser();
+        var store = CreateUserStore();
+        await store.CreateAsync(user, CancellationToken.None);
+        var altStore = CreateUserStore();
+        var altUser = (await altStore.FindByIdAsync(user.Id, CancellationToken.None))!;
+        altUser.PasswordHash = "alt-hashed-password";
+        await altStore.UpdateAsync(altUser, CancellationToken.None);
+        user.PasswordHash = "new-hashed-password";
+
+        var result = await store.UpdateAsync(user, CancellationToken.None);
+
+        result.Succeeded.ShouldBeFalse();
+        result.Errors.Any(e => e.Code == "ConcurrencyFailure").ShouldBeTrue();
+        var retrievedUser = await GetUser(user.Id);
+        UsersShouldMatch(retrievedUser, altUser);
+    }
+
+    [Test]
+    public async Task ShouldDoNothingIfUpdatingNonExistentUser()
+    {
+        var user = CreateUser();
+        var store = CreateUserStore();
+        await store.CreateAsync(user, CancellationToken.None);
+        await Testing.DynamoContext.DeleteAsync(user, CancellationToken.None);
+
+        var result = await store.UpdateAsync(user, CancellationToken.None);
+
+        var retrievedUser = await GetUser(user.Id);
+        retrievedUser.ShouldBeNull();
+        result.Succeeded.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ShouldReplaceEmailRecordWhenEmailAddressChanges()
+    {
+        var user = CreateUser();
+        var store = CreateUserStore();
+        await store.CreateAsync(user, CancellationToken.None);
+        var originalEmail = user.NormalizedEmailAddress!;
+        user.EmailAddress = $"{Guid.NewGuid()}@example.com";
+        user.NormalizedEmailAddress = user.EmailAddress.ToUpperInvariant();
+
+        var result = await store.UpdateAsync(user, CancellationToken.None);
+
+        result.Succeeded.ShouldBeTrue();
+        var retrievedUser = await GetUser(user.Id);
+        UsersShouldMatch(retrievedUser, user, true);
+        (await GetEmailRecord(originalEmail)).ShouldBeNull();
+        (await GetEmailRecord(user.NormalizedEmailAddress)).ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ShouldReplaceUsernameRecordWhenUsernameChanges()
+    {
+        var user = CreateUser();
+        var store = CreateUserStore();
+        await store.CreateAsync(user, CancellationToken.None);
+        var originalUsername = user.NormalizedUsername!;
+        user.Username = Guid.NewGuid().ToString();
+        user.NormalizedUsername = user.Username.ToUpperInvariant();
+
+        var result = await store.UpdateAsync(user, CancellationToken.None);
+
+        result.Succeeded.ShouldBeTrue();
+        var retrievedUser = await GetUser(user.Id);
+        UsersShouldMatch(retrievedUser, user, true);
+        (await GetUsernameRecord(originalUsername)).ShouldBeNull();
+        (await GetUsernameRecord(user.NormalizedUsername)).ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ShouldFailToUpdateUserIfChangedEmailExists()
+    {
+        var user = CreateUser();
+        var user2 = CreateUser();
+        var store = CreateUserStore();
+        await store.CreateAsync(user, CancellationToken.None);
+        await store.CreateAsync(user2, CancellationToken.None);
+        user.EmailAddress = user2.EmailAddress;
+        user.NormalizedEmailAddress = user2.NormalizedEmailAddress;
+
+        var result = await store.UpdateAsync(user, CancellationToken.None);
+
+        result.Succeeded.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ShouldFailToUpdateUserIfChangedUsernameExists()
+    {
+        var user = CreateUser();
+        var user2 = CreateUser();
+        var store = CreateUserStore();
+        await store.CreateAsync(user, CancellationToken.None);
+        await store.CreateAsync(user2, CancellationToken.None);
+        user.Username = user2.Username;
+        user.NormalizedUsername = user2.NormalizedUsername;
+
+        var result = await store.UpdateAsync(user, CancellationToken.None);
+
+        result.Succeeded.ShouldBeFalse();
+    }
+
+    private static void UsersShouldMatch(User user, User user2, bool ignoreConcurrency = false)
     {
         user.Username.ShouldBe(user2.Username);
         user.NormalizedUsername.ShouldBe(user2.NormalizedUsername);
@@ -259,10 +356,12 @@ public class UserStoreTests
         user.EmailAddressConfirmed.ShouldBe(user2.EmailAddressConfirmed);
         user.PasswordHash.ShouldBe(user2.PasswordHash);
         user.SecurityStamp.ShouldBe(user2.SecurityStamp);
-        user.ConcurrencyStamp.ShouldBe(user2.ConcurrencyStamp);
+
+        if (!ignoreConcurrency)
+            user.Version.ShouldBe(user2.Version);
     }
 
-    private static UserStore CreateUserStore() => new(Testing.Dynamo.Client, Testing.Dynamo.Context, Testing.BitsAndBobsTable.FullName);
+    private static UserStore CreateUserStore() => new(Testing.DynamoClient, Testing.DynamoContext, Testing.BitsAndBobsTable.FullName);
 
     private static User CreateUser() =>
         new()
@@ -274,13 +373,36 @@ public class UserStoreTests
             EmailAddressConfirmed = true,
             PasswordHash = "hashed-password",
             SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
         };
 
     private static Task<User> GetUser(string userId) =>
-        Testing.Dynamo.Context.LoadAsync<User>(
+        Testing.DynamoContext.LoadAsync<User>(
             User.GetPk(userId),
             User.SortKey,
             CancellationToken.None
         );
+
+    private static Task<Dictionary<string, AttributeValue>?> GetEmailRecord(string normalizedEmail) =>
+        GetReservedItemRecord($"email#{normalizedEmail}");
+
+    private static Task<Dictionary<string, AttributeValue>?> GetUsernameRecord(string normalizedUsername) =>
+        GetReservedItemRecord($"username#{normalizedUsername}");
+
+    private static async Task<Dictionary<string, AttributeValue>?> GetReservedItemRecord(string pk)
+    {
+        var result = await Testing.DynamoClient.GetItemAsync(
+                         new GetItemRequest
+                         {
+                             TableName = Testing.BitsAndBobsTable.FullName,
+                             Key = new Dictionary<string, AttributeValue>
+                             {
+                                 { "PK", new AttributeValue { S = pk } },
+                                 { "SK", new AttributeValue { S = "Reserved" } },
+                             },
+                         },
+                         CancellationToken.None
+                     );
+
+         return result?.Item;
+    }
 }

@@ -70,7 +70,7 @@ public class User : BitsAndBobsTableItem
     /// <summary>
     /// A random value that must change whenever a user is persisted to the store
     /// </summary>
-    public string? ConcurrencyStamp { get; set; } = Guid.NewGuid().ToString();
+    public string Version { get; set; } = "";
 
     internal static string GetPk(string id) => $"user#{id}";
 
