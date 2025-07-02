@@ -8,6 +8,8 @@ namespace BitsAndBobs.Features.Identity;
 
 public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordStore<User>
 {
+    private const string UniqueItemCondition = "attribute_not_exists(PK) AND attribute_not_exists(SK)";
+
     private readonly IAmazonDynamoDB _db;
     private readonly IDynamoDBContext _context;
     private readonly string _tableName;
@@ -23,8 +25,6 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
     {
         try
         {
-            const string uniqueItemCondition = "attribute_not_exists(PK) AND attribute_not_exists(SK)";
-
             var items = new List<TransactWriteItem>
             {
                 new()
@@ -33,27 +33,11 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
                     {
                         TableName = _tableName,
                         Item = _context.ToDocument(user).ToAttributeMap(),
-                        ConditionExpression = uniqueItemCondition
+                        ConditionExpression = UniqueItemCondition
                     }
                 },
-                new()
-                {
-                    Put = new Put
-                    {
-                        TableName = _tableName,
-                        Item = GetReservedEmailItem(user),
-                        ConditionExpression = uniqueItemCondition
-                    }
-                },
-                new()
-                {
-                    Put = new Put
-                    {
-                        TableName = _tableName,
-                        Item = GetReservedUsernameItem(user),
-                        ConditionExpression = uniqueItemCondition
-                    }
-                }
+                new() { Put = GetReservedEmailPut(user) },
+                new() { Put = GetReservedUsernamePut(user) },
             };
 
             await _db.TransactWriteItemsAsync(
@@ -69,23 +53,75 @@ public class UserStore : IUserStore<User>, IUserEmailStore<User>, IUserPasswordS
         }
     }
 
-    private static Dictionary<string, AttributeValue> GetReservedEmailItem(User user) =>
-        GetReservedUserItem(user, $"email#{user.NormalizedEmailAddress!}");
+    public Task<IdentityResult> UpdateAsync(User user, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-    private static Dictionary<string, AttributeValue> GetReservedUsernameItem(User user) =>
-        GetReservedUserItem(user, $"username#{user.NormalizedUsername!}");
+    private Put GetReservedEmailPut(User user) => GetReservedItemPut(user, GetReservedEmailKeyAttributes);
+    private Put GetReservedUsernamePut(User user) => GetReservedItemPut(user, GetReservedUsernameKeyAttributes);
 
-    private static Dictionary<string, AttributeValue> GetReservedUserItem(User user, string pk) =>
+    private Put GetReservedItemPut(User user, Func<User, Dictionary<string, AttributeValue>> getKeyAttributes)
+    {
+        var item = getKeyAttributes(user);
+
+        item["UserId"] = new AttributeValue { S = user.PK };
+
+        return new Put
+        {
+            TableName = _tableName,
+            Item = getKeyAttributes(user),
+            ConditionExpression = UniqueItemCondition
+        };
+    }
+
+    private Delete GetReservedEmailDelete(User user) => GetReservedItemDelete(user, GetReservedEmailKeyAttributes);
+    private Delete GetReservedUsernameDelete(User user) => GetReservedItemDelete(user, GetReservedUsernameKeyAttributes);
+
+    private Delete GetReservedItemDelete(User user, Func<User, Dictionary<string, AttributeValue>> getKeyAttributes) =>
+        new()
+        {
+            TableName = _tableName,
+            Key = getKeyAttributes(user),
+        };
+
+    private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(User user) =>
+        GetReservedKeyAttributes($"email#{user.NormalizedEmailAddress!}");
+
+    private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(User user) =>
+        GetReservedKeyAttributes($"username#{user.NormalizedUsername!}");
+
+    private static Dictionary<string, AttributeValue> GetReservedKeyAttributes(string pk) =>
         new()
         {
             { "PK", new AttributeValue { S = pk } },
             { "SK", new AttributeValue { S = "Reserved" } },
-            { "UserId", new AttributeValue { S = user.PK } }
         };
 
-    public Task<IdentityResult> UpdateAsync(User user, CancellationToken cancellationToken) => throw new NotImplementedException();
-
-    public Task<IdentityResult> DeleteAsync(User user, CancellationToken cancellationToken) => throw new NotImplementedException();
+    public async Task<IdentityResult> DeleteAsync(User user, CancellationToken cancellationToken)
+    {
+        await _db.TransactWriteItemsAsync(
+            new TransactWriteItemsRequest
+            {
+                TransactItems = new List<TransactWriteItem>
+                {
+                    new()
+                    {
+                        Delete = new Delete
+                        {
+                            TableName = _tableName,
+                            Key = new Dictionary<string, AttributeValue>
+                            {
+                                { "PK", new AttributeValue { S = user.PK } },
+                                { "SK", new AttributeValue { S = User.SortKey } }
+                            }
+                        },
+                    },
+                    new() { Delete = GetReservedEmailDelete(user) },
+                    new() { Delete = GetReservedUsernameDelete(user) },
+                },
+            },
+            cancellationToken
+        );
+        return IdentityResult.Success;
+    }
 
     public Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken) => _context.LoadAsync<User>(
         User.GetPk(userId), User.SortKey,

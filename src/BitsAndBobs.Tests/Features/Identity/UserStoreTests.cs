@@ -1,4 +1,5 @@
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.Model;
 using BitsAndBobs.Features.Identity;
 using Microsoft.AspNetCore.Identity;
 using NUnit.Framework;
@@ -183,6 +184,70 @@ public class UserStoreTests
         var user = await store.FindByNameAsync(user2.NormalizedUsername!.ToLowerInvariant(), CancellationToken.None);
 
         user.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ShouldDeleteUser()
+    {
+        var user = CreateUser();
+        var store = CreateUserStore();
+
+        await store.CreateAsync(user, CancellationToken.None);
+        var result = await store.DeleteAsync(user, CancellationToken.None);
+
+        result.Succeeded.ShouldBeTrue();
+        var retrievedUser = await GetUser(user.Id);
+        retrievedUser.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ShouldDeleteEmailRecordWhenDeletingUser()
+    {
+        var user = CreateUser();
+        var store = CreateUserStore();
+
+        await store.CreateAsync(user, CancellationToken.None);
+        var result = await store.DeleteAsync(user, CancellationToken.None);
+
+        result.Succeeded.ShouldBeTrue();
+        var emailRecord = await Testing.Dynamo.Client.GetItemAsync(
+                              new GetItemRequest
+                              {
+                                  TableName = Testing.BitsAndBobsTable.FullName,
+                                  Key = new Dictionary<string, AttributeValue>
+                                  {
+                                      { "PK", new AttributeValue { S = $"email#{user.NormalizedEmailAddress}" } },
+                                      { "SK", new AttributeValue { S = "Reserved" } },
+                                  },
+                              },
+                              CancellationToken.None
+                          );
+        emailRecord.Item.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ShouldDeleteUsernameRecordWhenDeletingUser()
+    {
+        var user = CreateUser();
+        var store = CreateUserStore();
+
+        await store.CreateAsync(user, CancellationToken.None);
+        var result = await store.DeleteAsync(user, CancellationToken.None);
+
+        result.Succeeded.ShouldBeTrue();
+        var emailRecord = await Testing.Dynamo.Client.GetItemAsync(
+                              new GetItemRequest
+                              {
+                                  TableName = Testing.BitsAndBobsTable.FullName,
+                                  Key = new Dictionary<string, AttributeValue>
+                                  {
+                                      { "PK", new AttributeValue { S = $"username#{user.NormalizedUsername}" } },
+                                      { "SK", new AttributeValue { S = "Reserved" } },
+                                  },
+                              },
+                              CancellationToken.None
+                          );
+        emailRecord.Item.ShouldBeNull();
     }
 
     private static void UsersShouldMatch(User user, User user2)
