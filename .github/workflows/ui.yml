@@ -1,0 +1,41 @@
+name: UI Build
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'src/BitsAndBobs/clientapp/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'src/BitsAndBobs/clientapp/**'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: 'src/BitsAndBobs/clientapp'
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+        
+    - name: Install Node.js dependencies
+      run: yarn install --immutable --immutable-cache --check-cache
+
+    - name: Run eslint
+      run: yarn eslint src/ --max-warnings=0
+
+    - name: Build
+      run: yarn build
+
+    - name: Run tests
+      run: yarn test
