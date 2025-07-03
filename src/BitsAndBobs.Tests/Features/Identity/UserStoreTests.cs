@@ -239,7 +239,7 @@ public class UserStoreTests
 
         result.Succeeded.ShouldBeTrue();
         var retrievedUser = await GetUser(user.Id);
-        UsersShouldMatch(retrievedUser, user, true);
+        UsersShouldMatch(retrievedUser, user);
     }
 
     [Test]
@@ -291,7 +291,7 @@ public class UserStoreTests
 
         result.Succeeded.ShouldBeTrue();
         var retrievedUser = await GetUser(user.Id);
-        UsersShouldMatch(retrievedUser, user, true);
+        UsersShouldMatch(retrievedUser, user);
         (await GetEmailRecord(originalEmail)).ShouldBeNull();
         (await GetEmailRecord(user.NormalizedEmailAddress)).ShouldNotBeNull();
     }
@@ -310,7 +310,7 @@ public class UserStoreTests
 
         result.Succeeded.ShouldBeTrue();
         var retrievedUser = await GetUser(user.Id);
-        UsersShouldMatch(retrievedUser, user, true);
+        UsersShouldMatch(retrievedUser, user);
         (await GetUsernameRecord(originalUsername)).ShouldBeNull();
         (await GetUsernameRecord(user.NormalizedUsername)).ShouldNotBeNull();
     }
@@ -347,7 +347,7 @@ public class UserStoreTests
         result.Succeeded.ShouldBeFalse();
     }
 
-    private static void UsersShouldMatch(User user, User user2, bool ignoreConcurrency = false)
+    private static void UsersShouldMatch(User user, User user2)
     {
         user.Username.ShouldBe(user2.Username);
         user.NormalizedUsername.ShouldBe(user2.NormalizedUsername);
@@ -356,9 +356,10 @@ public class UserStoreTests
         user.EmailAddressConfirmed.ShouldBe(user2.EmailAddressConfirmed);
         user.PasswordHash.ShouldBe(user2.PasswordHash);
         user.SecurityStamp.ShouldBe(user2.SecurityStamp);
-
-        if (!ignoreConcurrency)
-            user.Version.ShouldBe(user2.Version);
+        user.Version.ShouldBe(user2.Version);
+        user.IsLockedOut.ShouldBe(user2.IsLockedOut);
+        user.LockoutEndDate.ShouldBe(user2.LockoutEndDate);
+        user.FailedAccessAttempts.ShouldBe(user2.FailedAccessAttempts);
     }
 
     private static UserStore CreateUserStore() => new(Testing.DynamoClient, Testing.DynamoContext, Testing.BitsAndBobsTable.FullName);
@@ -373,6 +374,9 @@ public class UserStoreTests
             EmailAddressConfirmed = true,
             PasswordHash = "hashed-password",
             SecurityStamp = Guid.NewGuid().ToString(),
+            IsLockedOut = true,
+            LockoutEndDate = DateTimeOffset.Now.AddMinutes(4622),
+            FailedAccessAttempts = 4,
         };
 
     private static Task<User> GetUser(string userId) =>

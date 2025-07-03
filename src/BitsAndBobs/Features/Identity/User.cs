@@ -1,4 +1,5 @@
 using Amazon.DynamoDBv2.DataModel;
+using BitsAndBobs.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 
 namespace BitsAndBobs.Features.Identity;
@@ -66,6 +67,22 @@ public class User : BitsAndBobsTableItem
     /// A random value that must change whenever a users credentials change (password changed, login removed)
     /// </summary>
     public string? SecurityStamp { get; set; } = Guid.NewGuid().ToString();
+
+    /// <summary>
+    /// The number of consecutive failed access attempts for this user.
+    /// </summary>
+    public int FailedAccessAttempts { get; set; }
+
+    /// <summary>
+    /// A flag indicating whether the user is locked out of their account due to too many failed access attempts.
+    /// </summary>
+    public bool IsLockedOut { get; set; }
+
+    /// <summary>
+    /// The date and time when the user will be unlocked from their account.
+    /// </summary>
+    [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
+    public DateTimeOffset? LockoutEndDate { get; set; }
 
     /// <summary>
     /// A random value that must change whenever a user is persisted to the store

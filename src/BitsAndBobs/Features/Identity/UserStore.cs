@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace BitsAndBobs.Features.Identity;
 
-public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserSecurityStampStore<User>
+public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserSecurityStampStore<User>, IUserLockoutStore<User>
 {
     private const string UniqueItemCondition = "attribute_not_exists(PK) AND attribute_not_exists(SK)";
 
@@ -160,67 +160,6 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
         }
     }
 
-    private Put GetReservedEmailPut(User user) => GetReservedItemPut(user, GetReservedEmailKeyAttributes);
-
-    private Put GetReservedUsernamePut(User user) => GetReservedItemPut(user, GetReservedUsernameKeyAttributes);
-
-    private Put GetReservedItemPut(User user, Func<User, Dictionary<string, AttributeValue>> getKeyAttributes)
-    {
-        var item = getKeyAttributes(user);
-
-        item["UserId"] = new AttributeValue(user.PK);
-
-        return new Put
-        {
-            TableName = _tableName,
-            Item = item,
-            ConditionExpression = UniqueItemCondition,
-        };
-    }
-
-    private Delete GetReservedEmailDelete(User user) => GetReservedItemDelete(user.PK, GetReservedEmailKeyAttributes(user));
-    private Delete GetReservedEmailDelete(UserMemo user) => GetReservedItemDelete(user.PK, GetReservedEmailKeyAttributes(user));
-
-    private Delete GetReservedUsernameDelete(User user) => GetReservedItemDelete(user.PK, GetReservedUsernameKeyAttributes(user));
-    private Delete GetReservedUsernameDelete(UserMemo user) => GetReservedItemDelete(user.PK, GetReservedUsernameKeyAttributes(user));
-
-    private Delete GetReservedItemDelete(string userPk, Dictionary<string, AttributeValue> keyAttributes) =>
-        new()
-        {
-            TableName = _tableName,
-            Key = keyAttributes,
-            ConditionExpression = "UserId = :userId",
-            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-            {
-                { ":userId", new AttributeValue(userPk) },
-            },
-        };
-
-    private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(User user) =>
-        GetReservedEmailKeyAttributes(user.NormalizedEmailAddress);
-
-    private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(UserMemo user) =>
-        GetReservedEmailKeyAttributes(user.NormalizedEmailAddress);
-
-    private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(string? normalizedEmailAddress) =>
-        GetReservedKeyAttributes($"email#{normalizedEmailAddress}");
-
-    private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(User user) =>
-        GetReservedUsernameKeyAttributes(user.NormalizedUsername);
-
-    private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(UserMemo user) =>
-        GetReservedUsernameKeyAttributes(user.NormalizedUsername);
-
-    private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(string? normalizedUsername) =>
-        GetReservedKeyAttributes($"username#{normalizedUsername}");
-
-    private static Dictionary<string, AttributeValue> GetReservedKeyAttributes(string pk) =>
-        new()
-        {
-            { "PK", new AttributeValue(pk) },
-            { "SK", new AttributeValue("Reserved") },
-        };
-
     public async Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
         var user = await _context.LoadAsync<User>(User.GetPk(userId), User.SortKey, cancellationToken);
@@ -253,14 +192,39 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
     }
 
     public Task<string> GetUserIdAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.Id);
-    public Task<string?> GetUserNameAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.Username)!;
-    public Task<string?> GetNormalizedUserNameAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.NormalizedUsername);
-    public Task<string?> GetEmailAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.EmailAddress)!;
-    public Task<string?> GetNormalizedEmailAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.NormalizedEmailAddress);
-    public Task<bool> GetEmailConfirmedAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.EmailAddressConfirmed);
-    public Task<string?> GetPasswordHashAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.PasswordHash);
-    public Task<bool> HasPasswordAsync(User user, CancellationToken cancellationToken) => Task.FromResult(!string.IsNullOrEmpty(user.PasswordHash));
-    public Task<string?> GetSecurityStampAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.SecurityStamp);
+
+    public Task<string?> GetUserNameAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(user.Username)!;
+
+    public Task<string?> GetNormalizedUserNameAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(user.NormalizedUsername);
+
+    public Task<string?> GetEmailAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(user.EmailAddress)!;
+
+    public Task<string?> GetNormalizedEmailAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(user.NormalizedEmailAddress);
+
+    public Task<bool> GetEmailConfirmedAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(user.EmailAddressConfirmed);
+
+    public Task<string?> GetPasswordHashAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(user.PasswordHash);
+
+    public Task<bool> HasPasswordAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(!string.IsNullOrEmpty(user.PasswordHash));
+
+    public Task<string?> GetSecurityStampAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(user.SecurityStamp);
+
+    public Task<DateTimeOffset?> GetLockoutEndDateAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(user.LockoutEndDate);
+
+    public Task<int> GetAccessFailedCountAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(user.FailedAccessAttempts);
+
+    public Task<bool> GetLockoutEnabledAsync(User user, CancellationToken cancellationToken) =>
+        Task.FromResult(user.IsLockedOut);
 
     public Task SetUserNameAsync(User user, string? userName, CancellationToken cancellationToken)
     {
@@ -303,6 +267,97 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
         user.SecurityStamp = stamp;
         return Task.CompletedTask;
     }
+
+    public Task SetLockoutEndDateAsync(User user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
+    {
+        user.LockoutEndDate = lockoutEnd;
+        return Task.CompletedTask;
+    }
+
+    public Task<int> IncrementAccessFailedCountAsync(User user, CancellationToken cancellationToken)
+    {
+        user.FailedAccessAttempts++;
+        return Task.FromResult(user.FailedAccessAttempts);
+    }
+
+    public Task ResetAccessFailedCountAsync(User user, CancellationToken cancellationToken)
+    {
+        user.FailedAccessAttempts = 0;
+        return Task.CompletedTask;
+    }
+
+    public Task SetLockoutEnabledAsync(User user, bool enabled, CancellationToken cancellationToken)
+    {
+        user.IsLockedOut = enabled;
+        return Task.CompletedTask;
+    }
+
+        private Put GetReservedEmailPut(User user) => GetReservedItemPut(user, GetReservedEmailKeyAttributes);
+
+    private Put GetReservedUsernamePut(User user) => GetReservedItemPut(user, GetReservedUsernameKeyAttributes);
+
+    private Put GetReservedItemPut(User user, Func<User, Dictionary<string, AttributeValue>> getKeyAttributes)
+    {
+        var item = getKeyAttributes(user);
+
+        item["UserId"] = new AttributeValue(user.PK);
+
+        return new Put
+        {
+            TableName = _tableName,
+            Item = item,
+            ConditionExpression = UniqueItemCondition,
+        };
+    }
+
+    private Delete GetReservedEmailDelete(User user) =>
+        GetReservedItemDelete(user.PK, GetReservedEmailKeyAttributes(user));
+
+    private Delete GetReservedEmailDelete(UserMemo user) =>
+        GetReservedItemDelete(user.PK, GetReservedEmailKeyAttributes(user));
+
+    private Delete GetReservedUsernameDelete(User user) =>
+        GetReservedItemDelete(user.PK, GetReservedUsernameKeyAttributes(user));
+
+    private Delete GetReservedUsernameDelete(UserMemo user) =>
+        GetReservedItemDelete(user.PK, GetReservedUsernameKeyAttributes(user));
+
+    private Delete GetReservedItemDelete(string userPk, Dictionary<string, AttributeValue> keyAttributes) =>
+        new()
+        {
+            TableName = _tableName,
+            Key = keyAttributes,
+            ConditionExpression = "UserId = :userId",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":userId", new AttributeValue(userPk) },
+            },
+        };
+
+    private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(User user) =>
+        GetReservedEmailKeyAttributes(user.NormalizedEmailAddress);
+
+    private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(UserMemo user) =>
+        GetReservedEmailKeyAttributes(user.NormalizedEmailAddress);
+
+    private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(string? normalizedEmailAddress) =>
+        GetReservedKeyAttributes($"email#{normalizedEmailAddress}");
+
+    private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(User user) =>
+        GetReservedUsernameKeyAttributes(user.NormalizedUsername);
+
+    private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(UserMemo user) =>
+        GetReservedUsernameKeyAttributes(user.NormalizedUsername);
+
+    private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(string? normalizedUsername) =>
+        GetReservedKeyAttributes($"username#{normalizedUsername}");
+
+    private static Dictionary<string, AttributeValue> GetReservedKeyAttributes(string pk) =>
+        new()
+        {
+            { "PK", new AttributeValue(pk) },
+            { "SK", new AttributeValue("Reserved") },
+        };
 
     private static void UpdateVersion(User user) => user.Version = Guid.NewGuid().ToString("n");
 
