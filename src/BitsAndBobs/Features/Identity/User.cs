@@ -30,7 +30,7 @@ public class User : BitsAndBobsTableItem
     /// Gets or sets the username for this user.
     /// </summary>
     [ProtectedPersonalData]
-    public required string Username { get; set; }
+    public string Username { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the normalized username for this user.
@@ -42,7 +42,7 @@ public class User : BitsAndBobsTableItem
     /// Gets or sets the email address for this user.
     /// </summary>
     [ProtectedPersonalData]
-    public required string EmailAddress { get; set; }
+    public string EmailAddress { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the normalized email address for this user.
