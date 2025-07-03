@@ -3,14 +3,16 @@ name: API Build
 on:
   push:
     branches: [ "main" ]
-    paths-ignore:
-      - 'src/BitsAndBobs/clientapp/**' 
+    paths:
+      - '**'
+      - '!src/BitsAndBobs/clientapp/**' 
       - '!.github/workflows/**'
       - '.github/workflows/api.yml'
   pull_request:
     branches: [ "main" ]
-    paths-ignore:
-      - 'src/BitsAndBobs/clientapp/**' 
+    paths:
+      - '**'
+      - '!src/BitsAndBobs/clientapp/**' 
       - '!.github/workflows/**'
       - '.github/workflows/api.yml'
 
