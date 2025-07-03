@@ -5,10 +5,14 @@ on:
     branches: [ "main" ]
     paths-ignore:
       - 'src/BitsAndBobs/clientapp/**' 
+      - '!.github/workflows/**'
+      - '.github/workflows/api.yml'
   pull_request:
     branches: [ "main" ]
     paths-ignore:
       - 'src/BitsAndBobs/clientapp/**' 
+      - '!.github/workflows/**'
+      - '.github/workflows/api.yml'
 
 jobs:
   build:
