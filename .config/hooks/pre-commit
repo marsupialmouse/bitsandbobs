@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# Hook script that runs validation on modified files before a commit.  Called by "git
+# commit" before anything has been committed.  If this script exits with a non-zero status ,
+# nothing will be committed.
+#
+
+# If a merge is in process, we don't want to do the lint step
+if [[ -f '.git/MERGE_HEAD' ]]; then
+    exit 0
+fi
+
+declare GIT_ROOT="$(git rev-parse --show-toplevel)"
+trap "cd "$(dirname "$0")" > /dev/null" EXIT
+
+# Check for any staged file paths that include clientapp (case-insensitive)
+if git diff --cached --name-only --diff-filter=ADMR HEAD | grep -qiE '^src/BitsAndBobs/clientapp/'; then
+    pushd "${GIT_ROOT}/src/BitsAndBobs/clientapp" > /dev/null
+    yarn lint-staged -q
+fi

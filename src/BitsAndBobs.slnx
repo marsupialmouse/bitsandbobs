@@ -1,6 +1,18 @@
 <Solution>
-  <Project Path="BitsAndBobs.Tests/BitsAndBobs.Tests.csproj" />
-  <Project Path="BitsAndBobs/BitsAndBobs.csproj" />
+  <Folder Name="/Config/">
+    <File Path="..\.editorconfig" />
+    <File Path="..\configure.sh" />
+  </Folder>
+  <Folder Name="/Config/hooks/">
+    <File Path="..\.config\hooks\post-checkout" />
+    <File Path="..\.config\hooks\pre-commit" />
+  </Folder>
+  <Folder Name="/DevOps/">
+    <File Path="..\.github\workflows\api.yml" />
+    <File Path="..\.github\workflows\ui.yml" />
+  </Folder>
   <Project Path="BitsAndBobs.AppHost/BitsAndBobs.AppHost.csproj" />
   <Project Path="BitsAndBobs.ServiceDefaults/BitsAndBobs.ServiceDefaults.csproj" />
+  <Project Path="BitsAndBobs.Tests/BitsAndBobs.Tests.csproj" />
+  <Project Path="BitsAndBobs/BitsAndBobs.csproj" />
 </Solution>

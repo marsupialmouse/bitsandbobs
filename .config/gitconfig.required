@@ -1,0 +1,26 @@
+[core]
+    # Tell git where to find hooks (note that this path is relative to the root of the repository)
+    hooksPath = .config/hooks
+
+    # Ignore changes in file mode (useful to ensure that Linux file mode isn't overwritten on Windows)
+    fileMode = false
+
+    # Ignore casing in file names - this ensures that we can't add both web.config and Web.config on a case-sensitive filesystem
+    ignorecase = true
+
+    # Do not convert line endings, leave it to .gitattributes + .editorconfig to tell other tools what to do
+    autocrlf = input
+
+    # Do not emit warnings like "File will have LF line endings in the repository, but CRLF on disk"
+    safecrlf = false
+
+[pull]
+    # When pulling, default to rebasing
+    rebase = true
+
+    # When pulling, allow merging only if it would be a fast-forward merge
+    ff = yes
+
+[push]
+    # Allow pushing the current branch without setting upstream
+    default = current
