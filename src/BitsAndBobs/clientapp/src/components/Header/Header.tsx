@@ -1,11 +1,17 @@
-import { useState } from 'react'
 import { Link } from 'react-router'
+import { useSelector } from 'react-redux'
+import {
+  selectIsAuthenticated,
+  signedOut,
+} from '../../features/identity/identitySlice.ts'
+import { useAppDispatch } from '../../stores/hooks.ts'
 
 export const Header = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const isAuthenticated = useSelector(selectIsAuthenticated)
+  const dispatch = useAppDispatch()
 
   function handleSignOut() {
-    setIsAuthenticated(false)
+    dispatch(signedOut())
   }
 
   return (

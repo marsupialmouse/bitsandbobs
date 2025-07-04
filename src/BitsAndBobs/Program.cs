@@ -56,7 +56,15 @@ builder.Services.AddOpenApiDocument();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
-app.MapGroup("/api/identity").MapIdentityApi<User>();
+var identityGroup = app.MapGroup("/api/identity");
+identityGroup.MapIdentityApi<User>();
+identityGroup.MapPost(
+    "/logout",
+    async (SignInManager<User> signInManager) =>
+    {
+        await signInManager.SignOutAsync().ConfigureAwait(false);
+    }
+);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
