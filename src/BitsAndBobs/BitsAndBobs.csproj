@@ -7,6 +7,33 @@
       <UserSecretsId>9c165170-1a0e-4805-87d6-9cbf86a9a79b</UserSecretsId>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Don't publish the SPA source files, but do show them in the project files list -->
+    <Content Remove="clientapp/**" />
+    <None Remove="clientapp/**" />
+    <None Include="clientapp/**" Exclude="clientapp/node_modules/**;clientapp/dist/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <NpmPackageDependency Include="clientapp/package.json" />
+  </ItemGroup>
+  
+  <Target Name="InstallNodeModules" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' " Inputs="$(MSBuildProjectFile);@(NpmPackageDependency)" Outputs="clientapp/yarn.lock;clientapp/node_modules/.yarn-integrity">
+    <!-- Ensure Node.js is installed -->
+    <Exec Command="node --version" ContinueOnError="true" EchoOff="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+    </Exec>
+    
+    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+  
+    <!-- Restore packages -->
+    <Message Importance="high" Text="Restoring dependencies using 'yarn'. This may take several minutes..." />
+    <Exec WorkingDirectory="clientapp" Command="npx yarn" />
+  
+    <!-- Ensure the timestamps of output files are up to date, so that MSBuild doesn't run as again unless packages have changed -->
+    <Touch Files="clientapp/yarn.lock;clientapp/node_modules/.yarn-integrity" />
+  </Target>
+  
     <ItemGroup>
         <PackageReference Include="Amazon.AspNetCore.DataProtection.SSM" Version="4.0.0" />
         <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.1.9" />
