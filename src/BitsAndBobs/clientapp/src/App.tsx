@@ -1,10 +1,10 @@
 import { Header } from './components/Header/Header.tsx'
-import { Route, Routes } from 'react-router'
+import { BrowserRouter, Route, Routes } from 'react-router'
 import Home from './features/home/Home.tsx'
 
 function App() {
   return (
-    <>
+    <BrowserRouter>
       <Header />
       <Routes>
         <Route index element={<Home />} />
@@ -17,7 +17,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
         */}
       </Routes>
-    </>
+    </BrowserRouter>
   )
 }
 
