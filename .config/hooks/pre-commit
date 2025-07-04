@@ -11,10 +11,11 @@ if [[ -f '.git/MERGE_HEAD' ]]; then
 fi
 
 declare GIT_ROOT="$(git rev-parse --show-toplevel)"
-trap "cd "$(dirname "$0")" > /dev/null" EXIT
 
 # Check for any staged file paths that include clientapp (case-insensitive)
 if git diff --cached --name-only --diff-filter=ADMR HEAD | grep -qiE '^src/BitsAndBobs/clientapp/'; then
+
     pushd "${GIT_ROOT}/src/BitsAndBobs/clientapp" > /dev/null
+    trap "popd > /dev/null" EXIT
     yarn lint-staged -q
 fi

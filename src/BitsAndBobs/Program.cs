@@ -49,8 +49,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddIdentityCore<User>().AddDefaultTokenProviders().AddApiEndpoints();
 builder.Services.Configure<IdentityOptions>(options => { options.User.RequireUniqueEmail = true; });
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddMvc();
 builder.Services.AddOpenApi();
+builder.Services.AddOpenApiDocument();
 
 var app = builder.Build();
 
@@ -60,7 +61,8 @@ app.MapGroup("/api/identity").MapIdentityApi<User>();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseOpenApi();
+    app.UseSwaggerUi();
 }
 
 app.UseHttpsRedirection();

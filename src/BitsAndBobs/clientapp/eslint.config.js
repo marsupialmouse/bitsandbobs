@@ -7,12 +7,14 @@ import tseslint from 'typescript-eslint'
 import eslintPluginPrettier from 'eslint-config-prettier'
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  { ignores: ['dist', 'src/models/ApiGenerated.ts'] },
   {
-    extends: [js.configs.recommended,
+    extends: [
+      js.configs.recommended,
       ...tseslint.configs.strictTypeChecked,
       ...tseslint.configs.stylisticTypeChecked,
-      eslintPluginPrettier,],
+      eslintPluginPrettier,
+    ],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
@@ -31,7 +33,10 @@ export default tseslint.config(
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': ['warn', {allowConstantExport: true}],
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
     },
     settings: {
       react: {

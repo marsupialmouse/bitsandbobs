@@ -12,14 +12,33 @@
         <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.1.9" />
         <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.2" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
+        <PackageReference Include="NSwag.AspNetCore" Version="14.4.0" />
+        <PackageReference Include="NSwag.CodeGeneration.TypeScript" Version="14.4.0" />
+        <PackageReference Include="NSwag.MSBuild" Version="14.4.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\BitsAndBobs.ServiceDefaults\BitsAndBobs.ServiceDefaults.csproj" />
     </ItemGroup>
 
+    <PropertyGroup>
+      <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    </PropertyGroup>
+  
     <ItemGroup>
-      <Folder Include="clientapp\src\assets\" />
+      <ApiFiles Include="**/*.cs" Exclude="clientapp/**;obj/**;bin**" />
     </ItemGroup>
+
+    <!-- Run NSwag on build, but only when files that may affect the generated types have changed -->
+    <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Debug' " Inputs="$(MSBuildProjectFile);@(ApiFiles)" Outputs="clientapp/src/models/ApiGenerated.ts">
+
+      <Exec WorkingDirectory="$(ProjectDir)" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development" Command="$(NSwagExe_Net90) run nswag.json /variables:Configuration=$(Configuration),WorkingDirectory=$(ProjectDir)" />
+
+      <!-- NSwag doesn't modify the file if there are no changes, but we update the timestamp so that MSBuild knows not to regenerate it next time -->
+      <Touch Files="clientapp/src/models/ApiGenerated.ts" />
+    </Target>
 
 </Project>

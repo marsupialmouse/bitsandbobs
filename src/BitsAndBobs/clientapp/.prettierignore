@@ -6,3 +6,4 @@ default.conf.template
 .husky
 yarn.lock
 .prettierignore
+src/models/ApiGenerated.ts
