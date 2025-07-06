@@ -57,12 +57,13 @@
   
     <ItemGroup>
       <ApiFiles Include="**/*.cs" Exclude="clientapp/**;obj/**;bin**" />
+      <ApiFiles Include="nswag.json" />
     </ItemGroup>
 
     <!-- Run NSwag on build, but only when files that may affect the generated types have changed -->
     <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Debug' " Inputs="$(MSBuildProjectFile);@(ApiFiles)" Outputs="clientapp/src/models/ApiGenerated.ts">
 
-      <Exec WorkingDirectory="$(ProjectDir)" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development" Command="$(NSwagExe_Net90) run nswag.json /variables:Configuration=$(Configuration),WorkingDirectory=$(ProjectDir)" />
+      <Exec WorkingDirectory="$(ProjectDir)" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;AWS_ACCESS_KEY_ID=dummy;AWS_SECRET_ACCESS_KEY=dummy" Command="$(NSwagExe_Net90) run nswag.json /variables:Configuration=$(Configuration),WorkingDirectory=$(ProjectDir)" />
 
       <!-- NSwag doesn't modify the file if there are no changes, but we update the timestamp so that MSBuild knows not to regenerate it next time -->
       <Touch Files="clientapp/src/models/ApiGenerated.ts" />
