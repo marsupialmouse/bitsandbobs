@@ -10,6 +10,12 @@
 
 
 
+export interface UserContextResponse {
+    isAuthenticated?: boolean;
+    username?: string | undefined;
+    emailAddress?: string | undefined;
+}
+
 export interface ProblemDetails {
     type?: string | undefined;
     title?: string | undefined;

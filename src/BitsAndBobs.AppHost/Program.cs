@@ -13,6 +13,7 @@ var api = builder.AddProject<BitsAndBobs>("api").WithReference(awsResources).Wit
 
 builder
     .AddViteApp("ui", "../BitsAndBobs/clientapp", packageManager: "yarn")
+    .WithReference(api)
     .WaitFor(api);
 
 builder.Build().Run();

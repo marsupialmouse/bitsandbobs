@@ -41,6 +41,7 @@
     "globals": "^16.2.0",
     "jsdom": "^26.1.0",
     "lint-staged": "^16.1.2",
+    "msw": "^2.10.3",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.13",
     "tailwindcss": "^4.1.10",
@@ -50,7 +51,7 @@
     "vitest": "^3.2.4"
   },
   "lint-staged": {
-    "**/*": [
+    "*.{ts,tsx,css,json,js}": [
       "yarn lint",
       "yarn format"
     ]

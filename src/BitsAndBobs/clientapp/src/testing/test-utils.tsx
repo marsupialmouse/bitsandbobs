@@ -35,6 +35,26 @@ export function renderWithProvider(
   }: ExtendedRenderOptions = {}
 ) {
   function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
+    return <Provider store={store}>{children}</Provider>
+  }
+  return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
+}
+
+/**
+ * Renders a component inside the Redux store provider and MemoryRouter
+ * @param ui The component to render
+ * @param param1 Any default state
+ * @returns
+ */
+export function renderWithProviderAndRouter(
+  ui: ReactElement,
+  {
+    preloadedState = {},
+    store = setupStore(preloadedState),
+    ...renderOptions
+  }: ExtendedRenderOptions = {}
+) {
+  function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
     return (
       <Provider store={store}>
         <MemoryRouter>{children}</MemoryRouter>

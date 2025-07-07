@@ -1,16 +1,16 @@
 import { Header } from './Header.tsx'
 import { screen } from '@testing-library/react'
-import { renderWithProvider } from '../../testing/test-utils.tsx'
+import { renderWithProviderAndRouter } from '../../testing/test-utils.tsx'
 
 describe('Header', () => {
   it('renders the site name', () => {
-    renderWithProvider(<Header />)
+    renderWithProviderAndRouter(<Header />)
 
     expect(screen.getByText('BITS&BOBS')).toBeInTheDocument()
   })
 
   it('renders Sign Up and Sign In links when not authenticated', () => {
-    renderWithProvider(<Header />)
+    renderWithProviderAndRouter(<Header />)
 
     expect(screen.getByText('Sign Up')).toBeInTheDocument()
     expect(screen.getByText('Sign In')).toBeInTheDocument()
@@ -19,7 +19,7 @@ describe('Header', () => {
   })
 
   it('renders Profile and Sign Out links when authenticated', () => {
-    renderWithProvider(<Header />, {
+    renderWithProviderAndRouter(<Header />, {
       preloadedState: {
         identity: {
           isAuthenticated: true,

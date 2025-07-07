@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using BitsAndBobs.Features.Identity;
+using BitsAndBobs.Features.UserContext;
 using BitsAndBobs.Infrastructure.AntiForgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
@@ -84,7 +85,7 @@ public class Program
         );
 
         var endpoints = app.MapGroup("/api");
-        //endpoints.MapUserContextEndpoints();
+        endpoints.MapUserContextEndpoints();
 
         var identityEndpoints = endpoints.MapGroup("/identity");
         identityEndpoints.MapIdentityApi<User>();
