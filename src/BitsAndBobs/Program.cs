@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Features.UserContext;
 using BitsAndBobs.Infrastructure.AntiForgery;
@@ -60,7 +61,14 @@ public class Program
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                .AddCookie(o => o.Cookie.Name = "auth");
         builder.Services.AddIdentityCore<User>().AddDefaultTokenProviders().AddApiEndpoints();
-        builder.Services.Configure<IdentityOptions>(options => { options.User.RequireUniqueEmail = true; });
+        builder.Services.Configure<IdentityOptions>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = true;
+                options.User.RequireUniqueEmail = true;
+            }
+        );
+        builder.Services.AddTransient<IEmailSender<User>, EmailStore>();
+        builder.Services.AddTransient<IEmailStore, EmailStore>();
 
         builder.Services.AddMvc();
         builder.Services.AddOpenApi();
@@ -86,6 +94,7 @@ public class Program
 
         var endpoints = app.MapGroup("/api");
         endpoints.MapUserContextEndpoints();
+        endpoints.MapEmailEndpoints();
 
         var identityEndpoints = endpoints.MapGroup("/identity");
         identityEndpoints.MapIdentityApi<User>();

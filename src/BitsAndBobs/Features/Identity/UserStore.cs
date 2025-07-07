@@ -341,7 +341,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
         GetReservedEmailKeyAttributes(user.NormalizedEmailAddress);
 
     private static Dictionary<string, AttributeValue> GetReservedEmailKeyAttributes(string? normalizedEmailAddress) =>
-        GetReservedKeyAttributes($"email#{normalizedEmailAddress}");
+        GetReservedKeyAttributes($"emailaddress#{normalizedEmailAddress}");
 
     private static Dictionary<string, AttributeValue> GetReservedUsernameKeyAttributes(User user) =>
         GetReservedUsernameKeyAttributes(user.NormalizedUsername);

@@ -1,9 +1,12 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using BitsAndBobs.Features.Email;
+using BitsAndBobs.Features.Identity;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +54,9 @@ public abstract class TestBase
             builder.ConfigureTestServices(services =>
             {
                 services.AddDataProtection().UseEphemeralDataProtectionProvider();
+
+                services.Replace(ServiceDescriptor.Singleton(Substitute.For<IEmailSender<User>>()));
+                services.Replace(ServiceDescriptor.Singleton(Substitute.For<IEmailStore>()));
 
                 if (!ValidateAntiForgeryTokens)
                 {

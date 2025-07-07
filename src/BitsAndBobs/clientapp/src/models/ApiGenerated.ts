@@ -16,6 +16,13 @@ export interface UserContextResponse {
     emailAddress?: string | undefined;
 }
 
+export interface EmailResponse {
+    recipient?: string;
+    type?: string;
+    body?: string;
+    sentAt?: Date;
+}
+
 export interface ProblemDetails {
     type?: string | undefined;
     title?: string | undefined;

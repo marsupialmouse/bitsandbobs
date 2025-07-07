@@ -387,7 +387,7 @@ public class UserStoreTests
         );
 
     private static Task<Dictionary<string, AttributeValue>?> GetEmailRecord(string normalizedEmail) =>
-        GetReservedItemRecord($"email#{normalizedEmail}");
+        GetReservedItemRecord($"emailaddress#{normalizedEmail}");
 
     private static Task<Dictionary<string, AttributeValue>?> GetUsernameRecord(string normalizedUsername) =>
         GetReservedItemRecord($"username#{normalizedUsername}");
