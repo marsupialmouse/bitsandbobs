@@ -162,7 +162,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
 
     public async Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
-        var user = await _context.LoadAsync<User>(User.GetPk(userId), User.SortKey, cancellationToken);
+        var user = await _context.LoadAsync<User>(userId, User.SortKey, cancellationToken);
         CacheUniqueAttributes(user);
         return user;
     }

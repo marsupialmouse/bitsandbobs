@@ -9,16 +9,12 @@ public class User : BitsAndBobsTableItem
     public const string SortKey = "Profile";
 
     /// <summary>
-    /// Gets or sets the primary key for this user.
+    /// Gets the user ID.
     /// </summary>
     [DynamoDBIgnore]
-    public string Id { get; private set;  } = Guid.NewGuid().ToString("n");
+    public string Id => PK;
 
-    public override string PK
-    {
-        get => GetPk(Id);
-        protected set => Id = value[5..];
-    }
+    public override string PK { get; protected set; } = $"user#{Guid.NewGuid():n}";
 
     public override string SK
     {
@@ -88,8 +84,6 @@ public class User : BitsAndBobsTableItem
     /// A random value that must change whenever a user is persisted to the store
     /// </summary>
     public string Version { get; set; } = "";
-
-    internal static string GetPk(string id) => $"user#{id}";
 
     /// <summary>
     /// Returns the username for this user.

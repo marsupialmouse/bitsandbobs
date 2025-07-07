@@ -380,11 +380,7 @@ public class UserStoreTests
         };
 
     private static Task<User> GetUser(string userId) =>
-        Testing.DynamoContext.LoadAsync<User>(
-            User.GetPk(userId),
-            User.SortKey,
-            CancellationToken.None
-        );
+        Testing.DynamoContext.LoadAsync<User>(userId, User.SortKey, CancellationToken.None);
 
     private static Task<Dictionary<string, AttributeValue>?> GetEmailRecord(string normalizedEmail) =>
         GetReservedItemRecord($"emailaddress#{normalizedEmail}");
