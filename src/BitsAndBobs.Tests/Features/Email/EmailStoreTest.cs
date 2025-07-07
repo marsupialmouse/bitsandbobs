@@ -14,7 +14,7 @@ public class EmailStoreTest
         var user = new User { EmailAddress = "user-confirm@fufme.com" };
         var emailStore = new EmailStore(Testing.DynamoContext);
 
-        await emailStore.SendConfirmationLinkAsync(user, emailAddress, "https://example.com/confirm/path?token");
+        await emailStore.SendConfirmationLinkAsync(user, emailAddress, "https://example.com/confirm/path?token=123");
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
@@ -32,11 +32,11 @@ public class EmailStoreTest
         var user = new User();
         var emailStore = new EmailStore(Testing.DynamoContext);
 
-        await emailStore.SendConfirmationLinkAsync(user, emailAddress, "https://example.com/confirm/path?token");
+        await emailStore.SendConfirmationLinkAsync(user, emailAddress, "https://example.com/confirm/path?token=123");
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
-        email.Body.ShouldContain($"<a href='/confirm/path?token'>clicking here</a>");
+        email.Body.ShouldContain("<a href='/confirmemail?token=123'>clicking here</a>");
     }
 
     [Test]
@@ -46,7 +46,7 @@ public class EmailStoreTest
         var user = new User { EmailAddress = "user-resetlink@fufme.com" };
         var emailStore = new EmailStore(Testing.DynamoContext);
 
-        await emailStore.SendPasswordResetLinkAsync(user, emailAddress, "https://example.com/reset/path?token");
+        await emailStore.SendPasswordResetLinkAsync(user, emailAddress, "https://example.com/reset/path?token=321");
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
@@ -64,11 +64,11 @@ public class EmailStoreTest
         var user = new User();
         var emailStore = new EmailStore(Testing.DynamoContext);
 
-        await emailStore.SendPasswordResetLinkAsync(user, emailAddress, "https://example.com/reset/path?token");
+        await emailStore.SendPasswordResetLinkAsync(user, emailAddress, "https://example.com/reset/path?token=321");
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
-        email.Body.ShouldContain($"<a href='/reset/path?token'>clicking here</a>");
+        email.Body.ShouldContain($"<a href='/resetpassword?token=321'>clicking here</a>");
     }
 
     [Test]

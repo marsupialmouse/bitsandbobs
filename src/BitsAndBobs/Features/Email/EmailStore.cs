@@ -16,12 +16,12 @@ public class EmailStore : IEmailStore, IEmailSender<User>
 
     public Task SendConfirmationLinkAsync(User user, string email, string confirmationLink)
     {
-        var link = new Uri(confirmationLink).PathAndQuery;
+        var query = new Uri(confirmationLink).Query;
         var message = new EmailMessage(
             user,
             email,
             "Email Confirmation",
-            $"Please confirm your account by <a href='{link}'>clicking here</a>."
+            $"Please confirm your account by <a href='/confirmemail{query}'>clicking here</a>."
         );
 
         return _context.SaveAsync(message);
@@ -29,12 +29,12 @@ public class EmailStore : IEmailStore, IEmailSender<User>
 
     public Task SendPasswordResetLinkAsync(User user, string email, string resetLink)
     {
-        var link = new Uri(resetLink).PathAndQuery;
+        var query = new Uri(resetLink).Query;
         var message = new EmailMessage(
             user,
             email,
             "Password Reset Link",
-            $"Please reset your password by <a href='{link}'>clicking here</a>."
+            $"Please reset your password by <a href='/resetpassword{query}'>clicking here</a>."
         );
 
         return _context.SaveAsync(message);
