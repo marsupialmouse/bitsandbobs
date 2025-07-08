@@ -6,6 +6,7 @@ using Shouldly;
 
 namespace BitsAndBobs.Tests.Features.Identity;
 
+[TestFixture]
 public class UserStoreTests
 {
     [Test]

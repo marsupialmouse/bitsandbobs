@@ -38,6 +38,14 @@ public class Testing
                 Path.Combine(ProjectSource.ProjectDirectory(), "../Infrastructure", "aws-resources.yaml"),
                 "BitsAndBobs"
             );
+
+            var table = await _dynamo.Client.DescribeTableAsync(_bitsAndBobsTable.FullName);
+
+            Console.WriteLine($"Created DynamoDB table {table.Table.TableName} with GSIs:");
+            foreach (var gsi in table.Table.GlobalSecondaryIndexes)
+            {
+                Console.WriteLine($"- {gsi.IndexName} (ProjectionType: {gsi.Projection.ProjectionType})");
+            }
         }
         finally
         {

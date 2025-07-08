@@ -1,6 +1,5 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Runtime;
 using Testcontainers.DynamoDb;
@@ -193,7 +192,10 @@ public sealed class DynamoDb : IAsyncDisposable
             return new Table(request.TableName.Replace(dynamoDb.TablePrefix, ""), dynamoDb.TablePrefix, dynamoDb);
         }
 
-        public async ValueTask DisposeAsync() =>
-            await Dynamo.Client.DeleteTableAsync(Dynamo.TablePrefix + Name);
+        public async ValueTask DisposeAsync()
+        {
+            await Dynamo.Client.DeleteTableAsync(FullName);
+            Console.WriteLine("Dropped DynamoDB table: " + FullName);
+        }
     }
 }

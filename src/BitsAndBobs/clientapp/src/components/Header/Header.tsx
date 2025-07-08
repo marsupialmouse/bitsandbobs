@@ -1,4 +1,4 @@
-import { Link } from 'react-router'
+import { Link, NavLink } from 'react-router'
 import { useSelector } from 'react-redux'
 import {
   selectIsAuthenticated,
@@ -24,18 +24,18 @@ export const Header = () => {
           <div className="flex items-center space-x-4">
             {!isAuthenticated ? (
               <div className="flex items-center space-x-2">
-                <Link
+                <NavLink
                   to="/signup"
                   className="px-4 py-2 text-sm font-bold text-lime-300 hover:rounded-md hover:bg-linear-to-bl hover:from-lime-300 hover:to-lime-400 hover:text-indigo-500"
                 >
                   Sign Up
-                </Link>
-                <Link
+                </NavLink>
+                <NavLink
                   to="/signin"
                   className="px-4 py-2 text-sm font-bold text-lime-300 hover:rounded-md hover:bg-linear-to-bl hover:from-lime-300 hover:to-lime-400 hover:text-indigo-500"
                 >
                   Sign In
-                </Link>
+                </NavLink>
               </div>
             ) : (
               <div className="flex items-center space-x-2">

@@ -5,6 +5,7 @@ using Shouldly;
 
 namespace BitsAndBobs.Tests.Features.Email;
 
+[TestFixture]
 public class EmailStoreTest
 {
     [Test]

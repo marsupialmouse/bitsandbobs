@@ -1,0 +1,54 @@
+import { api } from '../../api/apiSlice'
+import {
+  HttpValidationProblemDetails,
+  InfoResponse,
+  LoginRequest,
+  RegisterRequest,
+} from '../../models/ApiGenerated.ts'
+
+const identityApi = api
+  .enhanceEndpoints({ addTagTypes: ['Identity'] })
+  .injectEndpoints({
+    endpoints: (builder) => ({
+      register: builder.mutation<void, RegisterRequest>({
+        query: (registerRequest) => ({
+          url: '/identity/register',
+          method: 'POST',
+          body: registerRequest,
+        }),
+        transformErrorResponse: (response) =>
+          response.status === 400
+            ? (response.data as HttpValidationProblemDetails)
+            : response.data,
+        invalidatesTags: ['Identity'],
+      }),
+      login: builder.mutation<void, LoginRequest>({
+        query: (loginRequest) => ({
+          url: '/identity/login',
+          params: { useCookies: true },
+          method: 'POST',
+          body: loginRequest,
+        }),
+        transformErrorResponse: (response) =>
+          response.status === 400
+            ? (response.data as HttpValidationProblemDetails)
+            : response.data,
+        invalidatesTags: ['Identity'],
+      }),
+      logout: builder.mutation({
+        query: () => ({
+          url: '/identity/signout',
+          method: 'POST',
+        }),
+        invalidatesTags: ['Identity'],
+      }),
+      getInfo: builder.query<InfoResponse, void>({
+        query: () => '/identity/info',
+        providesTags: ['Identity'],
+      }),
+    }),
+    overrideExisting: false,
+  })
+
+export const { useRegisterMutation, useGetInfoQuery, useLogoutMutation } =
+  identityApi

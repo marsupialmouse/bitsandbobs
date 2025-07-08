@@ -6,6 +6,7 @@ using Shouldly;
 
 namespace BitsAndBobs.Tests.Infrastructure;
 
+[TestFixture]
 public class DateTimeOffsetConverterTests
 {
     [Test]
