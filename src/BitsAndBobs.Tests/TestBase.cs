@@ -45,7 +45,7 @@ public abstract class TestBase
         {
             Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "dummy");
             Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "dummy");
-            Environment.SetEnvironmentVariable("AWS_REGION", "dummy");
+            Environment.SetEnvironmentVariable("AWS_REGION", "ap-southeast-2");
 
             builder
                 .UseEnvironment("Test")
