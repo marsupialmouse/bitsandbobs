@@ -30,9 +30,13 @@ public class Program
 
         builder.AddServiceDefaults();
 
-        builder.Services.AddDataProtection()
-               .SetApplicationName("BitsAndBobs")
-               .PersistKeysToAWSSystemsManager($"/BitsAndBobs/{builder.Environment.EnvironmentName}/DataProtection");
+        if (builder.Environment.EnvironmentName != "Test")
+        {
+            builder
+                .Services.AddDataProtection()
+                .SetApplicationName("BitsAndBobs")
+                .PersistKeysToAWSSystemsManager($"/BitsAndBobs/{builder.Environment.EnvironmentName}/DataProtection");
+        }
 
         // Add services to the container.
         var tablePrefix = $"{builder.Environment.EnvironmentName}-";
