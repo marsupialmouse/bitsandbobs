@@ -5,14 +5,14 @@ on:
     branches: [ "main" ]
     paths:
       - '**'
-      - '!src/BitsAndBobs/clientapp/**' 
+      - '!src/BitsAndBobs/clientapp/**'
       - '!.github/workflows/**'
       - '.github/workflows/api.yml'
   pull_request:
     branches: [ "main" ]
     paths:
       - '**'
-      - '!src/BitsAndBobs/clientapp/**' 
+      - '!src/BitsAndBobs/clientapp/**'
       - '!.github/workflows/**'
       - '.github/workflows/api.yml'
 
@@ -30,6 +30,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore src/BitsAndBobs.slnx
     - name: Build
-      run: dotnet build src/BitsAndBobs.slnx --no-restore 
+      run: dotnet build src/BitsAndBobs.slnx --no-restore --configuration Release
     - name: Test
-      run: dotnet test src/BitsAndBobs.slnx --no-build --verbosity normal
+      run: dotnet test src/BitsAndBobs.slnx --no-build --configuration Release --verbosity normal
