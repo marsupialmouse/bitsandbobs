@@ -20,8 +20,8 @@ public class EmailStoreTest
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
         email.SK.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
-        email.UserId.ShouldBe(user.Id);
-        email.Recipient.ShouldBe(emailAddress);
+        email.RecipientUserId.ShouldBe(user.Id);
+        email.RecipientEmail.ShouldBe(emailAddress);
         email.Type.ShouldBe("Email Confirmation");
         email.SentAt.ShouldBe(DateTimeOffset.Now, TimeSpan.FromSeconds(1));
     }
@@ -52,8 +52,8 @@ public class EmailStoreTest
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
         email.SK.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
-        email.UserId.ShouldBe(user.Id);
-        email.Recipient.ShouldBe(emailAddress);
+        email.RecipientUserId.ShouldBe(user.Id);
+        email.RecipientEmail.ShouldBe(emailAddress);
         email.Type.ShouldBe("Password Reset Link");
         email.SentAt.ShouldBe(DateTimeOffset.Now, TimeSpan.FromSeconds(1));
     }
@@ -84,8 +84,8 @@ public class EmailStoreTest
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
         email.SK.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
-        email.UserId.ShouldBe(user.Id);
-        email.Recipient.ShouldBe(emailAddress);
+        email.RecipientUserId.ShouldBe(user.Id);
+        email.RecipientEmail.ShouldBe(emailAddress);
         email.Type.ShouldBe("Password Reset Code");
         email.Body.ShouldContain($"Please reset your password using the following code: parsnip");
         email.SentAt.ShouldBe(DateTimeOffset.Now, TimeSpan.FromSeconds(1));
@@ -116,7 +116,7 @@ public class EmailStoreTest
             .Select(email => (email.PK, email.SK));
 
         var expectedEmails = emails
-            .Where(email => email.Recipient == users[0].EmailAddress && email.SentAt >= DateTimeOffset.Now.AddMinutes(-30))
+            .Where(email => email.RecipientEmail == users[0].EmailAddress && email.SentAt >= DateTimeOffset.Now.AddMinutes(-30))
             .OrderByDescending(email => email.SentAt)
             .Select(email => (email.PK, email.SK));
         recentEmails.ShouldBe(expectedEmails);
@@ -136,7 +136,7 @@ public class EmailStoreTest
             CreateEmail(users[0], users[0].EmailAddress, 89),
             CreateEmail(users[0], users[1].EmailAddress, 1),
             CreateEmail(users[1], users[0].EmailAddress, 65),
-            CreateEmail(users[1], users[1].EmailAddress, 1),
+            CreateEmail(users[1], users[1].EmailAddress, 2),
             CreateEmail(users[1], users[0].EmailAddress, 13),
         };
         await SaveEmails(emails);
@@ -147,7 +147,7 @@ public class EmailStoreTest
                            .Select(email => (email.PK, email.SK));
 
         var expectedEmails = emails
-                             .Where(email => email.UserId == users[1].Id && email.SentAt >= DateTimeOffset.Now.AddMinutes(-30))
+                             .Where(email => email.RecipientUserId == users[1].Id && email.SentAt >= DateTimeOffset.Now.AddMinutes(-30))
                              .OrderByDescending(email => email.SentAt)
                              .Select(email => (email.PK, email.SK));
         recentEmails.ShouldBe(expectedEmails);

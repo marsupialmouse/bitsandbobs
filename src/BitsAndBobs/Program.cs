@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
+using BitsAndBobs.Features;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Features.UserContext;
@@ -31,27 +33,32 @@ public class Program
                .PersistKeysToAWSSystemsManager($"/BitsAndBobs/{builder.Environment.EnvironmentName}/DataProtection");
 
         // Add services to the container.
+        var tablePrefix = $"{builder.Environment.EnvironmentName}-";
         builder.Services.AddAWSService<IAmazonDynamoDB>();
-        builder.Services.AddSingleton<IDynamoDBContext>(services => new DynamoDBContextBuilder()
-                                                                    .WithDynamoDBClient(
-                                                                        services.GetRequiredService<IAmazonDynamoDB>
-                                                                    )
-                                                                    .ConfigureContext(config =>
-                                                                        {
-                                                                            config.TableNamePrefix =
-                                                                                $"{builder.Environment.EnvironmentName}-";
-                                                                        }
-                                                                    )
-                                                                    .Build()
+        builder.Services.AddKeyedSingleton<Table>(
+            BitsAndBobsTable.Name,
+            (services, _) => BitsAndBobsTable.CreateTableDefinition(
+                services.GetRequiredService<IAmazonDynamoDB>(),
+                tablePrefix
+            )
+        );
+        builder.Services.AddSingleton<IDynamoDBContext>(services =>
+            {
+                var context = new DynamoDBContextBuilder()
+                              .WithDynamoDBClient(services.GetRequiredService<IAmazonDynamoDB>)
+                              .ConfigureContext(config =>
+                                  {
+                                      config.TableNamePrefix = tablePrefix;
+                                  }
+                              )
+                              .Build();
+                context.RegisterTableDefinition(services.GetRequiredKeyedService<Table>(BitsAndBobsTable.Name));
+                return context;
+            }
         );
 
         // Identity
-        builder.Services.AddScoped<UserStore>(services => new UserStore(
-                                                  services.GetRequiredService<IAmazonDynamoDB>(),
-                                                  services.GetRequiredService<IDynamoDBContext>(),
-                                                  $"{builder.Environment.EnvironmentName}-BitsAndBobs"
-                                              )
-        );
+        builder.Services.AddScoped<UserStore>();
         builder.Services.AddScoped<IUserStore<User>>(services => services.GetRequiredService<UserStore>());
         builder.Services.AddScoped<IUserEmailStore<User>>(services => services.GetRequiredService<UserStore>());
         builder.Services.AddScoped<IUserPasswordStore<User>>(services => services.GetRequiredService<UserStore>());

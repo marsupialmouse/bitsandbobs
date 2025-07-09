@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Identity;
 
 namespace BitsAndBobs.Features.Identity;
 
-public class User : BitsAndBobsTableItem
+[DynamoDBTable(BitsAndBobsTable.Name)]
+public class User
 {
     public const string SortKey = "Profile";
 
@@ -14,11 +15,14 @@ public class User : BitsAndBobsTableItem
     [DynamoDBIgnore]
     public string Id => PK;
 
-    public override string PK { get; protected set; } = $"user#{Guid.NewGuid():n}";
+    public string PK { get; protected set; } = $"user#{Guid.NewGuid():n}";
 
-    public override string SK
+    public string SK
     {
         get => SortKey;
+        // This is settable only so the AWS SDK recognises the property
+        // ReSharper disable once ValueParameterNotUsed
+        // ReSharper disable once PropertyCanBeMadeInitOnly.Global
         protected set { }
     }
 
@@ -31,7 +35,6 @@ public class User : BitsAndBobsTableItem
     /// <summary>
     /// Gets or sets the normalized username for this user.
     /// </summary>
-    [DynamoDBGlobalSecondaryIndexHashKey("UsersByNormalizedUsername")]
     public string? NormalizedUsername { get; set; }
 
     /// <summary>
@@ -43,8 +46,6 @@ public class User : BitsAndBobsTableItem
     /// <summary>
     /// Gets or sets the normalized email address for this user.
     /// </summary>
-    [DynamoDBGlobalSecondaryIndexHashKey("UsersByNormalizedEmailAddress")]
-
     public string? NormalizedEmailAddress { get; set; }
 
     /// <summary>
@@ -84,6 +85,10 @@ public class User : BitsAndBobsTableItem
     /// A random value that must change whenever a user is persisted to the store
     /// </summary>
     public string Version { get; set; } = "";
+
+    // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
+    // ReSharper disable once UnusedMember.Global
+    protected string? RecipientUserId { get; set; }
 
     /// <summary>
     /// Returns the username for this user.

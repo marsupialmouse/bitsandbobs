@@ -39,5 +39,5 @@ public static class EmailEndpoints
     }
 
     private static IEnumerable<EmailResponse> ToEmailResponses(this IEnumerable<EmailMessage> emails) =>
-        emails.Select(email => new EmailResponse(email.Recipient, email.Type, email.Body, email.SentAt));
+        emails.Select(email => new EmailResponse(email.RecipientEmail, email.Type, email.Body, email.SentAt));
 }

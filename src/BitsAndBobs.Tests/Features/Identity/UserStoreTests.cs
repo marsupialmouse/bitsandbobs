@@ -363,7 +363,7 @@ public class UserStoreTests
         user.FailedAccessAttempts.ShouldBe(user2.FailedAccessAttempts);
     }
 
-    private static UserStore CreateUserStore() => new(Testing.DynamoClient, Testing.DynamoContext, Testing.BitsAndBobsTable.FullName);
+    private static UserStore CreateUserStore() => new(Testing.DynamoClient, Testing.DynamoContext);
 
     private static User CreateUser() =>
         new()

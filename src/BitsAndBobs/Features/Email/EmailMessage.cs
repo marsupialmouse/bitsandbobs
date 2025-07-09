@@ -4,37 +4,42 @@ using BitsAndBobs.Infrastructure;
 
 namespace BitsAndBobs.Features.Email;
 
-public class EmailMessage : BitsAndBobsTableItem
+// This class only uses the DynamoDBHashKey / DynamoDBRangeKey / DynamoDBGlobalSecondaryIndexRangeKey attributes
+// because there's a bug in the SDK that manifests itself when using RegisterTableDefinition and a GSI uses the
+// table's range key as one of the index keys.
+[DynamoDBTable(BitsAndBobsTable.Name)]
+public class EmailMessage
 {
-    public override string PK { get; protected set; } = null!;
+    [DynamoDBHashKey]
+    public string PK { get; protected set; } = null!;
 
+    [DynamoDBRangeKey]
     [DynamoDBGlobalSecondaryIndexRangeKey("EmailsByUserId")]
-    public override string SK { get; protected set; } = null!;
-    public string Recipient { get; set; } = null!;
-    public string Body { get; set; } = null!;
+    public string SK { get; protected set; } = null!;
+    public string RecipientEmail { get; protected set; } = null!;
 
     [DynamoDBGlobalSecondaryIndexHashKey("EmailsByUserId")]
-    [DynamoDBProperty("SentToUserId")]
-    public string UserId { get; set; } = null!;
+    public string RecipientUserId { get; protected set; } = null!;
+    public string Body { get; protected set; } = null!;
 
     [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
-    public DateTimeOffset SentAt { get; set; }
+    public DateTimeOffset SentAt { get; protected set; }
 
     [DynamoDBProperty("EmailType")]
-    public string Type { get; set; } = null!;
+    public string Type { get; protected set; } = null!;
 
     public EmailMessage()
     {
     }
 
-    public EmailMessage(User user, string recipient, string type, string body, DateTimeOffset? sentAt = null)
+    public EmailMessage(User user, string recipientEmail, string type, string body, DateTimeOffset? sentAt = null)
     {
         SentAt = sentAt ?? DateTimeOffset.Now;
-        PK = $"email#{recipient.ToUpperInvariant()}";
+        PK = $"email#{recipientEmail.ToUpperInvariant()}";
         SK = SentAt.UtcDateTime.ToString("O");
-        Recipient = recipient;
+        RecipientEmail = recipientEmail;
+        RecipientUserId = user.PK;
         Type = type;
         Body = body;
-        UserId = user.PK;
     }
 }

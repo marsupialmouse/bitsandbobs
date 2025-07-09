@@ -36,7 +36,11 @@ public class Testing
             _bitsAndBobsTable = await _dynamo.CreateTableForCloudFormationResource(
                 "DynamoDbTable",
                 Path.Combine(ProjectSource.ProjectDirectory(), "../Infrastructure", "aws-resources.yaml"),
-                "BitsAndBobs"
+                BitsAndBobs.Features.BitsAndBobsTable.Name
+            );
+
+            _dynamo.Context.RegisterTableDefinition(
+                BitsAndBobs.Features.BitsAndBobsTable.CreateTableDefinition(_dynamo.Client, _dynamo.TablePrefix)
             );
 
             var table = await _dynamo.Client.DescribeTableAsync(_bitsAndBobsTable.FullName);

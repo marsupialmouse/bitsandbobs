@@ -23,7 +23,7 @@ Resources:
           AttributeType: S
         - AttributeName: NormalizedUsername
           AttributeType: S
-        - AttributeName: SentToUserId
+        - AttributeName: RecipientUserId
           AttributeType: S
       KeySchema:
         - AttributeName: PK
@@ -45,7 +45,7 @@ Resources:
             ProjectionType: ALL
         - IndexName: EmailsByUserId
           KeySchema:
-            - AttributeName: SentToUserId
+            - AttributeName: RecipientUserId
               KeyType: HASH
             - AttributeName: SK
               KeyType: RANGE

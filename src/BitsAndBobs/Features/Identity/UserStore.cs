@@ -12,15 +12,13 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
 
     private readonly IAmazonDynamoDB _db;
     private readonly IDynamoDBContext _context;
-    private readonly string _tableName;
 
     private readonly ConcurrentDictionary<string, UserMemo> _uniqueAttributesCache = new();
 
-    public UserStore(IAmazonDynamoDB db, IDynamoDBContext context, string tableName)
+    public UserStore(IAmazonDynamoDB db, IDynamoDBContext context)
     {
         _db = db;
         _context = context;
-        _tableName = tableName;
     }
 
     public async Task<IdentityResult> CreateAsync(User user, CancellationToken cancellationToken)
@@ -35,7 +33,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
                 {
                     Put = new Put
                     {
-                        TableName = _tableName,
+                        TableName = BitsAndBobsTable.FullName,
                         Item = _context.ToDocument(user).ToAttributeMap(),
                         ConditionExpression = UniqueItemCondition
                     }
@@ -75,7 +73,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
                 {
                     Put = new Put
                     {
-                        TableName = _tableName,
+                        TableName = BitsAndBobsTable.FullName,
                         Item = _context.ToDocument(user).ToAttributeMap(),
                         ConditionExpression = "attribute_exists(PK) AND attribute_exists(SK) AND Version = :currentVersion",
                         ExpressionAttributeValues = new Dictionary<string, AttributeValue>
@@ -127,7 +125,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
                 {
                     Delete = new Delete
                     {
-                        TableName = _tableName,
+                        TableName = BitsAndBobsTable.FullName,
                         Key = new Dictionary<string, AttributeValue>
                         {
                             { nameof(user.PK), new AttributeValue(user.PK) },
@@ -304,7 +302,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
 
         return new Put
         {
-            TableName = _tableName,
+            TableName = BitsAndBobsTable.FullName,
             Item = item,
             ConditionExpression = UniqueItemCondition,
         };
@@ -325,7 +323,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
     private Delete GetReservedItemDelete(string userPk, Dictionary<string, AttributeValue> keyAttributes) =>
         new()
         {
-            TableName = _tableName,
+            TableName = BitsAndBobsTable.FullName,
             Key = keyAttributes,
             ConditionExpression = "UserId = :userId",
             ExpressionAttributeValues = new Dictionary<string, AttributeValue>
