@@ -33,11 +33,11 @@ public class EmailStoreTest
         var user = new User();
         var emailStore = new EmailStore(Testing.DynamoContext);
 
-        await emailStore.SendConfirmationLinkAsync(user, emailAddress, "https://example.com/confirm/path?token=123");
+        await emailStore.SendConfirmationLinkAsync(user, emailAddress, "https://example.com/confirm/path?token=123&amp;a=b");
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
-        email.Body.ShouldContain("<a href='/confirmemail?token=123'>clicking here</a>");
+        email.Body.ShouldContain("[clicking here](/confirmemail?token=123&a=b)");
     }
 
     [Test]
@@ -65,11 +65,11 @@ public class EmailStoreTest
         var user = new User();
         var emailStore = new EmailStore(Testing.DynamoContext);
 
-        await emailStore.SendPasswordResetLinkAsync(user, emailAddress, "https://example.com/reset/path?token=321");
+        await emailStore.SendPasswordResetLinkAsync(user, emailAddress, "https://example.com/reset/path?token=321&amp;v=a");
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
-        email.Body.ShouldContain($"<a href='/resetpassword?token=321'>clicking here</a>");
+        email.Body.ShouldContain("[clicking here](/resetpassword?token=321&v=a)");
     }
 
     [Test]
@@ -101,12 +101,12 @@ public class EmailStoreTest
         };
         var emails = new[]
         {
-            CreateEmail(users[0], users[0].EmailAddress, 10),
-            CreateEmail(users[0], users[0].EmailAddress, 89),
+            CreateEmail(users[0], users[0].EmailAddress, 1200),
+            CreateEmail(users[0], users[0].EmailAddress, 1600),
             CreateEmail(users[0], users[1].EmailAddress, 1),
-            CreateEmail(users[1], users[0].EmailAddress, 65),
-            CreateEmail(users[1], users[1].EmailAddress, 1),
-            CreateEmail(users[1], users[0].EmailAddress, 13),
+            CreateEmail(users[1], users[0].EmailAddress, 1500),
+            CreateEmail(users[1], users[1].EmailAddress, 15),
+            CreateEmail(users[1], users[0].EmailAddress, 200),
         };
         await SaveEmails(emails);
         var emailStore = new EmailStore(Testing.DynamoContext);
@@ -116,7 +116,7 @@ public class EmailStoreTest
             .Select(email => (email.PK, email.SK));
 
         var expectedEmails = emails
-            .Where(email => email.RecipientEmail == users[0].EmailAddress && email.SentAt >= DateTimeOffset.Now.AddMinutes(-30))
+            .Where(email => email.RecipientEmail == users[0].EmailAddress && email.SentAt >= DateTimeOffset.Now.AddDays(-1))
             .OrderByDescending(email => email.SentAt)
             .Select(email => (email.PK, email.SK));
         recentEmails.ShouldBe(expectedEmails);
@@ -132,12 +132,12 @@ public class EmailStoreTest
         };
         var emails = new[]
         {
-            CreateEmail(users[0], users[0].EmailAddress, 10),
-            CreateEmail(users[0], users[0].EmailAddress, 89),
+            CreateEmail(users[0], users[0].EmailAddress, 101),
+            CreateEmail(users[0], users[0].EmailAddress, 1600),
             CreateEmail(users[0], users[1].EmailAddress, 1),
-            CreateEmail(users[1], users[0].EmailAddress, 65),
+            CreateEmail(users[1], users[0].EmailAddress, 1500),
             CreateEmail(users[1], users[1].EmailAddress, 2),
-            CreateEmail(users[1], users[0].EmailAddress, 13),
+            CreateEmail(users[1], users[0].EmailAddress, 130),
         };
         await SaveEmails(emails);
         var emailStore = new EmailStore(Testing.DynamoContext);
@@ -147,7 +147,7 @@ public class EmailStoreTest
                            .Select(email => (email.PK, email.SK));
 
         var expectedEmails = emails
-                             .Where(email => email.RecipientUserId == users[1].Id && email.SentAt >= DateTimeOffset.Now.AddMinutes(-30))
+                             .Where(email => email.RecipientUserId == users[1].Id && email.SentAt >= DateTimeOffset.Now.AddDays(-1))
                              .OrderByDescending(email => email.SentAt)
                              .Select(email => (email.PK, email.SK));
         recentEmails.ShouldBe(expectedEmails);

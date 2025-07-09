@@ -1,3 +1,5 @@
+using System.Net;
+using System.Text.Encodings.Web;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using BitsAndBobs.Features.Identity;
@@ -16,12 +18,12 @@ public class EmailStore : IEmailStore, IEmailSender<User>
 
     public Task SendConfirmationLinkAsync(User user, string email, string confirmationLink)
     {
-        var query = new Uri(confirmationLink).Query;
+        var query = new Uri(WebUtility.HtmlDecode(confirmationLink)).Query;
         var message = new EmailMessage(
             user,
             email,
             "Email Confirmation",
-            $"Please confirm your account by <a href='/confirmemail{query}'>clicking here</a>."
+            $"Please confirm your account by [clicking here](/confirmemail{query})."
         );
 
         return _context.SaveAsync(message);
@@ -29,12 +31,12 @@ public class EmailStore : IEmailStore, IEmailSender<User>
 
     public Task SendPasswordResetLinkAsync(User user, string email, string resetLink)
     {
-        var query = new Uri(resetLink).Query;
+        var query = new Uri(WebUtility.HtmlDecode(resetLink)).Query;
         var message = new EmailMessage(
             user,
             email,
             "Password Reset Link",
-            $"Please reset your password by <a href='/resetpassword{query}'>clicking here</a>."
+            $"Please reset your password by [clicking here](/resetpassword{query})."
         );
 
         return _context.SaveAsync(message);
@@ -57,7 +59,7 @@ public class EmailStore : IEmailStore, IEmailSender<User>
         var query = _context.QueryAsync<EmailMessage>(
             $"email#{emailAddress.ToUpperInvariant()}",
             QueryOperator.GreaterThan,
-            [DateTime.UtcNow.AddMinutes(-30).ToString("O")]
+            [DateTime.UtcNow.AddDays(-1).ToString("O")]
         );
 
         return await query.GetRemainingAsync();
@@ -68,7 +70,7 @@ public class EmailStore : IEmailStore, IEmailSender<User>
         var query = _context.QueryAsync<EmailMessage>(
             user.PK,
             QueryOperator.GreaterThan,
-            [DateTime.UtcNow.AddMinutes(-30).ToString("O")],
+            [DateTime.UtcNow.AddDays(-1).ToString("O")],
             new QueryConfig { IndexName = "EmailsByUserId" }
         );
 

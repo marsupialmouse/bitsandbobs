@@ -1,7 +1,5 @@
+import NoContent from '../../components/NoContent.tsx'
+
 export default function Home() {
-  return (
-    <div className="flex h-screen w-full items-center justify-center">
-      <span>No current auctions</span>
-    </div>
-  )
+  return <NoContent message="No current auctions" />
 }

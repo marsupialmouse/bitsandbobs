@@ -3,39 +3,36 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import Home from './features/home/Home.tsx'
 import { useGetUserContextQuery } from './features/usercontext/userContextApiSlice.ts'
 import SignUp from './features/identity/SignUp/SignUp.tsx'
+import RecentEmailsByAddress from './features/email/RecentEmailsByAddress/RecentEmailsByAddress.tsx'
+import Loading from './components/Loading.tsx'
+import ErrorMessage from './components/ErrorMessage.tsx'
+import RecentEmailsByUser from './features/email/RecentEmailsByUser/RecentEmailsByUser.tsx'
 
 function App() {
   const { isLoading, isError } = useGetUserContextQuery()
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div
-          className="h-6 w-6 animate-spin rounded-full border-t-2 border-indigo-700"
-          role="status"
-        />
-      </div>
-    )
+    return <Loading />
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-red-500">
-          An error occurred while loading the application. Please try again
-          later.
-        </div>
-      </div>
+      <ErrorMessage message="An error occurred while loading the application. Please try again later." />
     )
   }
 
   return (
     <BrowserRouter>
       <Header />
-      <main className="mt-16 flex-1">
+      <main className="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8">
         <Routes>
           <Route index element={<Home />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route
+            path="/email/recent/a/:emailAddress"
+            element={<RecentEmailsByAddress />}
+          />
+          <Route path="/email/recent/u" element={<RecentEmailsByUser />} />
           {/*
         <Route path="/add-lot" element={<AddLot />} />
 
