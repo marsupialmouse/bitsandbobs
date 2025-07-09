@@ -55,6 +55,8 @@ public abstract class TestBase
             {
                 services.AddDataProtection().UseEphemeralDataProtectionProvider();
 
+                services.Replace(ServiceDescriptor.Singleton(Testing.Dynamo.Client));
+                services.Replace(ServiceDescriptor.Singleton(Testing.Dynamo.Context));
                 services.Replace(ServiceDescriptor.Singleton(Substitute.For<IEmailSender<User>>()));
                 services.Replace(ServiceDescriptor.Singleton(Substitute.For<IEmailStore>()));
 
