@@ -168,7 +168,7 @@ describe('SignUp Component', () => {
 
     await waitFor(() => {
       const emailLink = screen.getByRole('link', { name: /check your email/i })
-      expect(emailLink).toHaveAttribute('href', `/email/${email}`)
+      expect(emailLink).toHaveAttribute('href', `/email/recent/a/${email}`)
     })
   })
 })

@@ -4,7 +4,7 @@ import {
   InfoResponse,
   LoginRequest,
   RegisterRequest,
-} from '../../models/ApiGenerated.ts'
+} from '../../api/ApiGenerated.ts'
 
 const identityApi = api
   .enhanceEndpoints({ addTagTypes: ['Identity'] })

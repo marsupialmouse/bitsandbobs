@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint'
 import eslintPluginPrettier from 'eslint-config-prettier'
 
 export default tseslint.config(
-  { ignores: ['dist', 'src/models/ApiGenerated.ts'] },
+  { ignores: ['dist', 'src/api/ApiGenerated.ts'] },
   {
     extends: [
       js.configs.recommended,

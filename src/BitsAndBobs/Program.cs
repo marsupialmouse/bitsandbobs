@@ -6,10 +6,12 @@ using BitsAndBobs.Features;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Features.UserContext;
+using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.AntiForgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
+using NJsonSchema.Generation;
 
 [assembly: InternalsVisibleTo("BitsAndBobs.Tests")]
 
@@ -79,7 +81,12 @@ public class Program
 
         builder.Services.AddMvc();
         builder.Services.AddOpenApi();
-        builder.Services.AddOpenApiDocument();
+        builder.Services.AddOpenApiDocument(o =>
+            {
+                o.DocumentProcessors.Add(new ReadOnlyOpenApiDocumentProcessor());
+                o.DefaultResponseReferenceTypeNullHandling = ReferenceTypeNullHandling.NotNull;
+            }
+        );
 
         builder.Services.AddResponseCaching();
         builder.Services.AddAntiforgery(o =>

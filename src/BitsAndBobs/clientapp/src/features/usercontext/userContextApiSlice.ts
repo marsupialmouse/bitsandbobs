@@ -1,6 +1,6 @@
 import { api } from '../../api/apiSlice'
 import { createSelector } from '@reduxjs/toolkit'
-import { UserContextResponse } from '../../models/ApiGenerated.ts'
+import { UserContextResponse } from '../../api/ApiGenerated.ts'
 
 const userContextApi = api
   .enhanceEndpoints({ addTagTypes: ['UserContext'] })

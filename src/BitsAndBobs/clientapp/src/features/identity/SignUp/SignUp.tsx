@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRegisterMutation } from './../identityApiSlice'
-import { HttpValidationProblemDetails } from '../../../models/ApiGenerated'
+import { HttpValidationProblemDetails } from '../../../api/ApiGenerated'
 import { Link } from 'react-router'
 
 interface SignUpForm {
@@ -50,7 +50,10 @@ export default function SignUp() {
           <h2 className="mb-6 text-2xl font-bold">Registration Successful</h2>
           <p className="text-sm text-gray-600">
             Thanks for signing up!
-            <Link to={`/email/${watch('email')}`} className="pl-2 underline">
+            <Link
+              to={`/email/recent/a/${watch('email')}`}
+              className="pl-2 underline"
+            >
               Check your email
             </Link>{' '}
             and follow the instructions to complete your registration.

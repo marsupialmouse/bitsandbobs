@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using BitsAndBobs.Features.Identity;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -7,7 +8,12 @@ namespace BitsAndBobs.Features.Email;
 
 public static class EmailEndpoints
 {
-    public sealed record EmailResponse(string Recipient, string Type, string Body, DateTimeOffset SentAt);
+    public sealed record EmailResponse(
+        [property: Required] string Recipient,
+        [property: Required] string Type,
+        [property: Required] string Body,
+        [property: Required] DateTimeOffset SentAt
+    );
 
     /// <summary>
     /// Maps endpoints for retrieving emails (since we don't want to mess around with actually sending emails).
