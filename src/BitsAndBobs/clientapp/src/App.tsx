@@ -9,6 +9,7 @@ import ErrorMessage from './components/ErrorMessage.tsx'
 import RecentEmailsByUser from './features/email/RecentEmailsByUser/RecentEmailsByUser.tsx'
 import ConfirmEmail from './features/identity/ConfirmEmail/ConfirmEmail.tsx'
 import Login from './features/identity/Login/Login.tsx'
+import ProtectedRoute from './components/ProtectedRoute.tsx'
 
 function App() {
   const { isLoading, isError } = useGetUserContextQuery()
@@ -36,7 +37,9 @@ function App() {
             path="/email/recent/a/:emailAddress"
             element={<RecentEmailsByAddress />}
           />
-          <Route path="/email/recent/u" element={<RecentEmailsByUser />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/email/recent/u" element={<RecentEmailsByUser />} />
+          </Route>
           {/*
         <Route path="/add-lot" element={<AddLot />} />
 
