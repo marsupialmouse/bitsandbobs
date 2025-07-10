@@ -22,11 +22,11 @@ export default function RecentEmails({
   }
 
   if (isError) {
-    return <ErrorMessage message={`Error loading recent emails`} />
+    return <ErrorMessage message="Error loading recent emails" />
   }
 
   if (!emails?.length) {
-    return <NoContent message={`No recent emails found for {emailAddress}`} />
+    return <NoContent message="No recent emails found" />
   }
 
   return (
