@@ -25,13 +25,13 @@ export const Header = () => {
             {!isAuthenticated ? (
               <div className="flex items-center space-x-2">
                 <NavLink
-                  to="/signup"
+                  to="/register"
                   className="px-4 py-2 text-sm font-bold text-lime-300 hover:rounded-md hover:bg-linear-to-bl hover:from-lime-300 hover:to-lime-400 hover:text-indigo-500"
                 >
                   Sign Up
                 </NavLink>
                 <NavLink
-                  to="/signin"
+                  to="/login"
                   className="px-4 py-2 text-sm font-bold text-lime-300 hover:rounded-md hover:bg-linear-to-bl hover:from-lime-300 hover:to-lime-400 hover:text-indigo-500"
                 >
                   Sign In

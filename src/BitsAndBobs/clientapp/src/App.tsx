@@ -2,7 +2,7 @@ import { Header } from './components/Header/Header.tsx'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import Home from './features/home/Home.tsx'
 import { useGetUserContextQuery } from './features/usercontext/userContextApiSlice.ts'
-import SignUp from './features/identity/SignUp/SignUp.tsx'
+import Register from './features/identity/Register/Register.tsx'
 import RecentEmailsByAddress from './features/email/RecentEmailsByAddress/RecentEmailsByAddress.tsx'
 import Loading from './components/Loading.tsx'
 import ErrorMessage from './components/ErrorMessage.tsx'
@@ -28,7 +28,7 @@ function App() {
       <main className="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8">
         <Routes>
           <Route index element={<Home />} />
-          <Route path="/signup" element={<SignUp />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/confirmemail" element={<ConfirmEmail />} />
           <Route
             path="/email/recent/a/:emailAddress"

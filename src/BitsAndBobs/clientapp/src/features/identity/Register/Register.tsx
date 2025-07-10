@@ -4,13 +4,13 @@ import { useRegisterMutation } from './../identityApiSlice'
 import { HttpValidationProblemDetails } from '../../../api/ApiGenerated'
 import { Link } from 'react-router'
 
-interface SignUpForm {
+interface RegistrationForm {
   email: string
   password: string
   confirmPassword: string
 }
 
-export default function SignUp() {
+export default function Register() {
   const [register, { isLoading }] = useRegisterMutation()
   const [apiError, setApiError] = useState<string | null>(null)
   const [isRegistered, setIsRegistered] = useState(false)
@@ -19,9 +19,12 @@ export default function SignUp() {
     register: registerField,
     handleSubmit,
     watch,
-  } = useForm<SignUpForm>({ shouldUseNativeValidation: true, mode: 'onChange' })
+  } = useForm<RegistrationForm>({
+    shouldUseNativeValidation: true,
+    mode: 'onChange',
+  })
 
-  const onSubmit = async (data: SignUpForm) => {
+  const onSubmit = async (data: RegistrationForm) => {
     try {
       setApiError(null)
       await register({ email: data.email, password: data.password }).unwrap()
