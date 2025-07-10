@@ -70,7 +70,7 @@ describe('Login Component', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
 
     await waitFor(() => {
-      expect(screen.queryByTestId(currentLocationTestId)).toHaveTextContent('/')
+      expect(screen.queryByTestId(currentLocationTestId)?.textContent).toBe('/')
     })
     const state = store.getState()
     expect(state.userContext.isAuthenticated).toBe(true)
@@ -101,7 +101,7 @@ describe('Login Component', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
 
     await waitFor(() => {
-      expect(screen.queryByTestId(currentLocationTestId)).toHaveTextContent(
+      expect(screen.queryByTestId(currentLocationTestId)?.textContent).toBe(
         '/previous-page?hello'
       )
     })

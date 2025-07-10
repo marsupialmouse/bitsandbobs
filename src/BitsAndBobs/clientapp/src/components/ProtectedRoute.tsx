@@ -7,7 +7,9 @@ export default function ProtectedRoute() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    // If someone signs out on a protected route we should navigate home, not to the login page
+    const path = location.hash === '#signedOut' ? '/' : '/login'
+    return <Navigate to={path} state={{ from: location }} replace />
   }
 
   return <Outlet />

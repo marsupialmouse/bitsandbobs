@@ -1,18 +1,24 @@
-import { Link, NavLink } from 'react-router'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router'
 import { useSelector } from 'react-redux'
-
-import { useAppDispatch } from '../../stores/hooks.ts'
-import {
-  selectIsAuthenticated,
-  signedOut,
-} from '../../features/usercontext/userContextSlice.ts'
+import { selectIsAuthenticated } from '../../features/usercontext/userContextSlice.ts'
+import { useLogoutMutation } from '../../features/identity/identityApiSlice.ts'
 
 export const Header = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated)
-  const dispatch = useAppDispatch()
+  const [logout] = useLogoutMutation()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   function handleSignOut() {
-    dispatch(signedOut())
+    const apiRequest = async () => {
+      await logout().unwrap()
+      const newLocation = { ...location, hash: 'signedOut' }
+      await navigate(newLocation, { replace: true })
+    }
+
+    apiRequest().catch((e: unknown) => {
+      console.log(e)
+    })
   }
 
   return (

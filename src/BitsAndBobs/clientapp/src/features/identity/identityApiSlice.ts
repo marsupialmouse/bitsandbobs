@@ -64,7 +64,7 @@ export const identityApi = api
         transformErrorResponse: (response) => response.data as ProblemDetails,
         invalidatesTags: ['Identity'],
       }),
-      logout: builder.mutation({
+      logout: builder.mutation<void, void>({
         query: () => ({
           url: '/identity/signout',
           method: 'POST',
@@ -83,6 +83,6 @@ export const {
   useRegisterMutation,
   useConfirmEmailMutation,
   useLoginMutation,
-  useGetInfoQuery,
   useLogoutMutation,
+  useGetInfoQuery,
 } = identityApi

@@ -3,24 +3,18 @@ import { RootState } from '../../stores/store'
 import { identityApi } from '../identity/identityApiSlice.ts'
 
 export interface UserContextState {
-  emailAddress: string | undefined
+  emailAddress?: string
   isAuthenticated: boolean
 }
 
 export const initialUserContextState: UserContextState = {
-  emailAddress: undefined,
   isAuthenticated: false,
 }
 
 export const userContextSlice = createSlice({
   name: 'userContext',
   initialState: initialUserContextState,
-  reducers: {
-    signedOut(state) {
-      state.emailAddress = undefined
-      state.isAuthenticated = false
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder.addMatcher(
       identityApi.endpoints.login.matchFulfilled,
@@ -42,7 +36,6 @@ export const userContextSlice = createSlice({
   },
 })
 
-export const { signedOut } = userContextSlice.actions
 export const selectIsAuthenticated = (state: RootState) =>
   state.userContext.isAuthenticated
 
