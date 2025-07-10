@@ -1,8 +1,8 @@
 import { useGetRecentUserEmailsQuery } from '../emailApiSlice'
 import ErrorMessage from '../../../components/ErrorMessage.tsx'
 import RecentEmails from '../RecentEmails/RecentEmails.tsx'
-import { selectIsAuthenticated } from '../../identity/identitySlice.ts'
 import { useSelector } from 'react-redux'
+import { selectIsAuthenticated } from '../../usercontext/userContextSlice.ts'
 
 export default function RecentEmailsByUser() {
   const isAuthenticated = useSelector(selectIsAuthenticated)

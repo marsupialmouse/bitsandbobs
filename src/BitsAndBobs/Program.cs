@@ -8,7 +8,6 @@ using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Features.UserContext;
 using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.AntiForgery;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using NJsonSchema.Generation;
@@ -71,8 +70,18 @@ public class Program
         builder.Services.AddScoped<IUserSecurityStampStore<User>>(services => services.GetRequiredService<UserStore>());
         builder.Services.AddScoped<IUserLockoutStore<User>>(services => services.GetRequiredService<UserStore>());
         builder.Services.AddAuthorization();
-        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-               .AddCookie(o => o.Cookie.Name = "auth");
+        builder
+            .Services.AddAuthentication()
+            .AddCookie(
+                IdentityConstants.ApplicationScheme,
+                o =>
+                {
+                    o.Cookie.Name = "auth";
+                    o.Cookie.SameSite = SameSiteMode.Strict;
+                    o.ExpireTimeSpan = TimeSpan.FromDays(7);
+                    o.SlidingExpiration = true;
+                }
+            );
         builder.Services.AddIdentityCore<User>().AddDefaultTokenProviders().AddApiEndpoints();
         builder.Services.Configure<IdentityOptions>(options =>
             {

@@ -33,10 +33,9 @@ afterAll(() => {
 const renderRecentEmailsByUser = (isAuthenticated = false) => {
   return renderWithProviderAndRouter(<RecentEmailsByUser />, {
     preloadedState: {
-      identity: {
+      userContext: {
         isAuthenticated,
         emailAddress: undefined,
-        username: undefined,
       },
     },
   })

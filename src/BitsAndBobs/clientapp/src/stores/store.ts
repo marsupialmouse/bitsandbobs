@@ -1,9 +1,9 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
-import identityReducer from '../features/identity/identitySlice'
+import userContextReducer from '../features/usercontext/userContextSlice'
 import { api } from '../api/apiSlice'
 
 const rootReducer = combineReducers({
-  identity: identityReducer,
+  userContext: userContextReducer,
   [api.reducerPath]: api.reducer,
 })
 

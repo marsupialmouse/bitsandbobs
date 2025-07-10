@@ -21,10 +21,9 @@ describe('Header', () => {
   it('renders Profile and Sign Out links when authenticated', () => {
     renderWithProviderAndRouter(<Header />, {
       preloadedState: {
-        identity: {
+        userContext: {
           isAuthenticated: true,
           emailAddress: 'jam@man.com',
-          username: 'gammon',
         },
       },
     })

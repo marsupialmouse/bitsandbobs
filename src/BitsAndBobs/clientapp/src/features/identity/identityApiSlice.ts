@@ -3,6 +3,7 @@ import {
   HttpValidationProblemDetails,
   InfoResponse,
   LoginRequest,
+  ProblemDetails,
   RegisterRequest,
 } from '../../api/ApiGenerated.ts'
 
@@ -12,7 +13,15 @@ export interface ConfirmEmailRequest {
   changedEmail?: string
 }
 
-const identityApi = api
+export interface ConfirmEmailResponse {
+  changedEmail?: string
+}
+
+export interface LoginResponse {
+  emailAddress: string
+}
+
+export const identityApi = api
   .enhanceEndpoints({ addTagTypes: ['Identity'] })
   .injectEndpoints({
     endpoints: (builder) => ({
@@ -28,26 +37,31 @@ const identityApi = api
             : response.data,
         invalidatesTags: ['Identity'],
       }),
-      confirmEmail: builder.mutation<void, ConfirmEmailRequest>({
-        query: (changedEmailParams) => ({
-          url: '/identity/confirmEmail',
-          params: changedEmailParams,
-          method: 'GET',
-          responseHandler: 'text',
-        }),
-        invalidatesTags: ['Identity'],
-      }),
-      login: builder.mutation<void, LoginRequest>({
+      confirmEmail: builder.mutation<ConfirmEmailResponse, ConfirmEmailRequest>(
+        {
+          query: (changedEmailParams) => ({
+            url: '/identity/confirmEmail',
+            params: changedEmailParams,
+            method: 'GET',
+            responseHandler: 'text',
+          }),
+          transformResponse: (_, __, arg) => {
+            return { changedEmail: arg.changedEmail }
+          },
+          invalidatesTags: ['Identity'],
+        }
+      ),
+      login: builder.mutation<LoginResponse, LoginRequest>({
         query: (loginRequest) => ({
           url: '/identity/login',
           params: { useCookies: true },
           method: 'POST',
           body: loginRequest,
         }),
-        transformErrorResponse: (response) =>
-          response.status === 400
-            ? (response.data as HttpValidationProblemDetails)
-            : response.data,
+        transformResponse: (_, __, arg) => {
+          return { emailAddress: arg.email ?? '' }
+        },
+        transformErrorResponse: (response) => response.data as ProblemDetails,
         invalidatesTags: ['Identity'],
       }),
       logout: builder.mutation({
@@ -68,6 +82,7 @@ const identityApi = api
 export const {
   useRegisterMutation,
   useConfirmEmailMutation,
+  useLoginMutation,
   useGetInfoQuery,
   useLogoutMutation,
 } = identityApi

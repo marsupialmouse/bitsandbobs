@@ -1,10 +1,11 @@
 import { Link, NavLink } from 'react-router'
 import { useSelector } from 'react-redux'
+
+import { useAppDispatch } from '../../stores/hooks.ts'
 import {
   selectIsAuthenticated,
   signedOut,
-} from '../../features/identity/identitySlice.ts'
-import { useAppDispatch } from '../../stores/hooks.ts'
+} from '../../features/usercontext/userContextSlice.ts'
 
 export const Header = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated)
