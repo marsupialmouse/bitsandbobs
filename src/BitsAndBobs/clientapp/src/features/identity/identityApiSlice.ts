@@ -6,6 +6,12 @@ import {
   RegisterRequest,
 } from '../../api/ApiGenerated.ts'
 
+export interface ConfirmEmailRequest {
+  userId: string
+  code: string
+  changedEmail?: string
+}
+
 const identityApi = api
   .enhanceEndpoints({ addTagTypes: ['Identity'] })
   .injectEndpoints({
@@ -20,6 +26,15 @@ const identityApi = api
           response.status === 400
             ? (response.data as HttpValidationProblemDetails)
             : response.data,
+        invalidatesTags: ['Identity'],
+      }),
+      confirmEmail: builder.mutation<void, ConfirmEmailRequest>({
+        query: (changedEmailParams) => ({
+          url: '/identity/confirmEmail',
+          params: changedEmailParams,
+          method: 'GET',
+          responseHandler: 'text',
+        }),
         invalidatesTags: ['Identity'],
       }),
       login: builder.mutation<void, LoginRequest>({
@@ -50,5 +65,9 @@ const identityApi = api
     overrideExisting: false,
   })
 
-export const { useRegisterMutation, useGetInfoQuery, useLogoutMutation } =
-  identityApi
+export const {
+  useRegisterMutation,
+  useConfirmEmailMutation,
+  useGetInfoQuery,
+  useLogoutMutation,
+} = identityApi

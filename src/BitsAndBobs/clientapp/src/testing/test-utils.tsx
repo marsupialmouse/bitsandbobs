@@ -1,6 +1,6 @@
 import * as testingLibraryUserEvent from '@testing-library/user-event'
 import { render, RenderOptions } from '@testing-library/react'
-import { MemoryRouter } from 'react-router'
+import { InitialEntry, MemoryRouter } from 'react-router'
 import { AppStore, RootState, setupStore } from '../stores/store.ts'
 import { JSX, PropsWithChildren, ReactElement } from 'react'
 import { Provider } from 'react-redux'
@@ -18,6 +18,7 @@ export function renderWithRouter(ui: React.ReactElement) {
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
   preloadedState?: Partial<RootState>
   store?: AppStore
+  initialEntries?: InitialEntry[]
 }
 
 /**
@@ -51,13 +52,14 @@ export function renderWithProviderAndRouter(
   {
     preloadedState = {},
     store = setupStore(preloadedState),
+    initialEntries = undefined,
     ...renderOptions
   }: ExtendedRenderOptions = {}
 ) {
   function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
     return (
       <Provider store={store}>
-        <MemoryRouter>{children}</MemoryRouter>
+        <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
       </Provider>
     )
   }

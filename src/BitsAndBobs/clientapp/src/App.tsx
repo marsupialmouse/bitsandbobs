@@ -7,6 +7,7 @@ import RecentEmailsByAddress from './features/email/RecentEmailsByAddress/Recent
 import Loading from './components/Loading.tsx'
 import ErrorMessage from './components/ErrorMessage.tsx'
 import RecentEmailsByUser from './features/email/RecentEmailsByUser/RecentEmailsByUser.tsx'
+import ConfirmEmail from './features/identity/ConfirmEmail/ConfirmEmail.tsx'
 
 function App() {
   const { isLoading, isError } = useGetUserContextQuery()
@@ -28,6 +29,7 @@ function App() {
         <Routes>
           <Route index element={<Home />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/confirmemail" element={<ConfirmEmail />} />
           <Route
             path="/email/recent/a/:emailAddress"
             element={<RecentEmailsByAddress />}
