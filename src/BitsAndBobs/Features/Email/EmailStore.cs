@@ -47,8 +47,8 @@ public class EmailStore : IEmailStore, IEmailSender<User>
         var message = new EmailMessage(
             user,
             email,
-            "Password Reset Code",
-            $"Please reset your password using the following code: {resetCode}"
+            "Password Reset Link",
+            $"Please reset your password by [clicking here](/resetpassword?email={WebUtility.UrlEncode(email)}&code={resetCode})."
         );
 
         return _context.SaveAsync(message);

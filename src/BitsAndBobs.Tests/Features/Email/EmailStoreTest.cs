@@ -86,8 +86,8 @@ public class EmailStoreTest
         email.SK.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
         email.RecipientUserId.ShouldBe(user.Id);
         email.RecipientEmail.ShouldBe(emailAddress);
-        email.Type.ShouldBe("Password Reset Code");
-        email.Body.ShouldContain($"Please reset your password using the following code: parsnip");
+        email.Type.ShouldBe("Password Reset Link");
+        email.Body.ShouldContain($"[clicking here](/resetpassword?email=email-resetcode%40fufme.com&code=parsnip)");
         email.SentAt.ShouldBe(DateTimeOffset.Now, TimeSpan.FromSeconds(1));
     }
 

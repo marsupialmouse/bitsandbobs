@@ -11,6 +11,7 @@ import ConfirmEmail from './features/identity/ConfirmEmail/ConfirmEmail.tsx'
 import Login from './features/identity/Login/Login.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import ForgotPassword from './features/identity/ForgotPassword/ForgotPassword.tsx'
+import ResetPassword from './features/identity/ResetPassword/ResetPassword.tsx'
 
 function App() {
   const { isLoading, isError } = useGetUserContextQuery()
@@ -35,6 +36,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/confirmemail" element={<ConfirmEmail />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
+          <Route path="/resetpassword" element={<ResetPassword />} />
           <Route
             path="/email/recent/a/:emailAddress"
             element={<RecentEmailsByAddress />}

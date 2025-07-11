@@ -6,6 +6,7 @@ import {
   LoginRequest,
   ProblemDetails,
   RegisterRequest,
+  ResetPasswordRequest,
 } from '../../api/ApiGenerated.ts'
 
 export interface ConfirmEmailRequest {
@@ -72,6 +73,17 @@ export const identityApi = api
           body: forgotPasswordRequest,
         }),
       }),
+      resetPassword: builder.mutation<void, ResetPasswordRequest>({
+        query: (resetPasswordRequest) => ({
+          url: '/identity/resetPassword',
+          method: 'POST',
+          body: resetPasswordRequest,
+        }),
+        transformErrorResponse: (response) =>
+          response.status === 400
+            ? (response.data as HttpValidationProblemDetails)
+            : response.data,
+      }),
       logout: builder.mutation<void, void>({
         query: () => ({
           url: '/identity/signout',
@@ -93,5 +105,6 @@ export const {
   useLoginMutation,
   useLogoutMutation,
   useForgotPasswordMutation,
+  useResetPasswordMutation,
   useGetInfoQuery,
 } = identityApi
