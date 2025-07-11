@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useLoginMutation } from './../identityApiSlice'
 import { ProblemDetails } from '../../../api/ApiGenerated'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, useLocation } from 'react-router'
+import { useSelector } from 'react-redux'
+import { selectIsAuthenticated } from '../../usercontext/userContextSlice.ts'
 
 interface LoginForm {
   email: string
@@ -12,8 +14,8 @@ interface LoginForm {
 export default function Login() {
   const [login, { isLoading }] = useLoginMutation()
   const [apiError, setApiError] = useState<string | null>(null)
-  const navigate = useNavigate()
   const location = useLocation()
+  const isAuthenticated = useSelector(selectIsAuthenticated)
 
   const { register, handleSubmit } = useForm<LoginForm>({
     shouldUseNativeValidation: true,
@@ -29,7 +31,6 @@ export default function Login() {
     try {
       setApiError(null)
       await login({ email: data.email, password: data.password }).unwrap()
-      await navigate(navigateTo, { replace: true })
     } catch (error) {
       const problem = error as ProblemDetails
       setApiError(
@@ -40,6 +41,10 @@ export default function Login() {
           : 'An unexpected error occurred during login, please try again later'
       )
     }
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to={navigateTo} replace />
   }
 
   return (

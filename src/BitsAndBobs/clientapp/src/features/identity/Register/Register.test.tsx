@@ -4,7 +4,7 @@ import { setupServer } from 'msw/node'
 import { describe, expect, it } from 'vitest'
 import Register from './Register.tsx'
 import {
-  renderWithProviderAndRouter,
+  renderWithProvidersAndRouter,
   userEvent,
 } from '../../../testing/test-utils.tsx'
 
@@ -22,7 +22,7 @@ describe('Register Component', () => {
   })
 
   it('renders the signup form correctly', () => {
-    renderWithProviderAndRouter(<Register />)
+    renderWithProvidersAndRouter(<Register />)
 
     expect(
       screen.getByRole('heading', { name: /sign up/i })
@@ -34,7 +34,7 @@ describe('Register Component', () => {
   })
 
   it('validates required fields', async () => {
-    renderWithProviderAndRouter(<Register />)
+    renderWithProvidersAndRouter(<Register />)
 
     const submitButton = screen.getByRole('button', { name: /sign up/i })
     await userEvent.click(submitButton)
@@ -45,7 +45,7 @@ describe('Register Component', () => {
   })
 
   it('validates password requirements', async () => {
-    renderWithProviderAndRouter(<Register />)
+    renderWithProvidersAndRouter(<Register />)
 
     const passwordInput = screen.getByLabelText(/^password$/i)
     await userEvent.type(passwordInput, 'weak')
@@ -54,7 +54,7 @@ describe('Register Component', () => {
   })
 
   it('validates password confirmation match', async () => {
-    renderWithProviderAndRouter(<Register />)
+    renderWithProvidersAndRouter(<Register />)
 
     const passwordInput = screen.getByLabelText(/^password$/i)
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i)
@@ -72,7 +72,7 @@ describe('Register Component', () => {
       })
     )
 
-    renderWithProviderAndRouter(<Register />)
+    renderWithProvidersAndRouter(<Register />)
 
     const emailInput = screen.getByLabelText(/email/i)
     const passwordInput = screen.getByLabelText(/^password$/i)
@@ -99,7 +99,7 @@ describe('Register Component', () => {
       })
     )
 
-    renderWithProviderAndRouter(<Register />)
+    renderWithProvidersAndRouter(<Register />)
 
     await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
     await userEvent.type(screen.getByLabelText(/^password$/i), 'StrongP@ss123')
@@ -130,7 +130,7 @@ describe('Register Component', () => {
       })
     )
 
-    renderWithProviderAndRouter(<Register />)
+    renderWithProvidersAndRouter(<Register />)
 
     await userEvent.type(screen.getByLabelText(/email/i), 'valid@email.com')
     await userEvent.type(screen.getByLabelText(/^password$/i), 'StrongP@ss123')
@@ -154,7 +154,7 @@ describe('Register Component', () => {
       })
     )
 
-    renderWithProviderAndRouter(<Register />)
+    renderWithProvidersAndRouter(<Register />)
 
     const email = 'test@example.com'
     await userEvent.type(screen.getByLabelText(/email/i), email)

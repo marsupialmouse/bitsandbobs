@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import RecentEmailsByAddress from './RecentEmailsByAddress'
-import { renderWithProvider } from '../../../testing/test-utils.tsx'
+import { renderWithProviders } from '../../../testing/test-utils.tsx'
 
 const mockEmails = [
   {
@@ -36,7 +36,7 @@ const renderRecentEmailsByAddress = (emailAddress?: string) => {
     ? `/email/recent/a/${emailAddress}`
     : '/email/recent/a'
 
-  return renderWithProvider(
+  return renderWithProviders(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route

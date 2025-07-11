@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import App from './App'
-import { renderWithProvider } from './testing/test-utils'
+import { renderWithProviders } from './testing/test-utils'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 
@@ -30,7 +30,7 @@ describe('App', () => {
       })
     )
 
-    renderWithProvider(<App />)
+    renderWithProviders(<App />)
 
     const spinner = screen.getByRole('status')
     expect(spinner).toBeInTheDocument()
@@ -38,7 +38,7 @@ describe('App', () => {
   })
 
   it('renders header and home route after loading', async () => {
-    renderWithProvider(<App />)
+    renderWithProviders(<App />)
 
     await waitFor(() => {
       expect(screen.getByRole('main')).toBeInTheDocument() // Home
@@ -53,7 +53,7 @@ describe('App', () => {
       })
     )
 
-    renderWithProvider(<App />)
+    renderWithProviders(<App />)
 
     await waitFor(() => {
       expect(

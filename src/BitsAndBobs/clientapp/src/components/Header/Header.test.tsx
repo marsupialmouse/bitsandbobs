@@ -1,13 +1,13 @@
 import { Header } from './Header.tsx'
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import {
-  renderWithProviderAndRouter,
+  renderWithProvidersAndRouter,
   userEvent,
 } from '../../testing/test-utils.tsx'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import ProtectedRoute from '../ProtectedRoute.tsx'
-import { Route, Routes, useLocation } from 'react-router'
+import { Route, Routes } from 'react-router'
 
 const signedInState = {
   preloadedState: {
@@ -24,17 +24,6 @@ const server = setupServer(
   )
 )
 
-const currentLocationTestId = 'current-location'
-const CurrentLocation = () => {
-  const location = useLocation()
-
-  return (
-    <div data-testid={currentLocationTestId}>
-      {location.pathname + location.search}
-    </div>
-  )
-}
-
 describe('Header', () => {
   beforeAll(() => {
     server.listen()
@@ -47,13 +36,13 @@ describe('Header', () => {
   })
 
   it('renders the site name', () => {
-    renderWithProviderAndRouter(<Header />)
+    renderWithProvidersAndRouter(<Header />)
 
     expect(screen.getByText('BITS&BOBS')).toBeInTheDocument()
   })
 
   it('renders Sign Up and Sign In links when not authenticated', () => {
-    renderWithProviderAndRouter(<Header />)
+    renderWithProvidersAndRouter(<Header />)
 
     expect(screen.getByText('Sign Up')).toBeInTheDocument()
     expect(screen.getByText('Sign In')).toBeInTheDocument()
@@ -62,7 +51,7 @@ describe('Header', () => {
   })
 
   it('renders Profile and Sign Out links when authenticated', () => {
-    renderWithProviderAndRouter(<Header />, signedInState)
+    renderWithProvidersAndRouter(<Header />, signedInState)
 
     expect(screen.getByText('Profile')).toBeInTheDocument()
     expect(screen.getByText('Sign Out')).toBeInTheDocument()
@@ -71,7 +60,7 @@ describe('Header', () => {
   })
 
   it('signs user out when Sign Out clicked', async () => {
-    const { store } = renderWithProviderAndRouter(<Header />, signedInState)
+    const { store } = renderWithProvidersAndRouter(<Header />, signedInState)
 
     await userEvent.click(screen.getByText('Sign Out'))
 
@@ -82,14 +71,14 @@ describe('Header', () => {
   })
 
   it('navigates home when signing out on protected route', async () => {
-    renderWithProviderAndRouter(
+    const { getCurrentLocation } = renderWithProvidersAndRouter(
       <>
         <Header />
         <Routes>
           <Route element={<ProtectedRoute />}>
             <Route path="/secret" element={<></>} />
           </Route>
-          <Route path="*" element={<CurrentLocation />} />
+          <Route path="*" element={<></>} />
         </Routes>
       </>,
       { ...signedInState, initialEntries: ['/secret'] }
@@ -97,7 +86,9 @@ describe('Header', () => {
 
     await userEvent.click(screen.getByText('Sign Out'))
 
-    const location = await screen.findByTestId(currentLocationTestId)
-    expect(location.textContent).toBe('/')
+    await waitFor(() => {
+      const location = getCurrentLocation()
+      expect(location?.pathname).toBe('/')
+    })
   })
 })

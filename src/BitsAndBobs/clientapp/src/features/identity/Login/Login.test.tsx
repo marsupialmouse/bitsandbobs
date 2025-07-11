@@ -4,23 +4,12 @@ import { setupServer } from 'msw/node'
 import { describe, expect, it } from 'vitest'
 import Login from './Login'
 import {
-  renderWithProviderAndRouter,
+  renderWithProvidersAndRouter,
   userEvent,
 } from '../../../testing/test-utils'
-import { useLocation } from 'react-router'
 
 const server = setupServer()
 
-const currentLocationTestId = 'current-location'
-const CurrentLocation = () => {
-  const location = useLocation()
-
-  return (
-    <div data-testid={currentLocationTestId}>
-      {location.pathname + location.search}
-    </div>
-  )
-}
 describe('Login Component', () => {
   beforeAll(() => {
     server.listen()
@@ -33,7 +22,7 @@ describe('Login Component', () => {
   })
 
   it('renders the login form', () => {
-    renderWithProviderAndRouter(<Login />)
+    renderWithProvidersAndRouter(<Login />)
 
     expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
@@ -42,7 +31,7 @@ describe('Login Component', () => {
   })
 
   it('validates required fields', async () => {
-    renderWithProviderAndRouter(<Login />)
+    renderWithProvidersAndRouter(<Login />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
 
@@ -57,11 +46,8 @@ describe('Login Component', () => {
       })
     )
 
-    const { store } = renderWithProviderAndRouter(
-      <>
-        <Login />
-        <CurrentLocation />
-      </>,
+    const { store, getCurrentLocation } = renderWithProvidersAndRouter(
+      <Login />,
       { initialEntries: ['/login'] }
     )
 
@@ -70,7 +56,9 @@ describe('Login Component', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
 
     await waitFor(() => {
-      expect(screen.queryByTestId(currentLocationTestId)?.textContent).toBe('/')
+      const location = getCurrentLocation()
+      expect(location?.pathname).toBe('/')
+      expect(location?.search ?? '').toBe('')
     })
     const state = store.getState()
     expect(state.userContext.isAuthenticated).toBe(true)
@@ -84,26 +72,20 @@ describe('Login Component', () => {
       })
     )
 
-    renderWithProviderAndRouter(
-      <>
-        <Login />
-        <CurrentLocation />
-      </>,
-      {
-        initialEntries: [
-          { pathname: '/login', state: { from: '/previous-page?hello' } },
-        ],
-      }
-    )
+    const { getCurrentLocation } = renderWithProvidersAndRouter(<Login />, {
+      initialEntries: [
+        { pathname: '/login', state: { from: '/previous-page?hello' } },
+      ],
+    })
 
     await userEvent.type(screen.getByLabelText('Email'), 'test@example.com')
     await userEvent.type(screen.getByLabelText('Password'), 'password123')
     await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
 
     await waitFor(() => {
-      expect(screen.queryByTestId(currentLocationTestId)?.textContent).toBe(
-        '/previous-page?hello'
-      )
+      const location = getCurrentLocation()
+      expect(location?.pathname).toBe('/previous-page')
+      expect(location?.search).toBe('?hello')
     })
   })
 
@@ -115,7 +97,7 @@ describe('Login Component', () => {
       })
     )
 
-    renderWithProviderAndRouter(<Login />)
+    renderWithProvidersAndRouter(<Login />)
 
     await userEvent.type(screen.getByLabelText('Email'), 'test@example.com')
     await userEvent.type(screen.getByLabelText('Password'), 'password123')
@@ -137,7 +119,7 @@ describe('Login Component', () => {
       })
     )
 
-    renderWithProviderAndRouter(<Login />)
+    renderWithProvidersAndRouter(<Login />)
 
     await userEvent.type(screen.getByLabelText('Email'), 'test@example.com')
     await userEvent.type(screen.getByLabelText('Password'), 'wrongpassword')
@@ -158,7 +140,7 @@ describe('Login Component', () => {
       })
     )
 
-    renderWithProviderAndRouter(<Login />)
+    renderWithProvidersAndRouter(<Login />)
 
     await userEvent.type(screen.getByLabelText('Email'), 'test@example.com')
     await userEvent.type(screen.getByLabelText('Password'), 'password123')
@@ -178,7 +160,7 @@ describe('Login Component', () => {
       })
     )
 
-    renderWithProviderAndRouter(<Login />)
+    renderWithProvidersAndRouter(<Login />)
 
     await userEvent.type(screen.getByLabelText('Email'), 'test@example.com')
     await userEvent.type(screen.getByLabelText('Password'), 'password123')
@@ -191,5 +173,21 @@ describe('Login Component', () => {
         )
       ).toBeInTheDocument()
     })
+  })
+
+  it('navigates home when already signed in', async () => {
+    const { getCurrentLocation } = renderWithProvidersAndRouter(<Login />, {
+      preloadedState: { userContext: { isAuthenticated: true } },
+      initialEntries: [{ pathname: '/login' }],
+    })
+
+    await waitFor(() => {
+      const location = getCurrentLocation()
+      expect(location?.pathname).toBe('/')
+      expect(location?.search).toBe('')
+    })
+    expect(
+      screen.queryByRole('heading', { name: 'Sign In' })
+    ).not.toBeInTheDocument()
   })
 })

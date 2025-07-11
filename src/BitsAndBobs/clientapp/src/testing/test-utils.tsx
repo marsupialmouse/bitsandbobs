@@ -1,39 +1,29 @@
 import * as testingLibraryUserEvent from '@testing-library/user-event'
-import { render, RenderOptions } from '@testing-library/react'
-import { InitialEntry, MemoryRouter } from 'react-router'
+import { render, RenderOptions, screen } from '@testing-library/react'
+import { InitialEntry, MemoryRouter, Path, useLocation } from 'react-router'
 import { AppStore, RootState, setupStore } from '../stores/store.ts'
 import { JSX, PropsWithChildren, ReactElement } from 'react'
 import { Provider } from 'react-redux'
 
 export const userEvent = testingLibraryUserEvent.default.setup({ delay: null })
 
-/**
- * Renders a React element with a MemoryRouter for testing purposes.
- * @param ui - The React element to render.
- */
-export function renderWithRouter(ui: React.ReactElement) {
-  return render(<MemoryRouter>{ui}</MemoryRouter>)
+interface Location<State> extends Path {
+  state: State
+  key: string
 }
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
+interface RenderWithProvidersProps extends Omit<RenderOptions, 'queries'> {
   preloadedState?: Partial<RootState>
   store?: AppStore
-  initialEntries?: InitialEntry[]
 }
 
-/**
- * Renders a component inside the Redux store provider and MemoryRouter
- * @param ui The component to render
- * @param param1 Any default state
- * @returns
- */
-export function renderWithProvider(
+export function renderWithProviders(
   ui: ReactElement,
   {
     preloadedState = {},
     store = setupStore(preloadedState),
     ...renderOptions
-  }: ExtendedRenderOptions = {}
+  }: RenderWithProvidersProps = {}
 ) {
   function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
     return <Provider store={store}>{children}</Provider>
@@ -41,27 +31,53 @@ export function renderWithProvider(
   return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
 
-/**
- * Renders a component inside the Redux store provider and MemoryRouter
- * @param ui The component to render
- * @param param1 Any default state
- * @returns
- */
-export function renderWithProviderAndRouter(
+interface RenderWithProvidersAndRouterProps extends RenderWithProvidersProps {
+  initialEntries?: InitialEntry[]
+}
+
+export function renderWithProvidersAndRouter(
   ui: ReactElement,
   {
     preloadedState = {},
     store = setupStore(preloadedState),
     initialEntries = undefined,
     ...renderOptions
-  }: ExtendedRenderOptions = {}
+  }: RenderWithProvidersAndRouterProps = {}
 ) {
   function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
     return (
       <Provider store={store}>
-        <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
+        <MemoryRouter initialEntries={initialEntries}>
+          {children}
+          <CurrentLocation />
+        </MemoryRouter>
       </Provider>
     )
   }
-  return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
+
+  const getCurrentLocation = <State = unknown,>() => {
+    const attribute = screen
+      .getByTestId('__current-location')
+      .getAttribute('data-location')
+    if (!attribute) return null
+    return JSON.parse(attribute) as Location<State>
+  }
+
+  return {
+    store,
+    getCurrentLocation,
+    ...render(ui, { wrapper: Wrapper, ...renderOptions }),
+  }
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+const CurrentLocation = () => {
+  const location = useLocation()
+
+  return (
+    <div
+      data-testid={'__current-location'}
+      data-location={JSON.stringify(location)}
+    ></div>
+  )
 }

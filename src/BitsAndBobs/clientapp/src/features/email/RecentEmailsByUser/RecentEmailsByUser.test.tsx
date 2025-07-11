@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import RecentEmailsByUser from './RecentEmailsByUser'
-import { renderWithProviderAndRouter } from '../../../testing/test-utils.tsx'
+import { renderWithProvidersAndRouter } from '../../../testing/test-utils.tsx'
 
 const mockEmails = [
   {
@@ -31,7 +31,7 @@ afterAll(() => {
 })
 
 const renderRecentEmailsByUser = (isAuthenticated = false) => {
-  return renderWithProviderAndRouter(<RecentEmailsByUser />, {
+  return renderWithProvidersAndRouter(<RecentEmailsByUser />, {
     preloadedState: {
       userContext: {
         isAuthenticated,

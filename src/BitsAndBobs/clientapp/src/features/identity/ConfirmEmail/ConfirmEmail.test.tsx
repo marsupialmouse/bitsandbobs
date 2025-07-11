@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import ConfirmEmail from './ConfirmEmail'
-import { renderWithProviderAndRouter } from '../../../testing/test-utils'
+import { renderWithProvidersAndRouter } from '../../../testing/test-utils'
 
 const server = setupServer()
 
@@ -42,7 +42,7 @@ describe('ConfirmEmail', () => {
       })
     )
 
-    renderWithProviderAndRouter(<ConfirmEmail />, {
+    renderWithProvidersAndRouter(<ConfirmEmail />, {
       initialEntries: ['/confirmemail?userId=hello&code=olleh'],
     })
 
@@ -54,7 +54,7 @@ describe('ConfirmEmail', () => {
   it('displays success message on successful account confirmation', async () => {
     mockSuccessfulResponse()
 
-    renderWithProviderAndRouter(<ConfirmEmail />, {
+    renderWithProvidersAndRouter(<ConfirmEmail />, {
       initialEntries: ['/confirmemail?userId=hello&code=olleh'],
     })
 
@@ -68,7 +68,7 @@ describe('ConfirmEmail', () => {
   it('displays success message on successful email confirmation', async () => {
     mockSuccessfulResponse()
 
-    renderWithProviderAndRouter(<ConfirmEmail />, {
+    renderWithProvidersAndRouter(<ConfirmEmail />, {
       initialEntries: [
         '/confirmemail?userId=hello&code=olleh&changedEmail=mmmmm',
       ],
@@ -84,7 +84,7 @@ describe('ConfirmEmail', () => {
   it('displays error message when request fails', async () => {
     mockFailedResponse(500)
 
-    renderWithProviderAndRouter(<ConfirmEmail />, {
+    renderWithProvidersAndRouter(<ConfirmEmail />, {
       initialEntries: ['/confirmemail?userId=hello&code=olleh'],
     })
 
@@ -96,7 +96,7 @@ describe('ConfirmEmail', () => {
   it('displays error message when account confirmation fails', async () => {
     mockFailedResponse(401)
 
-    renderWithProviderAndRouter(<ConfirmEmail />, {
+    renderWithProvidersAndRouter(<ConfirmEmail />, {
       initialEntries: ['/confirmemail?userId=hello&code=olleh'],
     })
 
@@ -108,7 +108,7 @@ describe('ConfirmEmail', () => {
   it('displays error message when email confirmation fails', async () => {
     mockFailedResponse(401)
 
-    renderWithProviderAndRouter(<ConfirmEmail />, {
+    renderWithProvidersAndRouter(<ConfirmEmail />, {
       initialEntries: [
         '/confirmemail?userId=hello&code=olleh&changedEmail=mmmmm',
       ],
@@ -120,7 +120,7 @@ describe('ConfirmEmail', () => {
   })
 
   it('displays error when required parameters are missing', () => {
-    renderWithProviderAndRouter(<ConfirmEmail />, {
+    renderWithProvidersAndRouter(<ConfirmEmail />, {
       initialEntries: ['/confirmemail'],
     })
 
