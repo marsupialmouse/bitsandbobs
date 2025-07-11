@@ -1,5 +1,6 @@
 import { api } from '../../api/apiSlice'
 import {
+  ForgotPasswordRequest,
   HttpValidationProblemDetails,
   InfoResponse,
   LoginRequest,
@@ -64,6 +65,13 @@ export const identityApi = api
         transformErrorResponse: (response) => response.data as ProblemDetails,
         invalidatesTags: ['Identity'],
       }),
+      forgotPassword: builder.mutation<void, ForgotPasswordRequest>({
+        query: (forgotPasswordRequest) => ({
+          url: '/identity/forgotPassword',
+          method: 'POST',
+          body: forgotPasswordRequest,
+        }),
+      }),
       logout: builder.mutation<void, void>({
         query: () => ({
           url: '/identity/signout',
@@ -84,5 +92,6 @@ export const {
   useConfirmEmailMutation,
   useLoginMutation,
   useLogoutMutation,
+  useForgotPasswordMutation,
   useGetInfoQuery,
 } = identityApi
