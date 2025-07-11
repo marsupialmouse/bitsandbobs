@@ -5,11 +5,7 @@ import { renderWithProviders } from './testing/test-utils'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 
-const server = setupServer(
-  http.get('/api/usercontext', () => {
-    return HttpResponse.json({ isAuthenticated: false })
-  })
-)
+const server = setupServer()
 
 describe('App', () => {
   beforeAll(() => {
@@ -38,6 +34,11 @@ describe('App', () => {
   })
 
   it('renders header and home route after loading', async () => {
+    server.use(
+      http.get('/api/usercontext', () =>
+        HttpResponse.json({ isAuthenticated: false })
+      )
+    )
     renderWithProviders(<App />)
 
     await waitFor(() => {
@@ -63,6 +64,41 @@ describe('App', () => {
       ).toBeInTheDocument()
       expect(screen.queryByRole('banner')).not.toBeInTheDocument()
       expect(screen.queryByRole('main')).not.toBeInTheDocument()
+    })
+  })
+
+  it('is sets context as authenticated when response is authenticated', async () => {
+    server.use(
+      http.get('/api/usercontext', () =>
+        HttpResponse.json({
+          isAuthenticated: true,
+          emailAddress: 'ted@interested.com',
+        })
+      )
+    )
+    const { store } = renderWithProviders(<App />)
+
+    await waitFor(() => {
+      expect(store.getState().userContext.isAuthenticated).toBe(true)
+      expect(store.getState().userContext.emailAddress).toBe(
+        'ted@interested.com'
+      )
+    })
+  })
+
+  it('is sets context as unauthenticated when response is unauthenticated', async () => {
+    server.use(
+      http.get('/api/usercontext', () =>
+        HttpResponse.json({
+          isAuthenticated: false,
+        })
+      )
+    )
+    const { store } = renderWithProviders(<App />)
+
+    await waitFor(() => {
+      expect(store.getState().userContext.isAuthenticated).toBe(false)
+      expect(store.getState().userContext.emailAddress).not.toBeDefined()
     })
   })
 })

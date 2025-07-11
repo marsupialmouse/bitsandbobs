@@ -19,7 +19,7 @@ const signedInState = {
 }
 
 const server = setupServer(
-  http.post('/api/identity/signout', () =>
+  http.post('/api/identity/logout', () =>
     HttpResponse.json(null, { status: 200 })
   )
 )

@@ -86,7 +86,7 @@ export const identityApi = api
       }),
       logout: builder.mutation<void, void>({
         query: () => ({
-          url: '/identity/signout',
+          url: '/identity/logout',
           method: 'POST',
         }),
         invalidatesTags: ['Identity'],

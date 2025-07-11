@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { RootState } from '../../stores/store'
 import { identityApi } from '../identity/identityApiSlice.ts'
+import { userContextApi } from './userContextApiSlice.ts'
 
 export interface UserContextState {
   emailAddress?: string
@@ -16,6 +17,13 @@ export const userContextSlice = createSlice({
   initialState: initialUserContextState,
   reducers: {},
   extraReducers: (builder) => {
+    builder.addMatcher(
+      userContextApi.endpoints.getUserContext.matchFulfilled,
+      (state, { payload }) => {
+        state.isAuthenticated = payload.isAuthenticated ?? false
+        state.emailAddress = payload.emailAddress
+      }
+    )
     builder.addMatcher(
       identityApi.endpoints.login.matchFulfilled,
       (state, { payload }) => {

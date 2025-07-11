@@ -1,7 +1,7 @@
 import { api } from '../../api/apiSlice'
 import { UserContextResponse } from '../../api/ApiGenerated.ts'
 
-const userContextApi = api
+export const userContextApi = api
   .enhanceEndpoints({ addTagTypes: ['UserContext'] })
   .injectEndpoints({
     endpoints: (builder) => ({
