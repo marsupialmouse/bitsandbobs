@@ -10,6 +10,7 @@
   <Folder Name="/DevOps/">
     <File Path="..\.github\workflows\api.yml" />
     <File Path="..\.github\workflows\ui.yml" />
+    <File Path="..\.github\workflows\infrastructure.yml" />
   </Folder>
   <Folder Name="/Infrastructure/">
     <File Path="Infrastructure\database.yaml" />

@@ -1,0 +1,32 @@
+name: CloudFormation Validation
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'src/Infrastructure/**/*.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'src/Infrastructure/**/*.yml'
+
+jobs:
+  checkov:
+    name: checkov
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: grolston/cfn-security@v1
+        with:
+          cloudformation_directory: './src/Infrastructure/'
+          scanner: 'checkov'
+
+    cfn-lint:
+      name: cfn-lint
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v2
+        - uses: grolston/cfn-security@v1
+          with:
+            cloudformation_directory: './src/Infrastructure/'
+            scanner: 'cfn-lint'
