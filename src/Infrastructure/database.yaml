@@ -12,6 +12,8 @@ Parameters:
 Resources:
   DynamoDbTable:
     Type: AWS::DynamoDB::Table
+    # checkov:skip=CKV_AWS_28:Ensure Dynamodb point in time recovery (backup) is enabled
+    # checkov:skip=CKV_AWS_119:Ensure DynamoDB Tables are encrypted using a KMS Customer Managed CMK
     Properties:
       TableName: !Sub "${Environment}-BitsAndBobs"
       AttributeDefinitions:
@@ -52,6 +54,7 @@ Resources:
           Projection:
             ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
+
 Outputs:
   DynamoDbTableName:
     Value: !Ref DynamoDbTable

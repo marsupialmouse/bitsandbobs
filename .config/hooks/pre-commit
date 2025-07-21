@@ -25,5 +25,6 @@ if git diff --cached --name-only --diff-filter=ADMR HEAD | grep -qiE --include=\
 
     pushd "${GIT_ROOT}/src/Infrastructure" > /dev/null
     trap "popd > /dev/null" EXIT
-    docker run --platform linux/amd64 -v `pwd`:/data -w /data mysteriouscode/cfn-lint:v0 cfn-lint --info *.yaml
+    docker run --platform linux/amd64 -v `pwd`:/data -w /data public.ecr.aws/rolston/cfn-security cfn-lint --info *.yaml
+    docker run --platform linux/amd64 -v `pwd`:/data -w /data public.ecr.aws/rolston/cfn-security checkov -d ./
 fi
