@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Resources used by the Bits & Bobs application
+Description: DynamoDB tables and indexes for the Bits & Bobs application
 Parameters:
   Environment:
     Type: String

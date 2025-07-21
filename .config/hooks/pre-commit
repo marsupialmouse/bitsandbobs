@@ -19,3 +19,11 @@ if git diff --cached --name-only --diff-filter=ADMR HEAD | grep -qiE '^src/BitsA
     trap "popd > /dev/null" EXIT
     yarn lint-staged -q
 fi
+
+# Validate CFN templates
+if git diff --cached --name-only --diff-filter=ADMR HEAD | grep -qiE --include=\*.yaml '^src/Infrastructure/'; then
+
+    pushd "${GIT_ROOT}/src/Infrastructure" > /dev/null
+    trap "popd > /dev/null" EXIT
+    docker run --platform linux/amd64 -v `pwd`:/data -w /data mysteriouscode/cfn-lint:v0 cfn-lint --info *.yaml
+fi
