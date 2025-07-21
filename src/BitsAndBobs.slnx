@@ -12,7 +12,7 @@
     <File Path="..\.github\workflows\ui.yml" />
   </Folder>
   <Folder Name="/Infrastructure/">
-    <File Path="Infrastructure\aws-resources.yaml" />
+    <File Path="Infrastructure\database.yaml" />
   </Folder>
   <Project Path="BitsAndBobs.AppHost/BitsAndBobs.AppHost.csproj" />
   <Project Path="BitsAndBobs.ServiceDefaults/BitsAndBobs.ServiceDefaults.csproj" />
