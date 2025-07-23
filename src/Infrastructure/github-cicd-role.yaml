@@ -1,9 +1,9 @@
 ---
+#aws cloudformation deploy --template-file ./src/Infrastructure/github-cicd-role.yaml --stack-name github-cicd-role --capabilities CAPABILITY_NAMED_IAM
 AWSTemplateFormatVersion: "2010-09-09"
 Description: OIDC IDP and associated Roles for GitHub Actions
 
 Parameters:
-
   GitHubOrganization:
     Type: String
     Description: This is the root organization where repos are stored (Case Sensitive)
@@ -15,7 +15,6 @@ Parameters:
     Default: "bitsandbobs"
 
 Resources:
-
   GitHubOidcProvider:
     Type: AWS::IAM::OIDCProvider
     Properties:
@@ -62,6 +61,10 @@ Resources:
                   - cloudformation:DescribeStackEvents
                   - cloudformation:DescribeStackResource
                   - cloudformation:DescribeStackResources
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:ExecuteChangeSet
                 Resource: !Sub 'arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*'
               # Allow passing IAM roles to CloudFormation
               - Sid: IAMPassRole
@@ -82,13 +85,37 @@ Resources:
                   - s3:DeleteBucketPolicy
                   - s3:PutBucketPublicAccessBlock
                   - s3:PutBucketVersioning
-                  - s3:PutBucketEncryption
-                  - s3:GetBucketEncryption
+                  - s3:PutEncryptionConfiguration
+                  - s3:GetEncryptionConfiguration
                   - s3:PutLifecycleConfiguration
                   - s3:GetBucketLocation
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:s3:::*'
                   - !Sub 'arn:${AWS::Partition}:s3:::*/*'
+        - PolicyName: CloudFrontDeployment
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: CloudFrontActions
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateDistribution
+                  - cloudfront:UpdateDistribution
+                  - cloudfront:DeleteDistribution
+                  - cloudfront:GetDistribution
+                  - cloudfront:CreateKeyValueStore
+                  - cloudfront:DeleteKeyValueStore
+                  - cloudfront:DescribeKeyValueStore
+                  - cloudfront:ListKeyValueStores
+                  - cloudfront:CreateFunction
+                  - cloudfront:DeleteFunction
+                  - cloudfront:DescribeFunction
+                  - cloudfront:UpdateFunction
+                  - cloudfront:PublishFunction
+                Resource:
+                  - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/*'
+                  - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:key-value-store/*'
+                  - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:function/*'
 
   RoleDelivery:
     Type: AWS::IAM::Role
@@ -107,8 +134,7 @@ Resources:
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepositoryName}:*
       Policies:
-        -
-          PolicyName: S3-Allow
+        - PolicyName: S3-Allow
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -123,7 +149,6 @@ Resources:
                   - !Sub 'arn:${AWS::Partition}:s3:::*/*'
 
 Outputs:
-
   GitHubOidc:
     Description: "ARN of Github OIDC Provider"
     Value: !GetAtt GitHubOidcProvider.Arn

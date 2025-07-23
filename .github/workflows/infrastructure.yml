@@ -4,11 +4,11 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'src/Infrastructure/**/*.yml'
+      - 'src/Infrastructure/**/*.yaml'
   pull_request:
     branches: [ "main" ]
     paths:
-      - 'src/Infrastructure/**/*.yml'
+      - 'src/Infrastructure/**/*.yaml'
 
 jobs:
   checkov:
@@ -16,17 +16,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: grolston/cfn-security@v1
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
         with:
-          cloudformation_directory: './src/Infrastructure/'
-          scanner: 'checkov'
+          python-version: 3.8
+      - name: Scan with Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: './src/Infrastructure/'
+          framework: cloudformation
+          quiet: true
 
-    cfn-lint:
-      name: cfn-lint
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2
-        - uses: grolston/cfn-security@v1
-          with:
-            cloudformation_directory: './src/Infrastructure/'
-            scanner: 'cfn-lint'
+  cfn-lint:
+    name: cfn-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup cfn-lint with latest version
+        uses: scottbrenner/cfn-lint-action@v2
+      - name: Print the cfn-lint version & run linter
+        run: |
+          shopt -s globstar # enable globbing
+          cfn-lint --version
+          cfn-lint -t ./src/Infrastructure/**/*.yaml

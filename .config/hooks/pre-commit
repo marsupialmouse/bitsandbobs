@@ -4,11 +4,16 @@
 # commit" before anything has been committed.  If this script exits with a non-zero status ,
 # nothing will be committed.
 #
+set -e
 
 # If a merge is in process, we don't want to do the lint step
 if [[ -f '.git/MERGE_HEAD' ]]; then
     exit 0
 fi
+
+# Make sure we pop any pushed directories
+dirstack_initial_size=$(dirs -p | wc -l)
+trap 'while [ "$(dirs -p | wc -l)" -gt "$dirstack_initial_size" ]; do popd > /dev/null; done' EXIT
 
 declare GIT_ROOT="$(git rev-parse --show-toplevel)"
 
@@ -16,7 +21,6 @@ declare GIT_ROOT="$(git rev-parse --show-toplevel)"
 if git diff --cached --name-only --diff-filter=ADMR HEAD | grep -qiE '^src/BitsAndBobs/clientapp/'; then
 
     pushd "${GIT_ROOT}/src/BitsAndBobs/clientapp" > /dev/null
-    trap "popd > /dev/null" EXIT
     yarn lint-staged -q
 fi
 
@@ -24,7 +28,6 @@ fi
 if git diff --cached --name-only --diff-filter=ADMR HEAD | grep -qiE --include=\*.yaml '^src/Infrastructure/'; then
 
     pushd "${GIT_ROOT}/src/Infrastructure" > /dev/null
-    trap "popd > /dev/null" EXIT
-    docker run --platform linux/amd64 -v `pwd`:/data -w /data public.ecr.aws/rolston/cfn-security cfn-lint --info *.yaml
-    docker run --platform linux/amd64 -v `pwd`:/data -w /data public.ecr.aws/rolston/cfn-security checkov -d ./
+    docker run --platform linux/amd64 -v `pwd`:/data -w /data public.ecr.aws/mysteriouscode/cfn-lint:latest cfn-lint --info *.yaml
+    docker run --platform linux/amd64 -v `pwd`:/data -w /data bridgecrew/checkov --quiet --framework cloudformation --directory ./
 fi
