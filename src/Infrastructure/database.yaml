@@ -1,5 +1,7 @@
+---
 AWSTemplateFormatVersion: 2010-09-09
 Description: DynamoDB tables and indexes for the Bits & Bobs application
+
 Parameters:
   Environment:
     Type: String
@@ -9,6 +11,7 @@ Parameters:
       - Development
       - Staging
       - Production
+
 Resources:
   DynamoDbTable:
     Type: AWS::DynamoDB::Table

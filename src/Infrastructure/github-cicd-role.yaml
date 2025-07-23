@@ -1,0 +1,137 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: OIDC IDP and associated Roles for GitHub Actions
+
+Parameters:
+
+  GitHubOrganization:
+    Type: String
+    Description: This is the root organization where repos are stored (Case Sensitive)
+    Default: "marsupialmouse"
+
+  RepositoryName:
+    Type: String
+    Description: The repo(s) these roles will have access to. (Use * for all Org Repos or wildcard)
+    Default: "bitsandbobs"
+
+Resources:
+
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+      Tags:
+        - Key: Name
+          Value: GitHub-OIDC-Provider
+
+  RoleDeploy:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: GitHub-Deploy
+      Description: "Role used by GitHub Actions for CloudFormation deployments"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GitHubOidcProvider
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepositoryName}:*
+      Policies:
+        - PolicyName: CloudFormationDeployment
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: CloudFormationActions
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:ListStacks
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:ValidateTemplate
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:DescribeStackResource
+                  - cloudformation:DescribeStackResources
+                Resource: !Sub 'arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*'
+              # Allow passing IAM roles to CloudFormation
+              - Sid: IAMPassRole
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*'
+        - PolicyName: S3-Allow
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: S3Actions
+                Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:DeleteBucket
+                  - s3:PutBucketPolicy
+                  - s3:DeleteBucketPolicy
+                  - s3:PutBucketPublicAccessBlock
+                  - s3:PutBucketVersioning
+                  - s3:PutBucketEncryption
+                  - s3:GetBucketEncryption
+                  - s3:PutLifecycleConfiguration
+                  - s3:GetBucketLocation
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::*/*'
+
+  RoleDelivery:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: GitHub-Delivery
+      Description: "Role used by GitHub Actions for artifact delivery"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GitHubOidcProvider
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepositoryName}:*
+      Policies:
+        -
+          PolicyName: S3-Allow
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: S3Actions
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::*/*'
+
+Outputs:
+
+  GitHubOidc:
+    Description: "ARN of Github OIDC Provider"
+    Value: !GetAtt GitHubOidcProvider.Arn
+
+  RoleDeliveryARN:
+    Description: "ARN of delivery role for GitHub Actions"
+    Value: !GetAtt RoleDelivery.Arn
+
+  RoleDeployARN:
+    Description: "ARN of deployment role for GitHub Actions"
+    Value: !GetAtt RoleDeploy.Arn

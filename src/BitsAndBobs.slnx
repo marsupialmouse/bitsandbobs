@@ -7,13 +7,14 @@
     <File Path="..\.config\hooks\post-checkout" />
     <File Path="..\.config\hooks\pre-commit" />
   </Folder>
-  <Folder Name="/DevOps/">
+  <Folder Name="/Infrastructure/">
+    <File Path="Infrastructure\database.yaml" />
+    <File Path="Infrastructure\github-cicd-role.yaml" />
+  </Folder>
+  <Folder Name="/Workflows/">
     <File Path="..\.github\workflows\api.yml" />
     <File Path="..\.github\workflows\ui.yml" />
     <File Path="..\.github\workflows\infrastructure.yml" />
-  </Folder>
-  <Folder Name="/Infrastructure/">
-    <File Path="Infrastructure\database.yaml" />
   </Folder>
   <Project Path="BitsAndBobs.AppHost/BitsAndBobs.AppHost.csproj" />
   <Project Path="BitsAndBobs.ServiceDefaults/BitsAndBobs.ServiceDefaults.csproj" />
