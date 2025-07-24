@@ -44,15 +44,13 @@ jobs:
       contents: read
     env:
       uiBucket: ${{ vars.S3_BUCKET_APP }}
+      version: ${{ needs.setVersion.outputs.version }}
     defaults:
       run:
         working-directory: 'src/BitsAndBobs/clientapp'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Echo bucket
-        run: |
-          echo "env ${{ inputs.environment }}"
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -70,7 +68,7 @@ jobs:
           role-to-assume: ${{ env.DeliveryRole }}
           role-session-name: ${{ github.run_id }}
       - name: Sync build to UI bucket
-        run: aws s3 sync ./dist s3://$uiBucket/$version
+        run: aws s3 sync ./dist s3://${{ env.uiBucket }}/${{ env.version }}
 
   deploy:
     name: Deploy to AWS
@@ -110,9 +108,20 @@ jobs:
           aws-region: ${{ env.Region }}
           role-to-assume: ${{ env.DeliveryRole }}
           role-session-name: ${{ github.run_id }}
-          role-chaining: true
       - name: Sync default document to UI bucket
-        run: aws s3 sync src/Infrastructure s3://$uiBucket --exclude='*' --include='index.html'
+        run: aws s3 sync src/Infrastructure s3://${{ env.uiBucket }} --exclude='*' --include='index.html'
+      - name: Create tag
+        if: ${{ !startsWith(inputs.version, 'v') }}
+        uses: actions/github-script@v5
+        with:
+          script: |
+              github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'refs/tags/${{ env.version }}',
+                sha: context.sha
+              })
+
 
 
 
