@@ -9,7 +9,7 @@ on:
         type: environment
         required: true
       version:
-        description: The version to deploy. Leave blank to build and deploy a new version.
+        description: The version (tag) to deploy. Leave blank to build and deploy a new version.
         type: string
         required: false
 
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !startsWith(inputs.version, 'v') }}
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      version: ${{ steps.version.outputs.version_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,8 +44,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.setVersion.outputs.version }}
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -72,7 +70,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.version }}
+          ref: ${{ inputs.version }}
       - name: Echo version
         run: echo "Version $version"
       - name: Configure AWS Credentials
