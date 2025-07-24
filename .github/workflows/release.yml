@@ -14,7 +14,6 @@ on:
         required: false
 
 env:
-  UiBucket: ${{ vars.S3_BUCKET_APP }}
   DeploymentRole: ${{ secrets.AWS_ROLE_ARN_DEPLOY }}
   DeliveryRole: ${{ secrets.AWS_ROLE_ARN_DELIVER }}
   Region: ${{ secrets.AWS_DEFAULT_REGION }}
@@ -39,6 +38,12 @@ jobs:
     name: Build UI
     runs-on: ubuntu-latest
     needs: setVersion
+    environment: inputs.environment
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      uiBucket: ${{ vars.S3_BUCKET_APP }}
     defaults:
       run:
         working-directory: 'src/BitsAndBobs/clientapp'
@@ -62,17 +67,19 @@ jobs:
           role-to-assume: ${{ env.DeliveryRole }}
           role-session-name: ${{ github.run_id }}
       - name: Sync build to UI bucket
-        run: aws s3 sync ./dist s3://$UiBucket/$version
+        run: aws s3 sync ./dist s3://$uiBucket/$version
 
   deploy:
     name: Deploy to AWS
     runs-on: ubuntu-latest
     needs: [setVersion, buildUi]
     if: ${{ !failure() && !cancelled() }}
+    environment: inputs.environment
     permissions:
       id-token: write
       contents: read
     env:
+      uiBucket: ${{ vars.S3_BUCKET_APP }}
       version: ${{ format('{0}{1}', inputs.version, needs.setVersion.outputs.version) }}
     steps:
       - name: Checkout
@@ -102,7 +109,7 @@ jobs:
           role-session-name: ${{ github.run_id }}
           role-chaining: true
       - name: Sync default document to UI bucket
-        run: aws s3 sync src/Infrastructure s3://$UiBucket --exclude='*' --include='index.html'
+        run: aws s3 sync src/Infrastructure s3://$uiBucket --exclude='*' --include='index.html'
 
 
 
