@@ -17,6 +17,7 @@
     <File Path="..\.github\workflows\api.yml" />
     <File Path="..\.github\workflows\ui.yml" />
     <File Path="..\.github\workflows\infrastructure.yml" />
+    <File Path="..\.github\workflows\release.yml" />
   </Folder>
   <Project Path="BitsAndBobs.AppHost/BitsAndBobs.AppHost.csproj" />
   <Project Path="BitsAndBobs.ServiceDefaults/BitsAndBobs.ServiceDefaults.csproj" />
