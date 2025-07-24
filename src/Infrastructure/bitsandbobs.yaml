@@ -185,12 +185,12 @@ Resources:
   CFKeyValueStore:
     Type: AWS::CloudFront::KeyValueStore
     Properties:
-      Name: CFKeyValueStore
+      Name: !Sub 'CFKeyValueStore-${Environment}'
 
   SpaPathFunction:
     Type: AWS::CloudFront::Function
     Properties:
-      Name: SpaPathFunction
+      Name: !Sub 'SpaPathFunction-${Environment}'
       AutoPublish: true
       FunctionConfig:
         Comment: >
