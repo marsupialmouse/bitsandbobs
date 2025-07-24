@@ -14,6 +14,7 @@ on:
         required: false
 
 env:
+  UiBucket: ${{ env.S3_BUCKET_APP }}
   DeploymentRole: ${{ secrets.AWS_ROLE_ARN_DEPLOY }}
   DeliveryRole: ${{ secrets.AWS_ROLE_ARN_DELIVER }}
   Region: ${{ secrets.AWS_DEFAULT_REGION }}
@@ -38,6 +39,8 @@ jobs:
     name: Build UI
     runs-on: ubuntu-latest
     needs: setVersion
+    env:
+      version: ${{ needs.setVersion.outputs.version }}
     defaults:
       run:
         working-directory: 'src/BitsAndBobs/clientapp'
@@ -54,7 +57,14 @@ jobs:
         run: yarn install --immutable --immutable-cache --check-cache
       - name: Build
         run: yarn build
-      # TODO: copy build output to S3
+      - name: Configure AWS Delivery Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.Region }}
+          role-to-assume: ${{ env.DeliveryRole }}
+          role-session-name: ${{ github.run_id }}
+      - name: Sync build to UI bucket
+        run: aws s3 sync ./dist s3://%UiBucket%/%version%
 
   deploy:
     name: Deploy to AWS
@@ -73,7 +83,7 @@ jobs:
           ref: ${{ inputs.version }}
       - name: Echo version
         run: echo "Version $version"
-      - name: Configure AWS Credentials
+      - name: Configure AWS Deployment Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ env.Region }}
@@ -86,6 +96,15 @@ jobs:
           template: src/Infrastructure/bitsandbobs.yaml
           parameter-overrides: 'Environment=${{ inputs.environment }}'
           no-fail-on-empty-changeset: '1'
+      - name: Configure AWS Delivery Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.Region }}
+          role-to-assume: ${{ env.DeliveryRole }}
+          role-session-name: ${{ github.run_id }}
+          role-chaining: true
+      - name: Sync default document to UI bucket
+        run: aws s3 sync src/Infrastructure s3://%UiBucket% --exclude='*' --include='index.html'
 
 
 

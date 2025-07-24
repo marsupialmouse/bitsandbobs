@@ -91,6 +91,8 @@ Resources:
                   - s3:GetEncryptionConfiguration
                   - s3:PutLifecycleConfiguration
                   - s3:GetBucketLocation
+                  - s3:GetBucketAcl
+                  - s3:PutBucketAcl
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:s3:::*'
                   - !Sub 'arn:${AWS::Partition}:s3:::*/*'
