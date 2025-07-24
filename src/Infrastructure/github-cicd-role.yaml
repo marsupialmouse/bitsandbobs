@@ -65,7 +65,7 @@ Resources:
                   - cloudformation:DescribeChangeSet
                   - cloudformation:DeleteChangeSet
                   - cloudformation:ExecuteChangeSet
-                Resource: !Sub 'arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*'
+                Resource: !Sub 'arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/*'
               # Allow passing IAM roles to CloudFormation
               - Sid: IAMPassRole
                 Effect: Allow
@@ -84,6 +84,8 @@ Resources:
                   - s3:PutBucketPolicy
                   - s3:DeleteBucketPolicy
                   - s3:PutBucketPublicAccessBlock
+                  - s3:PutBucketLogging
+                  - s3:PutBucketOwnershipControls
                   - s3:PutBucketVersioning
                   - s3:PutEncryptionConfiguration
                   - s3:GetEncryptionConfiguration
@@ -112,8 +114,17 @@ Resources:
                   - cloudfront:DescribeFunction
                   - cloudfront:UpdateFunction
                   - cloudfront:PublishFunction
+                  - cloudfront:GetFunction
+                  - cloudfront:CreateOriginAccessControl
+                  - cloudfront:UpdateOriginAccessControl
+                  - cloudfront:DeleteOriginAccessControl
+                  - cloudfront:GetOriginAccessControl
+                  - cloudfront:GetOriginAccessControlConfig
+                  - cloudfront:ListOriginAccessControls
+                  - cloudfront:TagResource
                 Resource:
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/*'
+                  - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:origin-access-control/*'
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:key-value-store/*'
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:function/*'
 

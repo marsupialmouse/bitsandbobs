@@ -47,6 +47,7 @@ Resources:
   S3BucketPolicyApp:
     Type: 'AWS::S3::BucketPolicy'
     Properties:
+      Bucket: !Ref S3BucketApp
       PolicyDocument:
         Id: S3AppPolicy
         Version: 2012-10-17
@@ -54,13 +55,13 @@ Resources:
           - Sid: PolicyForCloudFrontPrivateContent
             Effect: Allow
             Resource: !Sub ${S3BucketApp.Arn}/*
+            Action: 's3:GetObject*'
             Principal:
               Service: cloudfront.amazonaws.com
             Condition:
               StringEquals:
                 AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CFDistribution}
-            Action: 's3:GetObject*'
-      Bucket: !Ref S3BucketApp
+
 
   # The S3 bucket for access logs from S3 (for the application) and CloudFront
   S3BucketLogging:
@@ -91,6 +92,7 @@ Resources:
   S3BucketPolicyLogging:
     Type: 'AWS::S3::BucketPolicy'
     Properties:
+      Bucket: !Ref S3BucketLogging
       PolicyDocument:
         Id: S3LoggingPolicy
         Version: 2012-10-17
@@ -98,13 +100,21 @@ Resources:
           - Sid: PolicyForS3ServerLog
             Effect: Allow
             Resource: !Sub ${S3BucketLogging.Arn}/*
+            Action: 's3:PutObject'
             Principal:
               Service: logging.s3.amazonaws.com
             Condition:
               StringEquals:
                 AWS:SourceAccount: !Sub ${AWS::AccountId}
+          - Sid: PolicyForCFLog
+            Effect: Allow
+            Resource: !Sub ${S3BucketLogging.Arn}/*
             Action: 's3:PutObject'
-      Bucket: !Ref S3BucketLogging
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CFDistribution}
 
   # The CloudFront distribution exposing both the client app and api
   CFDistribution:
