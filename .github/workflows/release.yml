@@ -49,7 +49,7 @@ jobs:
         working-directory: 'src/BitsAndBobs/clientapp'
     steps:
       - name: Echo bucket
-      - run: |
+        run: |
           echo "var ${{ vars.S3_BUCKET_APP }}"
           echo "env $uiBucket"
       - name: Checkout
