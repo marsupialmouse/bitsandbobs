@@ -147,11 +147,11 @@ jobs:
           role-session-name: ${{ github.run_id }}
       - name: Set UI version in CloudFront
         run: |
-          aws cloudfront put-key-value \
-           --key-value-store-arn "$kvsArn" \
-           --key "current-version" \
-           --value "$version" \
-           --if-match $(aws cloudfront get-key-value-store --key-value-store-arn "$kvsArn" --query 'ETag' --output text)
+          aws cloudfront-keyvaluestore put-key \
+           --kvs-arn=$kvsArn \
+           --key=current-version \
+           --value=$version \
+           --if-match=$(aws cloudfront-keyvaluestore describe-key-value-store --kvs-arn=$kvsArn --query=ETag --output=text)
 
 
 
