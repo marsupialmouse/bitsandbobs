@@ -1,11 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
+      <TargetFramework>net9.0</TargetFramework>
+      <Nullable>enable</Nullable>
+      <ImplicitUsings>enable</ImplicitUsings>
       <UserSecretsId>9c165170-1a0e-4805-87d6-9cbf86a9a79b</UserSecretsId>
+      <ContainerFamily>alpine</ContainerFamily>
+      <ContainerRepository>bitsandbobs-api</ContainerRepository>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <ContainerPort Include="3434" Type="tcp" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Don't publish the SPA source files, but do show them in the project files list -->
