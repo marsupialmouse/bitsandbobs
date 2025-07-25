@@ -77,7 +77,7 @@ jobs:
     needs: [createVersion]
     environment: ${{ inputs.environment }}
     env:
-      version: ${{ needs.createVersion.outputs.version }}
+      tag: ${{ needs.createVersion.outputs.version }}  # can't be named version: dotnet restore craps out if there's an environment variable named "version"
       registry: ghcr.io
     permissions:
       contents: read
@@ -101,7 +101,7 @@ jobs:
         run: |
           dotnet publish src/BitsAndBobs/BitsAndBobs.csproj \
             -t:PublishContainer \
-            -p:ContainerImageTag=${{ env.version }} \
+            -p:ContainerImageTag=${{ env.tag }} \
             -p:ContainerRegistry=${{ env.registry }} \
             --configuration Release \
             --runtime linux-arm64
