@@ -1,5 +1,5 @@
 ---
-#aws cloudformation deploy --template-file ./src/Infrastructure/github-cicd-role.yaml --stack-name github-cicd-role --capabilities CAPABILITY_NAMED_IAM
+# aws cloudformation deploy --template-file ./src/Infrastructure/github-cicd-roles.yaml --stack-name github-cicd-roles --capabilities CAPABILITY_NAMED_IAM
 AWSTemplateFormatVersion: "2010-09-09"
 Description: OIDC IDP and associated Roles for GitHub Actions
 
@@ -25,12 +25,12 @@ Resources:
         - 6938fd4d98bab03faadb97b34396831e3780aea1
       Tags:
         - Key: Name
-          Value: GitHub-OIDC-Provider
+          Value: GHA-OIDC-Provider
 
-  RoleDeploy:
+  RoleCfnDeploy:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: GitHub-Deploy
+      RoleName: GHA-DeployCloudFormation
       Description: "Role used by GitHub Actions for CloudFormation deployments"
       AssumeRolePolicyDocument:
         Statement:
@@ -72,7 +72,7 @@ Resources:
                 Action:
                   - iam:PassRole
                 Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*'
-        - PolicyName: S3-Allow
+        - PolicyName: S3CfnDeployment
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -96,7 +96,7 @@ Resources:
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:s3:::*'
                   - !Sub 'arn:${AWS::Partition}:s3:::*/*'
-        - PolicyName: CloudFrontDeployment
+        - PolicyName: CloudFrontCfnDeployment
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -130,10 +130,10 @@ Resources:
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:key-value-store/*'
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:function/*'
 
-  RoleDelivery:
+  RoleAssetDeploy:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: GitHub-Delivery
+      RoleName: GHA-DeployAssets
       Description: "Role used by GitHub Actions for artifact delivery"
       AssumeRolePolicyDocument:
         Statement:
@@ -147,7 +147,7 @@ Resources:
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepositoryName}:*
       Policies:
-        - PolicyName: S3-Allow
+        - PolicyName: S3AssetDeploy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -161,15 +161,48 @@ Resources:
                   - !Sub 'arn:${AWS::Partition}:s3:::*'
                   - !Sub 'arn:${AWS::Partition}:s3:::*/*'
 
+  RoleVersionDeploy:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: GHA-DeployVersion
+      Description: "Role used by GitHub Actions to update the active version of the application"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GitHubOidcProvider
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepositoryName}:*
+      Policies:
+        - PolicyName: CloudFrontDeployment
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: CloudFrontActions
+                Effect: Allow
+                Action:
+                  - cloudfront-keyvaluestore:DescribeKeyValueStore
+                  - cloudfront-keyvaluestore:PutKey
+                Resource:
+                  - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:key-value-store/*'
+
 Outputs:
   GitHubOidc:
     Description: "ARN of Github OIDC Provider"
     Value: !GetAtt GitHubOidcProvider.Arn
 
-  RoleDeliveryARN:
-    Description: "ARN of delivery role for GitHub Actions"
-    Value: !GetAtt RoleDelivery.Arn
+  RoleDeployCloudFormationARN:
+    Description: "ARN of CloudFormation deployment role for GitHub Actions"
+    Value: !GetAtt RoleCfnDeploy.Arn
 
-  RoleDeployARN:
-    Description: "ARN of deployment role for GitHub Actions"
-    Value: !GetAtt RoleDeploy.Arn
+  RoleDeployAssetsARN:
+    Description: "ARN of asset deployment role for GitHub Actions"
+    Value: !GetAtt RoleAssetDeploy.Arn
+
+  RoleDeployVersionARN:
+    Description: "ARN of asset deployment role for GitHub Actions"
+    Value: !GetAtt RoleVersionDeploy.Arn

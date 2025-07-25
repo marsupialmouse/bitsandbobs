@@ -9,7 +9,7 @@
   </Folder>
   <Folder Name="/Infrastructure/">
     <File Path="Infrastructure\database.yaml" />
-    <File Path="Infrastructure\github-cicd-role.yaml" />
+    <File Path="Infrastructure\github-cicd-roles.yaml" />
     <File Path="Infrastructure\bitsandbobs.yaml" />
     <File Path="Infrastructure\index.html" />
   </Folder>
