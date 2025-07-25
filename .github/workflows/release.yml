@@ -103,6 +103,7 @@ jobs:
             -t:PublishContainer \
             -p:ContainerImageTag=${{ env.tag }} \
             -p:ContainerRegistry=${{ env.registry }} \
+            -p:ContainerRepository=${{ github.actor }}/bitsandbobs-api
             --configuration Release \
             --runtime linux-arm64
 
