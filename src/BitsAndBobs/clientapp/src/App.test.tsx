@@ -58,9 +58,7 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          'An error occurred while loading the application. Please try again later.'
-        )
+        screen.getByText("It's broken, try again later.", { exact: false })
       ).toBeInTheDocument()
       expect(screen.queryByRole('banner')).not.toBeInTheDocument()
       expect(screen.queryByRole('main')).not.toBeInTheDocument()

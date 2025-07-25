@@ -5,7 +5,6 @@ import { useGetUserContextQuery } from './features/usercontext/userContextApiSli
 import Register from './features/identity/Register/Register.tsx'
 import RecentEmailsByAddress from './features/email/RecentEmailsByAddress/RecentEmailsByAddress.tsx'
 import Loading from './components/Loading.tsx'
-import ErrorMessage from './components/ErrorMessage.tsx'
 import RecentEmailsByUser from './features/email/RecentEmailsByUser/RecentEmailsByUser.tsx'
 import ConfirmEmail from './features/identity/ConfirmEmail/ConfirmEmail.tsx'
 import Login from './features/identity/Login/Login.tsx'
@@ -22,7 +21,18 @@ function App() {
 
   if (isError) {
     return (
-      <ErrorMessage message="An error occurred while loading the application. Please try again later." />
+      <div className="h-screen w-full bg-linear-to-bl from-indigo-400 to-indigo-700">
+        <div className="flex h-full items-center justify-center">
+          <div>
+            <h1 className="block font-logo text-7xl font-bold text-lime-300">
+              BITS&BOBS
+            </h1>
+            <div className="text-center text-lime-300">
+              It&apos;s broken, try again later.
+            </div>
+          </div>
+        </div>
+      </div>
     )
   }
 
