@@ -222,7 +222,7 @@ Resources:
           const originalUri = request.uri;
           const pathSegments = request.uri.split('/')
           if (!['assets', 'images'].includes(pathSegments[1])) {
-            request.uri = '/'
+            request.uri = '/index.html'
           }
           try {
             const hasVersion = await kvs.exists('current-version')
