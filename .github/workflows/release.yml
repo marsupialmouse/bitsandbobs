@@ -71,6 +71,39 @@ jobs:
       - name: Sync build to UI bucket
         run: aws s3 sync ./dist s3://${{ env.uiBucket }}/${{ env.version }}
 
+  deployApi:
+    name: Containerise API
+    runs-on: ubuntu-latest
+    needs: [createVersion]
+    environment: ${{ inputs.environment }}
+    env:
+      version: ${{ needs.createVersion.outputs.version }}
+      registry: ghcr.io
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Log in to the container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Publish container
+        run: |
+          dotnet publish src/BitsAndBobs/BitsAndBobs.csproj \
+            -t:PublishContainer \
+            -p:ContainerImageTags='$version' \
+            -p:ContainerRegistry='$registry' \
+            --configuration Release \
+            --runtime linux-arm64
+
   deployCfn:
     name: Deploy CloudFormation template
     runs-on: ubuntu-latest
