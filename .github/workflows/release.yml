@@ -101,7 +101,7 @@ jobs:
         run: |
           dotnet publish src/BitsAndBobs/BitsAndBobs.csproj \
             -t:PublishContainer \
-            -p:ContainerImageTags=${{ env.version }} \
+            -p:ContainerImageTag=${{ env.version }} \
             -p:ContainerRegistry=${{ env.registry }} \
             --configuration Release \
             --runtime linux-arm64
