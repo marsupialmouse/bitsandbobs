@@ -1,4 +1,4 @@
-name: CloudFormation Validation
+name: CI - CloudFormation Validation
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   checkov:
-    name: checkov
+    name: Validate with checkov
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -28,8 +28,8 @@ jobs:
           framework: cloudformation
           quiet: true
 
-  cfn-lint:
-    name: cfn-lint
+  cfnLint:
+    name: Validate with cfn-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
