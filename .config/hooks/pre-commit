@@ -28,6 +28,6 @@ fi
 if git diff --cached --name-only --diff-filter=ADMR HEAD | grep -qiE --include=\*.yaml '^src/Infrastructure/'; then
 
     pushd "${GIT_ROOT}/src/Infrastructure" > /dev/null
-    docker run --platform linux/amd64 -v `pwd`:/data -w /data public.ecr.aws/mysteriouscode/cfn-lint:latest cfn-lint --info *.yaml
-    docker run --platform linux/amd64 -v `pwd`:/data -w /data bridgecrew/checkov --quiet --framework cloudformation --directory ./
+    docker run --platform linux/amd64 -v `pwd`:/data -w /data --rm public.ecr.aws/mysteriouscode/cfn-lint:latest cfn-lint --info *.yaml
+    docker run --platform linux/amd64 -v `pwd`:/data -w /data --rm bridgecrew/checkov --quiet --framework cloudformation --directory ./
 fi
