@@ -65,7 +65,9 @@ Resources:
                   - cloudformation:DescribeChangeSet
                   - cloudformation:DeleteChangeSet
                   - cloudformation:ExecuteChangeSet
-                Resource: !Sub 'arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/*'
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/*'
+                  - !Sub 'arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/*/*'
               # Allow passing IAM roles to CloudFormation
               - Sid: IAMPassRole
                 Effect: Allow
@@ -165,6 +167,27 @@ Resources:
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:origin-access-control/*'
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:key-value-store/*'
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:function/*'
+        - PolicyName: DynamoDbCfnDeployment
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: DynamoDBTableManagement
+                Effect: Allow
+                Action:
+                  - dynamodb:CreateTable
+                  - dynamodb:UpdateTable
+                  - dynamodb:DeleteTable
+                  - dynamodb:DescribeTable
+                  - dynamodb:DescribeTimeToLive
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:DescribeContinuousBackups
+                  - dynamodb:UpdateContinuousBackups
+                  - dynamodb:ListTagsOfResource
+                  - dynamodb:TagResource
+                  - dynamodb:UntagResource
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:dynamodb:*:${AWS::AccountId}:table/*'
+                  - !Sub 'arn:${AWS::Partition}:dynamodb:*:${AWS::AccountId}:table/*/index/*'
 
   RoleAssetDeploy:
     Type: AWS::IAM::Role

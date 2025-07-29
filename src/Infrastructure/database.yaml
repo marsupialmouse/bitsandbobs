@@ -59,6 +59,6 @@ Resources:
       BillingMode: PAY_PER_REQUEST
 
 Outputs:
-  DynamoDbTableName:
+  TableName:
     Value: !Ref DynamoDbTable
 

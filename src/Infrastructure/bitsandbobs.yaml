@@ -12,6 +12,12 @@ Parameters:
       - Staging
       - Production
 
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - W3002 # aws-cloudformation-github-deploy uses package, so we don't need S3 for templates
+
 Mappings:
   EnvironmentMap:
     Development:
@@ -25,6 +31,13 @@ Mappings:
       Cidr: 10.16.32.0/20
 
 Resources:
+  DatabaseStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: database.yaml
+      Parameters:
+        Environment: !Ref Environment
+
   VPC:
     Type: AWS::EC2::VPC
     Properties:
