@@ -14,12 +14,87 @@ Parameters:
 
 Mappings:
   EnvironmentMap:
-    PlatformName:
-      Development: dev
-      Staging: staging
-      Production: prod
+    Development:
+      Moniker: dev
+      Cidr: 10.16.0.0/20
+    Staging:
+      Moniker: staging
+      Cidr: 10.16.16.0/20
+    Production:
+      Moniker: prod
+      Cidr: 10.16.32.0/20
 
 Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !FindInMap [ EnvironmentMap, !Ref Environment, Cidr ]
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  SubnetPrivateA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '0', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ]]
+      AvailabilityZone: !Select [ '0', !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Private-A'
+
+  SubnetPublicA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '1', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '0', !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Public-A'
+
+  SubnetKubernetesA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '2', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '0', !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Kubernetes-A'
+
+  SubnetPrivateB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '4', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '1', !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Private-B'
+
+  SubnetPublicB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '5', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '1', !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Public-B'
+
+  SubnetKubernetesB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '6', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '1', !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Kubernetes-B'
+
   # The S3 bucket for the client app
   S3BucketApp:
     Type: 'AWS::S3::Bucket'
@@ -27,7 +102,7 @@ Resources:
       BucketName:
         !Sub
           - 'marsupialmouse-bitsandbobs-${PlatformName}'
-          - PlatformName: !FindInMap [EnvironmentMap, PlatformName, !Ref Environment]
+          - PlatformName: !FindInMap [EnvironmentMap, !Ref Environment, Moniker]
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -71,7 +146,7 @@ Resources:
       BucketName:
         !Sub
         - 'marsupialmouse-bitsandbobs-${PlatformName}-logs'
-        - PlatformName: !FindInMap [ EnvironmentMap, PlatformName, !Ref Environment ]
+        - PlatformName: !FindInMap [ EnvironmentMap, !Ref Environment, Moniker ]
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -239,10 +314,7 @@ Resources:
 
 Outputs:
   BucketName:
-    Value:
-      !Sub
-        - 'marsupialmouse-bitsandbobs-${PlatformName}'
-        - PlatformName: !FindInMap [ EnvironmentMap, PlatformName, !Ref Environment ]
+    Value: !Ref S3BucketApp
   DomainName:
     Value: !GetAtt CFDistribution.DomainName
   KeyValueStoreArn:
