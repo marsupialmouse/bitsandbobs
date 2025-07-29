@@ -1,7 +1,7 @@
 ---
-# aws cloudformation deploy --template-file ./src/Infrastructure/github-cicd-roles.yaml --stack-name github-cicd-roles --capabilities CAPABILITY_NAMED_IAM
+# aws cloudformation deploy --template-file ./src/Infrastructure/bootstrap.yaml --stack-name github-cicd-roles --capabilities CAPABILITY_NAMED_IAM
 AWSTemplateFormatVersion: "2010-09-09"
-Description: OIDC IDP and associated Roles for GitHub Actions
+Description: Bootstrap the environment for CFN deployments from GitHub Actions
 
 Parameters:
   GitHubOrganization:
@@ -15,6 +15,24 @@ Parameters:
     Default: "bitsandbobs"
 
 Resources:
+  #This is the bucket where CloudFormation templates will be stored when packaged
+  S3BucketCfn:
+    # checkov:skip=CKV_AWS_18:This is a private bucket for logs, we don't need access logs
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub '${GitHubOrganization}-${RepositoryName}-cfn'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'
+
   GitHubOidcProvider:
     Type: AWS::IAM::OIDCProvider
     Properties:
@@ -258,6 +276,10 @@ Resources:
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:key-value-store/*'
 
 Outputs:
+  CfnBuketName:
+    Description: "The name of the bucket in which CFN templates should be stored"
+    Value: !Ref S3BucketCfn
+
   GitHubOidc:
     Description: "ARN of Github OIDC Provider"
     Value: !GetAtt GitHubOidcProvider.Arn
