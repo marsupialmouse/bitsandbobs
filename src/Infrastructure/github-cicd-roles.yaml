@@ -74,36 +74,42 @@ Resources:
                 Action:
                   - iam:PassRole
                 Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*'
+
         - PolicyName: VPCCfnDeployment
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
+              - Sid: VPCDescribeActions
+                Effect: Allow
+                Action:
+                  - ec2:DescribeVpcs
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeInternetGateways
+                  - ec2:DescribeRouteTables
+                  - ec2:DescribeTags
+                  - ec2:DescribeAvailabilityZones
+                Resource: '*'
               - Sid: VPCActions
                 Effect: Allow
                 Action:
                   - ec2:CreateVpc
                   - ec2:DeleteVpc
-                  - ec2:DescribeVpcs
                   - ec2:ModifyVpcAttribute
                   - ec2:CreateSubnet
                   - ec2:DeleteSubnet
-                  - ec2:DescribeSubnets
                   - ec2:ModifySubnetAttribute
                   - ec2:CreateInternetGateway
                   - ec2:DeleteInternetGateway
                   - ec2:AttachInternetGateway
                   - ec2:DetachInternetGateway
-                  - ec2:DescribeInternetGateways
                   - ec2:CreateRouteTable
                   - ec2:DeleteRouteTable
-                  - ec2:DescribeRouteTables
                   - ec2:CreateRoute
                   - ec2:DeleteRoute
                   - ec2:AssociateRouteTable
                   - ec2:DisassociateRouteTable
                   - ec2:CreateTags
                   - ec2:DeleteTags
-                  - ec2:DescribeTags
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:vpc/*'
                   - !Sub 'arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:subnet/*'
@@ -134,6 +140,7 @@ Resources:
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:s3:::*'
                   - !Sub 'arn:${AWS::Partition}:s3:::*/*'
+
         - PolicyName: CloudFrontCfnDeployment
           PolicyDocument:
             Version: '2012-10-17'
@@ -167,6 +174,7 @@ Resources:
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:origin-access-control/*'
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:key-value-store/*'
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:function/*'
+
         - PolicyName: DynamoDbCfnDeployment
           PolicyDocument:
             Version: '2012-10-17'
