@@ -16,7 +16,7 @@ Metadata:
   cfn-lint:
     config:
       ignore_checks:
-        - W3002 # aws-cloudformation-github-deploy uses package, so we don't need S3 for templates
+        - W3002 # We do package the templates, so quit your whining
 
 Mappings:
   EnvironmentMap:

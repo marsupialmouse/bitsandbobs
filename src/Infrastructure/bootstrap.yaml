@@ -1,5 +1,5 @@
 ---
-# aws cloudformation deploy --template-file ./src/Infrastructure/bootstrap.yaml --stack-name github-cicd-roles --capabilities CAPABILITY_NAMED_IAM
+# aws cloudformation deploy --template-file ./src/Infrastructure/bootstrap.yaml --stack-name BitsAndBobs-Bootstrap --capabilities CAPABILITY_NAMED_IAM
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Bootstrap the environment for CFN deployments from GitHub Actions
 
@@ -155,6 +155,9 @@ Resources:
                   - s3:GetBucketLocation
                   - s3:GetBucketAcl
                   - s3:PutBucketAcl
+                  - s3:ListBucket
+                  - s3:GetObject
+                  - s3:PutObject
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:s3:::*'
                   - !Sub 'arn:${AWS::Partition}:s3:::*/*'
