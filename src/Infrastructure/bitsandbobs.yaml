@@ -108,6 +108,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Subnet-Public-A'
+        - Key: kubernetes.io/role/elb
+          Value: '1'
 
   SubnetPublicARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -146,6 +148,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Subnet-Public-B'
+        - Key: kubernetes.io/role/elb
+          Value: '1'
 
   SubnetPublicBRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
