@@ -228,6 +228,7 @@ Resources:
                   - eks:DescribeCluster
                   - eks:DescribeNodegroup
                   - eks:DescribeAddon
+                  - eks:DescribeAccessEntry
                   - eks:DescribeFargateProfile
                   - eks:ListClusters
                   - eks:ListNodegroups
@@ -246,6 +247,9 @@ Resources:
                   - eks:DeleteCluster
                   - eks:TagResource
                   - eks:UntagResource
+                  - eks:CreateAccessEntry
+                  - eks:UpdateAccessEntry
+                  - eks:DeleteAccessEntry
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:eks:*:${AWS::AccountId}:cluster/*'
               - Sid: EKSNodeGroupActions
