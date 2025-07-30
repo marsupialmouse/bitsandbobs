@@ -19,12 +19,11 @@ on:
         required: true
 
 env:
-  CfnBucket: ${{ vars.S3_BUCKET_APP }}
+  CfnBucket: ${{ vars.S3_BUCKET_CFN }}
   DeployCfnRole: ${{ secrets.AWS_ROLE_DEPLOY_CFN_ARN }}
   DeployAssetsRole: ${{ secrets.AWS_ROLE_DEPLOY_ASSSETS_ARN }}
   DeployVersionRole: ${{ secrets.AWS_ROLE_DEPLOY_VERSION_ARN }}
   Region: ${{ secrets.AWS_DEFAULT_REGION }}
-  UiBucket: ${{ vars.S3_BUCKET_APP }}
 
 jobs:
   createVersion:
@@ -52,6 +51,7 @@ jobs:
       contents: read
     env:
       version: ${{ needs.createVersion.outputs.version }}
+      uiBucket: ${{ vars.S3_BUCKET_APP }}
     defaults:
       run:
         working-directory: 'src/BitsAndBobs/clientapp'
@@ -75,7 +75,7 @@ jobs:
           role-to-assume: ${{ env.DeployAssetsRole }}
           role-session-name: ${{ github.run_id }}
       - name: Sync build to UI bucket
-        run: aws s3 sync ./dist s3://${{ env.UiBucket }}/${{ env.version }}
+        run: aws s3 sync ./dist s3://${{ env.uiBucket }}/${{ env.version }}
 
   deployApi:
     name: Build and publish API
@@ -152,6 +152,7 @@ jobs:
       id-token: write
       contents: read
     env:
+      uiBucket: ${{ vars.S3_BUCKET_APP }}
       version: ${{ format('{0}{1}', inputs.version, needs.createVersion.outputs.version) }}
     steps:
       - name: Checkout
@@ -170,7 +171,7 @@ jobs:
           parameter-overrides: 'Environment=${{ inputs.environment }},CreateEksCluster=${{ inputs.enableEksCluster }}'
           no-fail-on-empty-changeset: '1'
       - name: Sync default document to UI bucket
-        run: aws s3 sync src/Infrastructure s3://${{ env.UiBucket }} --exclude='*' --include='index.html'
+        run: aws s3 sync src/Infrastructure s3://${{ env.uiBucket }} --exclude='*' --include='index.html'
 
   tag:
     name: Create tag
