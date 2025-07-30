@@ -12,12 +12,19 @@ on:
         description: The version (tag) to deploy. Leave blank to build and deploy a new version.
         type: string
         required: false
+      enableEksCluster:
+        description: Whether the EKS cluster should be enabled ($$)
+        type: boolean
+        default: false
+        required: true
 
 env:
+  CfnBucket: ${{ vars.S3_BUCKET_APP }}
   DeployCfnRole: ${{ secrets.AWS_ROLE_DEPLOY_CFN_ARN }}
   DeployAssetsRole: ${{ secrets.AWS_ROLE_DEPLOY_ASSSETS_ARN }}
   DeployVersionRole: ${{ secrets.AWS_ROLE_DEPLOY_VERSION_ARN }}
   Region: ${{ secrets.AWS_DEFAULT_REGION }}
+  UiBucket: ${{ vars.S3_BUCKET_APP }}
 
 jobs:
   createVersion:
@@ -44,7 +51,6 @@ jobs:
       id-token: write
       contents: read
     env:
-      uiBucket: ${{ vars.S3_BUCKET_APP }}
       version: ${{ needs.createVersion.outputs.version }}
     defaults:
       run:
@@ -69,7 +75,7 @@ jobs:
           role-to-assume: ${{ env.DeployAssetsRole }}
           role-session-name: ${{ github.run_id }}
       - name: Sync build to UI bucket
-        run: aws s3 sync ./dist s3://${{ env.uiBucket }}/${{ env.version }}
+        run: aws s3 sync ./dist s3://${{ env.UiBucket }}/${{ env.version }}
 
   deployApi:
     name: Build and publish API
@@ -107,17 +113,46 @@ jobs:
             --configuration Release \
             --runtime linux-arm64
 
+  packageCfn:
+    name: Package CloudFormation template
+    runs-on: ubuntu-latest
+    needs: [ createVersion ]
+    env:
+      prefix: ${{ needs.createVersion.outputs.version }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.Region }}
+          role-to-assume: ${{ env.DeployAssetsRole }}
+          role-session-name: ${{ github.run_id }}
+      - name: Package template
+        run: |
+          aws cloudformation package \
+          --template-file src/Infrastructure/bitsandbobs.yaml \
+          --s3-bucket ${{ env.cfnBucket }} \
+          --s3-prefix ${{ env.prefix }} \
+          --output-template-file bitsandbobs.packaged.yaml \
+          --force-upload
+      - name: Sync template to CFN bucket
+        run: aws s3 sync . s3://${{ env.CfnBucket }}/${{ env.prefix }} --exclude='*' --include='bitsandbobs.packaged.yaml'
+
   deployCfn:
     name: Deploy CloudFormation template
     runs-on: ubuntu-latest
-    needs: [createVersion]
+    needs: [createVersion, packageCfn]
+    if: ${{ !failure() && !cancelled() }}
     environment: ${{ inputs.environment }}
     permissions:
       id-token: write
       contents: read
     env:
-      cfnBucket: ${{ vars.S3_BUCKET_APP }}
-      uiBucket: ${{ vars.S3_BUCKET_APP }}
+      version: ${{ format('{0}{1}', inputs.version, needs.createVersion.outputs.version) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -127,23 +162,15 @@ jobs:
           aws-region: ${{ env.Region }}
           role-to-assume: ${{ env.DeployCfnRole }}
           role-session-name: ${{ github.run_id }}
-      - name: Package template
-        run: |
-          aws cloudformation package \
-          --template-file src/Infrastructure/bitsandbobs.yaml \
-          --s3-bucket ${{ env.cfnBucket }} \
-          --s3-prefix ${{ needs.createVersion.outputs.version }} \
-          --output-template-file bitsandbobs.packaged.yaml \
-          --force-upload
       - name: Deploy to CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: 'BitsAndBobs-${{ inputs.environment }}'
-          template: bitsandbobs.packaged.yaml
-          parameter-overrides: 'Environment=${{ inputs.environment }}'
+          template: s3://${{ env.CfnBucket }}/${{ env.version }}/bitsandbobs.packaged.yaml
+          parameter-overrides: 'Environment=${{ inputs.environment }},CreateEksCluster=${{ inputs.enableEksCluster }}'
           no-fail-on-empty-changeset: '1'
       - name: Sync default document to UI bucket
-        run: aws s3 sync src/Infrastructure s3://${{ env.uiBucket }} --exclude='*' --include='index.html'
+        run: aws s3 sync src/Infrastructure s3://${{ env.UiBucket }} --exclude='*' --include='index.html'
 
   tag:
     name: Create tag

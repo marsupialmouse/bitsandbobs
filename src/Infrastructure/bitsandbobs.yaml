@@ -1,4 +1,3 @@
----
 AWSTemplateFormatVersion: 2010-09-09
 Description: Infrastructure for the Bits & Bobs application
 
@@ -11,6 +10,14 @@ Parameters:
       - Development
       - Staging
       - Production
+
+  CreateEksCluster:
+    Type: String
+    Default: false
+    Description: Whether the EKS cluster should be created ($$)
+    AllowedValues:
+      - true
+      - false
 
 Metadata:
   cfn-lint:
@@ -30,6 +37,9 @@ Mappings:
       Moniker: prod
       Cidr: 10.16.32.0/20
 
+Conditions:
+  CreateEksClusterCondition: !Equals [!Ref CreateEksCluster, 'true']
+
 Resources:
   DatabaseStack:
     Type: AWS::CloudFormation::Stack
@@ -47,6 +57,37 @@ Resources:
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-PublicSubnets"
+
+  InternetGatewayRoute:
+    Type: AWS::EC2::Route
+    # DependsOn is mandatory because route targets InternetGateway
+    # See here: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-dependson.html#gatewayattachment
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
 
   SubnetPrivateA:
     Type: AWS::EC2::Subnet
@@ -68,6 +109,12 @@ Resources:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Subnet-Public-A'
 
+  SubnetPublicARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetPublicA
+      RouteTableId: !Ref RouteTable
+
   SubnetKubernetesA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -77,6 +124,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Subnet-Kubernetes-A'
+        - Key: kubernetes.io/role/internal-elb
+          Value: '1'
 
   SubnetPrivateB:
     Type: AWS::EC2::Subnet
@@ -98,6 +147,12 @@ Resources:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Subnet-Public-B'
 
+  SubnetPublicBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetPublicB
+      RouteTableId: !Ref RouteTable
+
   SubnetKubernetesB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -107,6 +162,8 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Subnet-Kubernetes-B'
+        - Key: kubernetes.io/role/internal-elb
+          Value: '1'
 
   # The S3 bucket for the client app
   S3BucketApp:
@@ -325,6 +382,32 @@ Resources:
           return request;
         }
 
+  EksCluster:
+    Type: AWS::EKS::Cluster
+    Condition: CreateEksClusterCondition
+    Properties:
+      Name: !Sub 'EksCluster-${Environment}'
+      Version: '1.33'
+      RoleArn: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AmazonEKSAutoClusterRole'
+      AccessConfig:
+        AuthenticationMode: API_AND_CONFIG_MAP
+      ComputeConfig:
+        Enabled: true
+        NodePools:
+          - general-purpose
+        NodeRoleArn: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AmazonEKSAutoNodeRole'
+      KubernetesNetworkConfig:
+        ElasticLoadBalancing:
+          Enabled: true
+      ResourcesVpcConfig:
+        EndpointPublicAccess: true
+        SubnetIds:
+          - !Ref SubnetKubernetesA
+          - !Ref SubnetKubernetesB
+      StorageConfig:
+        BlockStorage:
+          Enabled: true
+
 Outputs:
   BucketName:
     Value: !Ref S3BucketApp
@@ -334,3 +417,12 @@ Outputs:
     Value: !GetAtt CFKeyValueStore.Arn
   KeyValueStoreId:
     Value: !GetAtt CFKeyValueStore.Id
+  EksCluster:
+    Condition: CreateEksClusterCondition
+    Value: !Ref EksCluster
+  EksClusterArn:
+    Condition: CreateEksClusterCondition
+    Value: !GetAtt EksCluster.Arn
+  EksClusterEndpoint:
+    Condition: CreateEksClusterCondition
+    Value: !GetAtt EksCluster.Endpoint

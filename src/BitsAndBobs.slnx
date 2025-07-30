@@ -8,10 +8,11 @@
     <File Path="..\.config\hooks\pre-commit" />
   </Folder>
   <Folder Name="/Infrastructure/">
-    <File Path="Infrastructure\database.yaml" />
     <File Path="Infrastructure\bootstrap.yaml" />
     <File Path="Infrastructure\bitsandbobs.yaml" />
+    <File Path="Infrastructure\database.yaml" />
     <File Path="Infrastructure\index.html" />
+    <File Path="Infrastructure\bitsandbobs-deploy.sh" />
   </Folder>
   <Folder Name="/Workflows/">
     <File Path="..\.github\workflows\api.yml" />
