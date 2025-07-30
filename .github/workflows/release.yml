@@ -167,7 +167,7 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: 'BitsAndBobs-${{ inputs.environment }}'
-          template: s3://${{ env.CfnBucket }}/${{ env.version }}/bitsandbobs.packaged.yaml
+          template: 'https://${{ env.CfnBucket }}.s3.${{ env.Region }}.amazonaws.com/${{ env.version }}/bitsandbobs.packaged.yaml'
           parameter-overrides: 'Environment=${{ inputs.environment }},CreateEksCluster=${{ inputs.enableEksCluster }}'
           no-fail-on-empty-changeset: '1'
       - name: Sync default document to UI bucket
