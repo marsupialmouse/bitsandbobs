@@ -206,7 +206,7 @@ jobs:
         uses: azure/setup-helm@v4.3.0
       - name: Create Helm package
         run: |
-          helm package src/Infrastructure/helm/bitsandbobs --app-version ${{ env.prefix }} --output
+          helm package src/Infrastructure/helm/bitsandbobs --app-version ${{ env.prefix }}
           mv bitsandbobs-*.tgz bitsandbobs.tgz
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
