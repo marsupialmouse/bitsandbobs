@@ -379,6 +379,15 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly
+      Policies:
+        - PolicyName: EksNodePodIdentity
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - eks-auth:AssumeRoleForPodIdentity
+                Resource: '*'
 
 Outputs:
   CfnBuketName:

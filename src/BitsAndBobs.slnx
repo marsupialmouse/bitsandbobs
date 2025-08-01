@@ -13,6 +13,26 @@
     <File Path="Infrastructure\database.yaml" />
     <File Path="Infrastructure\index.html" />
     <File Path="Infrastructure\bitsandbobs-deploy.sh" />
+    <File Path="Infrastructure\vpc.yaml" />
+    <File Path="Infrastructure\kubernetes.yaml" />
+  </Folder>
+  <Folder Name="/Infrastructure/helm/" />
+  <Folder Name="/Infrastructure/helm/bitsandbobs/">
+    <File Path="Infrastructure\helm\bitsandbobs\.helmignore" />
+    <File Path="Infrastructure\helm\bitsandbobs\Chart.yaml" />
+    <File Path="Infrastructure\helm\bitsandbobs\values.yaml" />
+  </Folder>
+  <Folder Name="/Infrastructure/helm/bitsandbobs/charts/" />
+  <Folder Name="/Infrastructure/helm/bitsandbobs/templates/">
+    <File Path="Infrastructure\helm\bitsandbobs\templates\_helpers.tpl" />
+    <File Path="Infrastructure\helm\bitsandbobs\templates\deployment.yaml" />
+    <File Path="Infrastructure\helm\bitsandbobs\templates\hpa.yaml" />
+    <File Path="Infrastructure\helm\bitsandbobs\templates\ingress.yaml" />
+    <File Path="Infrastructure\helm\bitsandbobs\templates\service.yaml" />
+    <File Path="Infrastructure\helm\bitsandbobs\templates\nodepool-spot.yaml" />
+  </Folder>
+  <Folder Name="/Infrastructure/helm/bitsandbobs/templates/tests/">
+    <File Path="Infrastructure\helm\bitsandbobs\templates\tests\test-connection.yaml" />
   </Folder>
   <Folder Name="/Workflows/">
     <File Path="..\.github\workflows\api.yml" />

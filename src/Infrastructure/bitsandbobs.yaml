@@ -41,6 +41,14 @@ Conditions:
   CreateEksClusterCondition: !Equals [!Ref CreateEksCluster, 'true']
 
 Resources:
+  VpcStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: vpc.yaml
+      Parameters:
+        Cidr: !FindInMap [EnvironmentMap, !Ref Environment, Cidr]
+        CreateNatGateway: !Ref CreateEksCluster
+
   DatabaseStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -48,126 +56,15 @@ Resources:
       Parameters:
         Environment: !Ref Environment
 
-  VPC:
-    Type: AWS::EC2::VPC
+  EksStack:
+    Type: AWS::CloudFormation::Stack
+    Condition: CreateEksClusterCondition
     Properties:
-      CidrBlock: !FindInMap [ EnvironmentMap, !Ref Environment, Cidr ]
-      EnableDnsSupport: true
-      EnableDnsHostnames: true
-      Tags:
-        - Key: Name
-          Value: !Ref AWS::StackName
-
-  InternetGateway:
-    Type: AWS::EC2::InternetGateway
-    Properties:
-      Tags:
-        - Key: Name
-          Value: !Ref AWS::StackName
-
-  VPCGatewayAttachment:
-    Type: AWS::EC2::VPCGatewayAttachment
-    Properties:
-      InternetGatewayId: !Ref InternetGateway
-      VpcId: !Ref VPC
-
-  RouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-PublicSubnets"
-
-  InternetGatewayRoute:
-    Type: AWS::EC2::Route
-    # DependsOn is mandatory because route targets InternetGateway
-    # See here: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-dependson.html#gatewayattachment
-    DependsOn: VPCGatewayAttachment
-    Properties:
-      RouteTableId: !Ref RouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref InternetGateway
-
-  SubnetPrivateA:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      CidrBlock: !Select [ '0', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ]]
-      AvailabilityZone: !Select [ '0', !GetAZs '' ]
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-Subnet-Private-A'
-
-  SubnetPublicA:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      CidrBlock: !Select [ '1', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
-      AvailabilityZone: !Select [ '0', !GetAZs '' ]
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-Subnet-Public-A'
-        - Key: kubernetes.io/role/elb
-          Value: '1'
-
-  SubnetPublicARouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref SubnetPublicA
-      RouteTableId: !Ref RouteTable
-
-  SubnetKubernetesA:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      CidrBlock: !Select [ '2', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
-      AvailabilityZone: !Select [ '0', !GetAZs '' ]
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-Subnet-Kubernetes-A'
-        - Key: kubernetes.io/role/internal-elb
-          Value: '1'
-
-  SubnetPrivateB:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      CidrBlock: !Select [ '4', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
-      AvailabilityZone: !Select [ '1', !GetAZs '' ]
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-Subnet-Private-B'
-
-  SubnetPublicB:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      CidrBlock: !Select [ '5', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
-      AvailabilityZone: !Select [ '1', !GetAZs '' ]
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-Subnet-Public-B'
-        - Key: kubernetes.io/role/elb
-          Value: '1'
-
-  SubnetPublicBRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref SubnetPublicB
-      RouteTableId: !Ref RouteTable
-
-  SubnetKubernetesB:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      CidrBlock: !Select [ '6', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
-      AvailabilityZone: !Select [ '1', !GetAZs '' ]
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-Subnet-Kubernetes-B'
-        - Key: kubernetes.io/role/internal-elb
-          Value: '1'
+      TemplateURL: kubernetes.yaml
+      Parameters:
+        ClusterName: !Sub 'EksCluster-${Environment}'
+        Subnet1Id: !GetAtt VpcStack.Outputs.SubnetKubernetesAId
+        Subnet2Id: !GetAtt VpcStack.Outputs.SubnetKubernetesBId
 
   # The S3 bucket for the client app
   S3BucketApp:
@@ -386,32 +283,6 @@ Resources:
           return request;
         }
 
-  EksCluster:
-    Type: AWS::EKS::Cluster
-    Condition: CreateEksClusterCondition
-    Properties:
-      Name: !Sub 'EksCluster-${Environment}'
-      Version: '1.33'
-      RoleArn: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AmazonEKSAutoClusterRole'
-      AccessConfig:
-        AuthenticationMode: API_AND_CONFIG_MAP
-      ComputeConfig:
-        Enabled: true
-        NodePools:
-          - general-purpose
-        NodeRoleArn: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AmazonEKSAutoNodeRole'
-      KubernetesNetworkConfig:
-        ElasticLoadBalancing:
-          Enabled: true
-      ResourcesVpcConfig:
-        EndpointPublicAccess: true
-        SubnetIds:
-          - !Ref SubnetKubernetesA
-          - !Ref SubnetKubernetesB
-      StorageConfig:
-        BlockStorage:
-          Enabled: true
-
 Outputs:
   BucketName:
     Value: !Ref S3BucketApp
@@ -421,12 +292,4 @@ Outputs:
     Value: !GetAtt CFKeyValueStore.Arn
   KeyValueStoreId:
     Value: !GetAtt CFKeyValueStore.Id
-  EksCluster:
-    Condition: CreateEksClusterCondition
-    Value: !Ref EksCluster
-  EksClusterArn:
-    Condition: CreateEksClusterCondition
-    Value: !GetAtt EksCluster.Arn
-  EksClusterEndpoint:
-    Condition: CreateEksClusterCondition
-    Value: !GetAtt EksCluster.Endpoint
+

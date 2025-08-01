@@ -1,0 +1,215 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: VPC for the Bits & Bobs application
+
+Parameters:
+  Cidr:
+    Type: String
+    Description: The CIDR block for the VPC (should be at least /20)
+  CreateNatGateway:
+    Type: String
+    Default: false
+    Description: Whether the NAT Gateway should be created ($$)
+    AllowedValues:
+      - true
+      - false
+
+Conditions:
+  CreateNatGatewayCondition: !Equals [!Ref CreateNatGateway, 'true']
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref Cidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-PublicSubnets"
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    # DependsOn is mandatory because route targets InternetGateway
+    # See here: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-dependson.html#gatewayattachment
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetPublicA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '1', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '0', !GetAZs '' ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Public-A'
+        - Key: kubernetes.io/role/elb
+          Value: '1'
+
+  SubnetPublicB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '5', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '1', !GetAZs '' ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Public-B'
+        - Key: kubernetes.io/role/elb
+          Value: '1'
+
+  SubnetPublicARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetPublicA
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetPublicBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetPublicB
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetKubernetesA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '2', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '0', !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Kubernetes-A'
+        - Key: kubernetes.io/role/internal-elb
+          Value: '1'
+
+  SubnetKubernetesB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '6', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '1', !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Kubernetes-B'
+        - Key: kubernetes.io/role/internal-elb
+          Value: '1'
+
+  SubnetPrivateA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '0', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '0', !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Private-A'
+
+  SubnetPrivateB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [ '4', !Cidr [ !GetAtt VPC.CidrBlock, '16', '8' ] ]
+      AvailabilityZone: !Select [ '1', !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Subnet-Private-B'
+
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    Condition: CreateNatGatewayCondition
+    DependsOn: VPC
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Condition: CreateNatGatewayCondition
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref SubnetPublicA
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Condition: CreateNatGatewayCondition
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-PrivateSubnets"
+
+  PrivatePublicRoute:
+    Type: AWS::EC2::Route
+    Condition: CreateNatGatewayCondition
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      NatGatewayId: !Ref NatGateway
+      DestinationCidrBlock: 0.0.0.0/0
+
+  SubnetKubernetesARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateNatGatewayCondition
+    Properties:
+      SubnetId: !Ref SubnetKubernetesA
+      RouteTableId: !Ref PrivateRouteTable
+
+  SubnetKubernetesBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateNatGatewayCondition
+    Properties:
+      SubnetId: !Ref SubnetKubernetesB
+      RouteTableId: !Ref PrivateRouteTable
+
+  SubnetPrivateARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateNatGatewayCondition
+    Properties:
+      SubnetId: !Ref SubnetPrivateA
+      RouteTableId: !Ref PrivateRouteTable
+
+  SubnetPrivateBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateNatGatewayCondition
+    Properties:
+      SubnetId: !Ref SubnetPrivateB
+      RouteTableId: !Ref PrivateRouteTable
+
+Outputs:
+  SubnetKubernetesAId:
+    Value: !Ref SubnetKubernetesA
+  SubnetKubernetesBId:
+    Value: !Ref SubnetKubernetesB
+  SubnetPrivateAId:
+    Value: !Ref SubnetPrivateA
+  SubnetPrivateBId:
+    Value: !Ref SubnetPrivateB
+  SubnetPublicAId:
+    Value: !Ref SubnetPublicA
+  SubnetPublicBId:
+    Value: !Ref SubnetPublicB

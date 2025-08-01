@@ -1,0 +1,61 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: EKS cluster for the Bits & Bobs application
+
+Parameters:
+  ClusterName:
+    Type: String
+    Description: The name of the EKS cluster (for tagging)
+  Subnet1Id:
+    Type: String
+    Description: The ID of the first subnet for EKS nodes
+  Subnet2Id:
+    Type: String
+    Description: The ID of the second subnet for EKS nodes
+
+Resources:
+  EksCluster:
+    # checkov:skip=CKV_AWS_58: This is a demo, we don't need to pay for KMS to encrypt out "secrets"
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: !Ref ClusterName
+      Version: '1.33'
+      RoleArn: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AmazonEKSAutoClusterRole'
+      AccessConfig:
+        AuthenticationMode: API_AND_CONFIG_MAP
+      ComputeConfig:
+        Enabled: true
+        NodePools: # We create a custom spot pool using Helm
+          - system
+          - general-purpose
+        NodeRoleArn: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AmazonEKSAutoNodeRole'
+      KubernetesNetworkConfig:
+        ElasticLoadBalancing:
+          Enabled: true
+      Logging:
+        ClusterLogging:
+          EnabledTypes:
+            - Type: api
+            - Type: audit
+      ResourcesVpcConfig:
+        EndpointPrivateAccess: true
+        EndpointPublicAccess: true
+        SubnetIds:
+          - !Ref Subnet1Id
+          - !Ref Subnet2Id
+      StorageConfig:
+        BlockStorage:
+          Enabled: true
+      UpgradePolicy:
+        SupportType: STANDARD
+      ZonalShiftConfig:
+        Enabled: false
+
+Outputs:
+  EksCluster:
+    Value: !Ref EksCluster
+  EksClusterArn:
+    Value: !GetAtt EksCluster.Arn
+  EksClusterEndpoint:
+    Value: !GetAtt EksCluster.Endpoint
+
