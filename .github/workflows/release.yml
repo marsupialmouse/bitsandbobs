@@ -193,18 +193,20 @@ jobs:
           role-to-assume: ${{ env.DeployCfnRole }}
           role-session-name: ${{ github.run_id }}
       # This check is to make sure we don't try to use out-of-date EKS LB secrets if the cluster doesn't exist yet
-      - name: Check if EKS cluster exists
+      - name: Require EKS cluster for LB parameters
         if: ${{ inputs.enableEksCluster }}
         id: checkCluster
         run: |
-          CLUSTER_EXISTS=$(aws eks describe-cluster --name "EksCluster-${{ inputs.environment }}" >/dev/null 2>&1 && echo "true" || echo "false")
-          echo "exists=$(CLUSTER_EXISTS)\n" >> $GITHUB_OUTPUT
+          if aws eks describe-cluster --name "EksCluster-${{ inputs.environment }}" >/dev/null 2>&1; then
+            echo "eksLoadBalancerArn=$(eksLoadBalancerArn)\n" >> $GITHUB_OUTPUT
+            echo "eksLoadBalancerDomainName=$(eksLoadBalancerDomainName)\n" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         env:
-            hasCluster: ${{ inputs.enableEksCluster && steps.checkCluster.outputs.exists == 'true' }}
-            lbArn: ${{ fromJSON(format('["", "{0}"]', env.eksLoadBalancerArn))[env.hasCluster] }}
-            lbDomain: ${{ fromJSON(format('["", "{0}"]', env.eksLoadBalancerDomainName))[env.hasCluster] }}
+            lbArn: ${{ steps.checkCluster.outputs.eksLoadBalancerArn }}
+            lbDomain: ${{ steps.checkCluster.outputs.eksLoadBalancerDomainName }}
         with:
           name: 'BitsAndBobs-${{ inputs.environment }}'
           template: 'https://${{ env.CfnBucket }}.s3.${{ env.Region }}.amazonaws.com/${{ env.version }}/bitsandbobs.packaged.yaml'
