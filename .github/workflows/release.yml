@@ -273,9 +273,11 @@ jobs:
       - name: Set kubectl context
         if: ${{ inputs.enableEksCluster }}
         run: aws eks update-kubeconfig --region ${{ env.Region }} --name EksCluster-${{ inputs.environment }}
+      - name: Get Helm package
+        run: aws s3 cp s3://${{ env.CfnBucket }}/${{ env.version }}/helm/bitsandbobs.tgz bitsandbobs.tgz
       - name: Deploy Helm chart
         if: ${{ inputs.enableEksCluster }}
-        run: helm upgrade bitsandbobs 'https://${{ env.CfnBucket }}.s3.${{ env.Region }}.amazonaws.com/${{ env.version }}/helm/bitsandbobs.tgz'
+        run: helm upgrade bitsandbobs bitsandbobs.tgz
       - name: Get load balancer details
         if: ${{ inputs.enableEksCluster }}
         id: get_lb_details
