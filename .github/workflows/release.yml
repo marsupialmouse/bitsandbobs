@@ -15,7 +15,7 @@ on:
       enableEksCluster:
         description: Whether the EKS cluster should be enabled ($$)
         type: boolean
-        default: false
+        default: true
         required: true
 
 env:
@@ -199,8 +199,8 @@ jobs:
         run: |
           if aws eks describe-cluster --name "EksCluster-${{ inputs.environment }}" >/dev/null 2>&1; then
             {
-              "eksLoadBalancerArn=$(eksLoadBalancerArn)"
-              "eksLoadBalancerDomainName=$(eksLoadBalancerDomainName)"
+              echo "eksLoadBalancerArn=$eksLoadBalancerArn"
+              echo "eksLoadBalancerDomainName=$eksLoadBalancerDomainName"
             } >> $GITHUB_OUTPUT
           fi
 
@@ -287,8 +287,8 @@ jobs:
           lb_domain_name=$(kubectl get ingress bitsandbobs -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
           lb_arn=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?DNSName=='$lb_domain_name'].LoadBalancerArn" --output text 2>/dev/null)
           {
-            "lb_arn=$(lb_arn)"
-            "lb_domain_name=$(lb_domain_name)"
+            echo "lb_arn=$lb_arn"
+            echo "lb_domain_name=$lb_domain_name"
           } >> $GITHUB_OUTPUT
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
