@@ -253,6 +253,8 @@ jobs:
     env:
       version: ${{ format('{0}{1}', inputs.version, needs.createVersion.outputs.version) }}
       kvsArn: ${{ secrets.CF_KVS_ARN }}
+      eksLoadBalancerArn: ${{ secrets.EKS_LB_ARN }}
+      eksLoadBalancerDomainName: ${{ secrets.EKS_LB_DOMAIN_NAME }}
     outputs:
       # These outputs should really be encrypted and saved to secrets...
       # For now, save them manually to secrets and re-run the workflow with the same version to finish CF setup
