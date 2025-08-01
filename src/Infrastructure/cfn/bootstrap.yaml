@@ -252,6 +252,8 @@ Resources:
                   - eks:ListTagsForResource
                   - ec2:DescribeSecurityGroups
                   - ec2:DescribeSecurityGroupRules
+                  - elasticloadbalancing:DescribeLoadBalancers
+                  - elasticloadbalancing:DescribeLoadBalancerAttributes
                 Resource: "*"
               - Sid: EKSClusterActions
                 Effect: Allow

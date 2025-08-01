@@ -180,7 +180,7 @@ jobs:
       contents: read
     env:
       eksLoadBalancerArn: ${{ secrets.EKS_LB_ARN }}
-      eksLoadBalancerDomainName: ${{ secrets.ELS_LB_DOMAIN_NAME }}
+      eksLoadBalancerDomainName: ${{ secrets.EKS_LB_DOMAIN_NAME }}
       uiBucket: ${{ vars.S3_BUCKET_APP }}
       version: ${{ format('{0}{1}', inputs.version, needs.createVersion.outputs.version) }}
     steps:
@@ -276,6 +276,7 @@ jobs:
         if: ${{ inputs.enableEksCluster }}
         run: aws eks update-kubeconfig --region ${{ env.Region }} --name EksCluster-${{ inputs.environment }}
       - name: Get Helm package
+        if: ${{ inputs.enableEksCluster }}
         run: aws s3 cp s3://${{ env.CfnBucket }}/${{ env.version }}/helm/bitsandbobs.tgz bitsandbobs.tgz
       - name: Deploy Helm chart
         if: ${{ inputs.enableEksCluster }}
@@ -290,6 +291,8 @@ jobs:
             echo "lb_arn=$lb_arn"
             echo "lb_domain_name=$lb_domain_name"
           } >> $GITHUB_OUTPUT
+          echo "EKS_LB_ARN:         $lb_arn"
+          echo "EKS_LB_DOMAIN_NAME: $lb_domain_name"
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
