@@ -19,6 +19,23 @@ Parameters:
       - true
       - false
 
+  EksLoadBalancerArn:
+    Type: String
+    Default: ''
+    Description: >
+      The ARN of the load balancer created by EKS, for use by the CloudFront VPC Origin. Ideally we'd look this up
+      inside the template, but the LB won't be created until we run helm to create the app inside Kubernetes, which
+      takes place after this template is deployed.
+
+  EksLoadBalancerDomainName:
+    Type: String
+    Default: ''
+    Description: |
+      The domain name of the load balancer created by EKS. To get the ARN and domain name:
+
+      DOMAINNAME=$(kubectl get ingress bitsandbobs -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+      ARN=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?DNSName=='$DOMAINNAME'].LoadBalancerArn" --output text)
+
 Metadata:
   cfn-lint:
     config:
@@ -38,7 +55,11 @@ Mappings:
       Cidr: 10.16.32.0/20
 
 Conditions:
-  CreateEksClusterCondition: !Equals [!Ref CreateEksCluster, 'true']
+  CreateEksClusterCondition: !Equals [ !Ref CreateEksCluster, 'true' ]
+  CreateEksVpcOriginCondition: !And
+    - !Condition CreateEksClusterCondition
+    - !Not [ !Equals [ !Ref EksLoadBalancerArn, ''] ]
+    - !Not [ !Equals [ !Ref EksLoadBalancerDomainName, '' ] ]
 
 Resources:
   VpcStack:
@@ -162,6 +183,17 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CFDistribution}
 
+  EksVpcOrigin:
+    Type: 'AWS::CloudFront::VpcOrigin'
+    Condition: CreateEksVpcOriginCondition
+    Properties:
+      VpcOriginEndpointConfig:
+        Name: !Sub EksLbVpcOrigin-${Environment}
+        Arn: !Ref EksLoadBalancerArn
+        HTTPPort: 80
+        HTTPSPort: 443
+        OriginProtocolPolicy: http-only
+
   # The CloudFront distribution exposing both the client app and api
   CFDistribution:
     # checkov:skip=CKV_AWS_68:This is a demo, we don't need to pay for WAF
@@ -174,6 +206,13 @@ Resources:
             S3OriginConfig:
               OriginAccessIdentity: ""
             OriginAccessControlId: !GetAtt CloudFrontOriginAccessControl.Id
+          - !If
+            - CreateEksVpcOriginCondition
+            - DomainName: !Ref EksLoadBalancerDomainName
+              Id: EksOrigin
+              VpcOriginConfig:
+                VpcOriginId: !Ref EksVpcOrigin
+            - !Ref AWS::NoValue
         Enabled: 'true'
         DefaultRootObject: index.html
         DefaultCacheBehavior:
@@ -189,10 +228,28 @@ Resources:
           # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-response-headers-policies.html
           #ResponseHeadersPolicyId: eaab4381-ed33-4a86-88ca-d9558dc6cd63 # CORS-with-preflight-and-SecurityHeadersPolicy
           ViewerProtocolPolicy: redirect-to-https
+          Compress: true
           FunctionAssociations:
             - EventType: viewer-request
               FunctionARN: !GetAtt SpaPathFunction.FunctionARN
         CacheBehaviors:
+          - !If
+            - CreateEksVpcOriginCondition
+            - PathPattern: /api/*
+              AllowedMethods:
+                - GET
+                - HEAD
+                - OPTIONS
+                - PUT
+                - PATCH
+                - POST
+                - DELETE
+              TargetOriginId: EksOrigin
+              CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # CachingDisabled
+              OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # AllViewer
+              ViewerProtocolPolicy: redirect-to-https
+              Compress: true
+            - !Ref AWS::NoValue
           - PathPattern: /images/*
             AllowedMethods:
               - GET
@@ -214,6 +271,7 @@ Resources:
             CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # CachingOptimized
             OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # CORS-S3Origin
             ViewerProtocolPolicy: redirect-to-https
+            Compress: true
             FunctionAssociations:
               - EventType: viewer-request
                 FunctionARN: !GetAtt SpaPathFunction.FunctionARN
