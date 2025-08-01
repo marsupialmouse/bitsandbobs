@@ -1,5 +1,5 @@
 ---
-# aws cloudformation deploy --template-file ./src/Infrastructure/bootstrap.yaml --stack-name BitsAndBobs-Bootstrap --capabilities CAPABILITY_NAMED_IAM
+# aws cloudformation deploy --template-file ./src/Infrastructure/cfn/bootstrap.yaml --stack-name BitsAndBobs-Bootstrap --capabilities CAPABILITY_NAMED_IAM
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Bootstrap the environment for CFN deployments from GitHub Actions
 
@@ -190,11 +190,16 @@ Resources:
                   - cloudfront:GetOriginAccessControlConfig
                   - cloudfront:ListOriginAccessControls
                   - cloudfront:TagResource
+                  - cloudfront:CreateVpcOrigin
+                  - cloudfront:DeleteVpcOrigin
+                  - cloudfront:UpdateVpcOrigin
+                  - cloudfront:GetVpcOrigin
                 Resource:
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/*'
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:origin-access-control/*'
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:key-value-store/*'
                   - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:function/*'
+                  - !Sub 'arn:aws:cloudfront::${AWS::AccountId}:vpcorigin/*'
 
         - PolicyName: DynamoDbCfnDeployment
           PolicyDocument:

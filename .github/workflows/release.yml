@@ -203,8 +203,8 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         env:
             hasCluster: ${{ inputs.enableEksCluster && steps.checkCluster.outputs.exists == 'true' }}
-            lbArn: fromJSON('["", "${{ env.eksLoadBalancerArn }}"]')[env.hasCluster]
-            lbDomain: fromJSON('["", "${{ env.eksLoadBalancerDomainName }}"]')[env.hasCluster]
+            lbArn: ${{ fromJSON(format('["", "{0}"]', env.eksLoadBalancerArn))[env.hasCluster] }}
+            lbDomain: ${{ fromJSON(format('["", "{0}"]', env.eksLoadBalancerDomainName))[env.hasCluster] }}
         with:
           name: 'BitsAndBobs-${{ inputs.environment }}'
           template: 'https://${{ env.CfnBucket }}.s3.${{ env.Region }}.amazonaws.com/${{ env.version }}/bitsandbobs.packaged.yaml'
