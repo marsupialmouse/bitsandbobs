@@ -152,6 +152,8 @@ jobs:
       id-token: write
       contents: read
     env:
+      eksLoadBalancerArn: ${{ secrets.EKS_LB_ARN }}
+      eksLoadBalancerDomainName: ${{ secrets.ELS_LB_DOMAIN_NAME }}
       uiBucket: ${{ vars.S3_BUCKET_APP }}
       version: ${{ format('{0}{1}', inputs.version, needs.createVersion.outputs.version) }}
     steps:
@@ -163,15 +165,57 @@ jobs:
           aws-region: ${{ env.Region }}
           role-to-assume: ${{ env.DeployCfnRole }}
           role-session-name: ${{ github.run_id }}
+      # This check is to make sure we don't try to use out-of-date EKS LB secrets if the cluster doesn't exist yet
+      - name: Check if EKS cluster exists
+        if: ${{ inputs.enableEksCluster }}
+        id: checkCluster
+        run: |
+          CLUSTER_EXISTS=$(aws eks describe-cluster --name "EksCluster-${{ inputs.environment }}" >/dev/null 2>&1 && echo "true" || echo "false")
+          echo "exists=$(CLUSTER_EXISTS)\n" >> $GITHUB_OUTPUT
       - name: Deploy to CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
+        env:
+            hasCluster: ${{ inputs.enableEksCluster && steps.checkCluster.outputs.exists == 'true' }}
+            lbArn: fromJSON('["", "${{ env.eksLoadBalancerArn }}"]')[env.hasCluster]
+            lbDomain: fromJSON('["", "${{ env.eksLoadBalancerDomainName }}"]')[env.hasCluster]
         with:
           name: 'BitsAndBobs-${{ inputs.environment }}'
           template: 'https://${{ env.CfnBucket }}.s3.${{ env.Region }}.amazonaws.com/${{ env.version }}/bitsandbobs.packaged.yaml'
-          parameter-overrides: 'Environment=${{ inputs.environment }},CreateEksCluster=${{ inputs.enableEksCluster }}'
+          parameter-overrides: >-
+            Environment=${{ inputs.environment }},
+            CreateEksCluster=${{ inputs.enableEksCluster }},
+            EksLoadBalancerArn=${{ env.lbArn }},
+            EksLoadBalancerDomainName=${{ env.lbDomain }}
           no-fail-on-empty-changeset: '1'
       - name: Sync default document to UI bucket
         run: aws s3 sync src/Infrastructure s3://${{ env.uiBucket }} --exclude='*' --include='index.html'
+
+  packageHelm:
+    name: Package Helm chart
+    runs-on: ubuntu-latest
+    needs: [ createVersion ]
+    env:
+      prefix: ${{ needs.createVersion.outputs.version }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Helm
+        uses: azure/setup-helm@v4.3.0
+      - name: Create Helm package
+        run: |
+          helm package src/Infrastructure/helm/bitsandbobs --app-version ${{ env.prefix }} --output
+          mv bitsandbobs-*.tgz bitsandbobs.tgz
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.Region }}
+          role-to-assume: ${{ env.DeployAssetsRole }}
+          role-session-name: ${{ github.run_id }}
+      - name: Sync package to CFN bucket
+        run: aws s3 sync . s3://${{ env.CfnBucket }}/${{ env.prefix }}/helm --exclude='*' --include='bitsandbobs.tgz'
 
   tag:
     name: Create tag
@@ -196,7 +240,7 @@ jobs:
   release:
     name: Releases the new or requested version
     runs-on: ubuntu-latest
-    needs: [ createVersion, deployUI, deployApi, deployCfn ]
+    needs: [ createVersion, deployUI, deployApi, packageHelm, deployCfn ]
     if: ${{ !failure() && !cancelled() }}
     environment: ${{ inputs.environment }}
     permissions:
@@ -205,7 +249,39 @@ jobs:
     env:
       version: ${{ format('{0}{1}', inputs.version, needs.createVersion.outputs.version) }}
       kvsArn: ${{ secrets.CF_KVS_ARN }}
+    outputs:
+      # These outputs should really be encrypted and saved to secrets...
+      # For now, save them manually to secrets and re-run the workflow with the same version to finish CF setup
+      EksLoadBalancerArn: ${{ steps.get_lb_details.outputs.lb_arn }}
+      EksLoadBalancerDomainName: ${{ steps.get_lb_details.outputs.lb_domain_name }}
     steps:
+      - name: Configure AWS Credentials
+        if: ${{ inputs.enableEksCluster }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.Region }}
+          role-to-assume: ${{ env.DeployCfnRole }}
+          role-session-name: ${{ github.run_id }}
+      - name: Install Helm
+        if: ${{ inputs.enableEksCluster }}
+        uses: azure/setup-helm@v4.3.0
+      - name: Install kubectl
+        if: ${{ inputs.enableEksCluster }}
+        uses: azure/setup-kubectl@v4
+      - name: Set kubectl context
+        if: ${{ inputs.enableEksCluster }}
+        run: aws eks update-kubeconfig --region ${{ env.Region }} --name EksCluster-${{ inputs.environment }}
+      - name: Deploy Helm chart
+        if: ${{ inputs.enableEksCluster }}
+        run: helm upgrade bitsandbobs 'https://${{ env.CfnBucket }}.s3.${{ env.Region }}.amazonaws.com/${{ env.version }}/helm/bitsandbobs.tgz'
+      - name: Get load balancer details
+        if: ${{ inputs.enableEksCluster }}
+        id: get_lb_details
+        run: |
+          lb_domain_name=$(kubectl get ingress bitsandbobs -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
+          lb_arn=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?DNSName=='$lb_domain_name'].LoadBalancerArn" --output text 2>/dev/null)
+          echo "lb_arn=$(lb_arn)\n" >> $GITHUB_OUTPUT
+          echo "lb_domain_name=$(lb_domain_name)\n" >> $GITHUB_OUTPUT
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
