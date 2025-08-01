@@ -12,9 +12,9 @@
     <File Path="Infrastructure\bitsandbobs.yaml" />
     <File Path="Infrastructure\database.yaml" />
     <File Path="Infrastructure\index.html" />
-    <File Path="Infrastructure\bitsandbobs-deploy.sh" />
     <File Path="Infrastructure\vpc.yaml" />
     <File Path="Infrastructure\kubernetes.yaml" />
+    <File Path="Infrastructure\bitsandbobs-deploy.ps1" />
   </Folder>
   <Folder Name="/Infrastructure/helm/" />
   <Folder Name="/Infrastructure/helm/bitsandbobs/">

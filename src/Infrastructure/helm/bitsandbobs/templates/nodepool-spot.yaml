@@ -1,0 +1,55 @@
+---
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: spot
+  labels:
+    {{- include "bitsandbobs.labels" . | nindent 4 }}
+spec:
+  template:
+    spec:
+      nodeClassRef:
+        group: eks.amazonaws.com
+        kind: NodeClass
+        name: default
+      requirements:
+        - key: "eks.amazonaws.com/instance-category"
+          operator: In
+          values: ["c", "m", "r"]
+        - key: "eks.amazonaws.com/instance-cpu"
+          operator: In
+          values: ["1", "2", "4"]
+        - key: "kubernetes.io/arch"
+          operator: In
+          values: ["amd64"]
+        - key: "karpenter.sh/capacity-type"
+          operator: In
+          values: ["spot"]
+      taints:
+        - key: "spot"
+          value: "true"
+          effect: "NoSchedule"
+  limits:
+    cpu: 1000
+  disruption:
+    consolidationPolicy: WhenEmpty
+    consolidateAfter: 30s
+
+#---
+#apiVersion: eks.amazonaws.com/v1
+#kind: NodeClass
+#metadata:
+#  name: spot-nodeclass
+#  labels:
+#    { {- include "bitsandbobs.labels" . | nindent 4 }}
+#spec:
+#  role: {{ .Values.nodeIamRoleName }}
+#  subnetSelectorTerms:
+#    - tags:
+#        kubernetes.io/role/internal-elb: "1"
+#        karpenter.sh/discovery: {{ .Values.eksClusterName }}
+#  securityGroupSelectorTerms:
+#    - tags:
+#        aws:eks:cluster-name: {{ .Values.eksClusterName }}
+#  tags:
+  #    karpenter.sh/discovery: {{ .Values.eksClusterName }}
