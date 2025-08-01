@@ -198,8 +198,10 @@ jobs:
         id: checkCluster
         run: |
           if aws eks describe-cluster --name "EksCluster-${{ inputs.environment }}" >/dev/null 2>&1; then
-            echo "eksLoadBalancerArn=$(eksLoadBalancerArn)\n" >> $GITHUB_OUTPUT
-            echo "eksLoadBalancerDomainName=$(eksLoadBalancerDomainName)\n" >> $GITHUB_OUTPUT
+            {
+              "eksLoadBalancerArn=$(eksLoadBalancerArn)"
+              "eksLoadBalancerDomainName=$(eksLoadBalancerDomainName)"
+            } >> $GITHUB_OUTPUT
           fi
 
       - name: Deploy to CloudFormation
@@ -284,8 +286,10 @@ jobs:
         run: |
           lb_domain_name=$(kubectl get ingress bitsandbobs -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
           lb_arn=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?DNSName=='$lb_domain_name'].LoadBalancerArn" --output text 2>/dev/null)
-          echo "lb_arn=$(lb_arn)\n" >> $GITHUB_OUTPUT
-          echo "lb_domain_name=$(lb_domain_name)\n" >> $GITHUB_OUTPUT
+          {
+            "lb_arn=$(lb_arn)"
+            "lb_domain_name=$(lb_domain_name)"
+          } >> $GITHUB_OUTPUT
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
