@@ -13,7 +13,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ScriptPath = $PSScriptRoot
-$PackagedTemplate = Join-Path $ScriptPath "bitsandbobs.packaged.yaml"
+$PackagedTemplate = Join-Path $ScriptPath "cfn/bitsandbobs.packaged.yaml"
 
 function Get-EksLoadBalancerInfo {
     $lbDomainName = kubectl get ingress bitsandbobs -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>$null
@@ -58,7 +58,7 @@ try {
 
     # Package template
     aws cloudformation package `
-        --template-file (Join-Path $ScriptPath "bitsandbobs.yaml") `
+        --template-file (Join-Path $ScriptPath "cfn/bitsandbobs.yaml") `
         --s3-bucket "marsupialmouse-bitsandbobs-cfn" `
         --s3-prefix "local" `
         --output-template-file $PackagedTemplate `

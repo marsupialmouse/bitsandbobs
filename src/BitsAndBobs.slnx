@@ -8,13 +8,15 @@
     <File Path="..\.config\hooks\pre-commit" />
   </Folder>
   <Folder Name="/Infrastructure/">
-    <File Path="Infrastructure\bootstrap.yaml" />
-    <File Path="Infrastructure\bitsandbobs.yaml" />
-    <File Path="Infrastructure\database.yaml" />
     <File Path="Infrastructure\index.html" />
-    <File Path="Infrastructure\vpc.yaml" />
-    <File Path="Infrastructure\kubernetes.yaml" />
     <File Path="Infrastructure\bitsandbobs-deploy.ps1" />
+  </Folder>
+  <Folder Name="/Infrastructure/cfn/">
+    <File Path="Infrastructure\cfn\bitsandbobs.yaml" />
+    <File Path="Infrastructure\cfn\bootstrap.yaml" />
+    <File Path="Infrastructure\cfn\database.yaml" />
+    <File Path="Infrastructure\cfn\kubernetes.yaml" />
+    <File Path="Infrastructure\cfn\vpc.yaml" />
   </Folder>
   <Folder Name="/Infrastructure/helm/" />
   <Folder Name="/Infrastructure/helm/bitsandbobs/">

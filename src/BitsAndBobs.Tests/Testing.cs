@@ -35,7 +35,7 @@ public class Testing
 
             _bitsAndBobsTable = await _dynamo.CreateTableForCloudFormationResource(
                 "DynamoDbTable",
-                Path.Combine(ProjectSource.ProjectDirectory(), "../Infrastructure", "database.yaml"),
+                Path.Combine(ProjectSource.ProjectDirectory(), "../Infrastructure/cfn", "database.yaml"),
                 BitsAndBobs.Features.BitsAndBobsTable.Name
             );
 

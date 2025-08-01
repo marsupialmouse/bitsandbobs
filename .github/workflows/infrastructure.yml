@@ -1,14 +1,16 @@
-name: CI - CloudFormation Validation
+name: CI - Infrastructure Validation
 
 on:
   push:
     branches: [ "main" ]
     paths:
-      - 'src/Infrastructure/**/*.yaml'
+      - 'src/Infrastructure/cfn/**/*.yaml'
+      - 'src/Infrastructure/helm/**/*.yaml'
   pull_request:
     branches: [ "main" ]
     paths:
-      - 'src/Infrastructure/**/*.yaml'
+      - 'src/Infrastructure/cfn/**/*.yaml'
+      - 'src/Infrastructure/helm/**/*.yaml'
 
 jobs:
   checkov:
@@ -24,7 +26,7 @@ jobs:
         id: checkov
         uses: bridgecrewio/checkov-action@master
         with:
-          directory: './src/Infrastructure/'
+          directory: './src/Infrastructure/cfn/'
           framework: cloudformation
           quiet: true
 
@@ -39,4 +41,17 @@ jobs:
         run: |
           shopt -s globstar # enable globbing
           cfn-lint --version
-          cfn-lint -t ./src/Infrastructure/**/*.yaml
+          cfn-lint -t ./src/Infrastructure/cfn/**/*.yaml
+
+  helm:
+    name: Validate with helm lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Setup cfn-lint with latest version
+      - name: Install Helm
+        uses: azure/setup-helm@v4.3.0
+      - name: Run linter
+        run: helm lint src/Infrastructure/helm/bitsandbobs
+
+

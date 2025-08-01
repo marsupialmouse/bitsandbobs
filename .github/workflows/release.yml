@@ -134,7 +134,7 @@ jobs:
       - name: Package template
         run: |
           aws cloudformation package \
-          --template-file src/Infrastructure/bitsandbobs.yaml \
+          --template-file src/Infrastructure/cfn/bitsandbobs.yaml \
           --s3-bucket ${{ env.CfnBucket }} \
           --s3-prefix ${{ env.prefix }} \
           --output-template-file bitsandbobs.packaged.yaml \
