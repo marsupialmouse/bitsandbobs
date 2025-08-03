@@ -107,7 +107,7 @@ jobs:
         run: |
           dotnet publish src/BitsAndBobs/BitsAndBobs.csproj \
             -t:PublishContainer \
-            -p:ContainerImageTags=${{ env.tag }};latest \
+            -p:ContainerImageTags='"${{ env.tag }};latest"' \
             -p:ContainerRegistry=${{ env.registry }} \
             -p:ContainerRepository=${{ github.actor }}/bitsandbobs-api \
             --configuration Release \
