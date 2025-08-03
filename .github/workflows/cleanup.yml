@@ -21,7 +21,6 @@ jobs:
           image-names: ${{ env.imageName }}
           tag-selection: untagged
           cut-off: 1m
-          dry-run: true
       - name: Retain only three tagged images
         uses: snok/container-retention-policy@v3.0.0
         with:
@@ -31,4 +30,3 @@ jobs:
           tag-selection: tagged
           keep-n-most-recent: 3
           cut-off: 1m
-          dry-run: true
