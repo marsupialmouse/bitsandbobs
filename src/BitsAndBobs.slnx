@@ -32,6 +32,7 @@
     <File Path="Infrastructure\helm\bitsandbobs\templates\ingress.yaml" />
     <File Path="Infrastructure\helm\bitsandbobs\templates\service.yaml" />
     <File Path="Infrastructure\helm\bitsandbobs\templates\nodepool-spot.yaml" />
+    <File Path="Infrastructure\helm\bitsandbobs\templates\serviceaccount.yaml" />
   </Folder>
   <Folder Name="/Infrastructure/helm/bitsandbobs/templates/tests/">
     <File Path="Infrastructure\helm\bitsandbobs\templates\tests\test-connection.yaml" />

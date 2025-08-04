@@ -5,6 +5,9 @@ metadata:
   labels:
     {{- include "bitsandbobs.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "bitsandbobs.selectorLabels" . | nindent 6 }}
@@ -13,6 +16,7 @@ spec:
       labels:
         {{- include "bitsandbobs.labels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "bitsandbobs.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -31,6 +35,9 @@ spec:
               containerPort: {{ .targetPort }}
               protocol: {{ .protocol }}
             {{- end }}
+          env:
+            - name: DOTNET_ENVIRONMENT
+              value: {{ .Values.environment | quote }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

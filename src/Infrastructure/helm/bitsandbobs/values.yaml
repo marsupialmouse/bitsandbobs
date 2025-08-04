@@ -3,21 +3,32 @@
 # Declare variables to be passed into your templates.
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-# replicaCount: 1
+replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  #repository: ghcr.io/bitsandbobs-api
-  repository: "public.ecr.aws/l6m2t8p7/docker-2048"
-  tag: "latest"
-  # This sets the pull policy for images.
+  repository: ghcr.io/marsupialmouse/bitsandbobs-api
   pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
-  #tag: ""
+  tag: "latest"
+
+# This sets the name of the runtime environment for the API
+environment: Development
 
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
 
 podSecurityContext:
   seccompProfile:
@@ -34,12 +45,11 @@ securityContext:
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: NodePort
+  type: ClusterIP
   ports:
     - name: http
       port: 80
-  #    targetPort: 8080
-      targetPort: 80
+      targetPort: 8080
       protocol: TCP
   #  - name: http-diag
   #    port: 3434
@@ -94,9 +104,3 @@ tolerations:
     effect: "NoSchedule"
 
 affinity: {}
-
-# The name of the EKS cluster
-eksClusterName: "EksCluster-Staging"
-
-# The name of the role used by nodes
-nodeIamRoleName: "AmazonEKSAutoNodeRole"
