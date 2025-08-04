@@ -15,6 +15,12 @@ Parameters:
   DynamoTableArn:
     Type: String
     Description: The ARN of the DynamoDB table used by the application
+  AdminPrincipalArn:
+    Type: String
+    Description: The ARN of the IAM role to grant admin access to the EKS cluster
+
+Conditions:
+  CreateAdminAccessEntry: !Not [!Equals [!Ref AdminPrincipalArn, '']]
 
 Resources:
   EksCluster:
@@ -132,6 +138,18 @@ Resources:
       Namespace: default
       RoleArn: !GetAtt RolePodIdentity.Arn
       ServiceAccount: bitsandbobs
+
+  AdminAccessEntry:
+    Type: AWS::EKS::AccessEntry
+    Condition: CreateAdminAccessEntry
+    Properties:
+      ClusterName: !Ref ClusterName
+      PrincipalArn: !Ref AdminPrincipalArn
+      AccessPolicies:
+        - PolicyArn: 'arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy'
+          AccessScope:
+            Type: 'cluster'
+      Type: 'STANDARD'
 
 
 Outputs:

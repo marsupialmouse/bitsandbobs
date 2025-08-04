@@ -34,6 +34,10 @@ Parameters:
       DOMAINNAME=$(kubectl get ingress bitsandbobs -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
       ARN=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?DNSName=='$DOMAINNAME'].LoadBalancerArn" --output text)
 
+  AdminPrincipalArn:
+    Type: String
+    Description: The ARN of the IAM role to grant admin access to the EKS cluster
+
 Metadata:
   cfn-lint:
     config:
@@ -86,6 +90,7 @@ Resources:
         Subnet1Id: !GetAtt VpcStack.Outputs.SubnetKubernetesAId
         Subnet2Id: !GetAtt VpcStack.Outputs.SubnetKubernetesBId
         DynamoTableArn: !GetAtt DatabaseStack.Outputs.TableArn
+        AdminPrincipalArn: !Ref AdminPrincipalArn
 
   # The S3 bucket for the client app
   S3BucketApp:

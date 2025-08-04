@@ -181,6 +181,7 @@ jobs:
     env:
       eksLoadBalancerArn: ${{ secrets.EKS_LB_ARN }}
       eksLoadBalancerDomainName: ${{ secrets.EKS_LB_DOMAIN_NAME }}
+      eksAdminArn: ${{ secrets.EKS_ADMIN_ARN }}
       uiBucket: ${{ vars.S3_BUCKET_APP }}
       version: ${{ format('{0}{1}', inputs.version, needs.createVersion.outputs.version) }}
     steps:
@@ -216,7 +217,8 @@ jobs:
             Environment=${{ inputs.environment }},
             CreateEksCluster=${{ inputs.enableEksCluster }},
             EksLoadBalancerArn=${{ env.lbArn }},
-            EksLoadBalancerDomainName=${{ env.lbDomain }}
+            EksLoadBalancerDomainName=${{ env.lbDomain }},
+            AdminPrincipalArn=${{ env.eksAdminArn }}
           no-fail-on-empty-changeset: '1'
       - name: Sync default document to UI bucket
         run: aws s3 sync src/Infrastructure s3://${{ env.uiBucket }} --exclude='*' --include='index.html'

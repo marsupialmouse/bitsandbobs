@@ -46,6 +46,7 @@ Resources:
           Value: GHA-OIDC-Provider
 
   RoleCfnDeploy:
+    # checkov:skip=CKV_AWS_109:We need this permission to create stacks containing roles
     Type: AWS::IAM::Role
     Properties:
       RoleName: GHA-DeployCloudFormation
@@ -92,6 +93,24 @@ Resources:
                 Action:
                   - iam:PassRole
                 Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*'
+
+        - PolicyName: IamDeployment
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: IamActions
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:UpdateRole
+                  - iam:DeleteRole
+                  - iam:GetRole
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:GetRolePolicy
+                Resource: '*'
 
         - PolicyName: VPCCfnDeployment
           PolicyDocument:
@@ -256,6 +275,7 @@ Resources:
                   - eks:ListAddons
                   - eks:ListFargateProfiles
                   - eks:ListTagsForResource
+                  - eks:DescribePodIdentityAssociation
                   - ec2:DescribeSecurityGroups
                   - ec2:DescribeSecurityGroupRules
                   - elasticloadbalancing:DescribeLoadBalancers
@@ -305,6 +325,15 @@ Resources:
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:security-group/*'
                   - !Sub 'arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:security-group-rule/*'
+              - Sid: PodIdentityAssociationActions
+                Effect: Allow
+                Action:
+                  - eks:CreatePodIdentityAssociation
+                  - eks:DeletePodIdentityAssociation
+                  - eks:UpdatePodIdentityAssociation
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:eks:*:${AWS::AccountId}:cluster/*'
+                  - !Sub 'arn:${AWS::Partition}:eks:*:${AWS::AccountId}:podidentityassociation/*/*'
 
   RoleAssetDeploy:
     Type: AWS::IAM::Role
