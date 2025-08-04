@@ -108,6 +108,11 @@ Resources:
                 Resource:
                   - !Ref DynamoTableArn
                   - !Sub ${DynamoTableArn}/index/*
+              - Sid: DynamoDBListTablesAccess   # For health checks
+                Effect: Allow
+                Action:
+                  - dynamodb:ListTables
+                Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*'
 
   EksPodIdentityAssociation:
     Type: AWS::EKS::PodIdentityAssociation

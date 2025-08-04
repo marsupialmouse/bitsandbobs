@@ -109,6 +109,8 @@ public class Program
             }
         );
 
+        builder.Services.AddHealthChecks().AddCheck<DynamoDbHealthCheck>("dynamodb");
+
         var app = builder.Build();
 
         app.UseResponseCaching();
