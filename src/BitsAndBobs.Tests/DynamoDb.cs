@@ -64,6 +64,7 @@ public sealed class DynamoDb : IAsyncDisposable
         var yaml = await File.ReadAllTextAsync(cfnTemplatePath, cancellationToken);
         var deserializer = new DeserializerBuilder().WithTagMapping(new TagName("!Sub"), typeof(string))
                                                     .WithTagMapping(new TagName("!Ref"), typeof(string))
+                                                    .WithTagMapping(new TagName("!GetAtt"), typeof(string))
                                                     .IgnoreUnmatchedProperties()
                                                     .Build();
 

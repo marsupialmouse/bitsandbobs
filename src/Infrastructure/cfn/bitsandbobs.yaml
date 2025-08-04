@@ -21,7 +21,6 @@ Parameters:
 
   EksLoadBalancerArn:
     Type: String
-    Default: ''
     Description: >
       The ARN of the load balancer created by EKS, for use by the CloudFront VPC Origin. Ideally we'd look this up
       inside the template, but the LB won't be created until we run helm to create the app inside Kubernetes, which
@@ -29,7 +28,6 @@ Parameters:
 
   EksLoadBalancerDomainName:
     Type: String
-    Default: ''
     Description: |
       The domain name of the load balancer created by EKS. To get the ARN and domain name:
 
@@ -58,8 +56,9 @@ Conditions:
   CreateEksClusterCondition: !Equals [ !Ref CreateEksCluster, 'true' ]
   CreateEksVpcOriginCondition: !And
     - !Condition CreateEksClusterCondition
-    - !Not [ !Equals [ !Ref EksLoadBalancerArn, ''] ]
-    - !Not [ !Equals [ !Ref EksLoadBalancerDomainName, '' ] ]
+    - !Not [ !Equals [ !Ref EksLoadBalancerArn, ""] ]
+    - !Not [ !Equals [ !Ref EksLoadBalancerDomainName, "" ] ]
+
 
 Resources:
   VpcStack:
@@ -86,10 +85,11 @@ Resources:
         ClusterName: !Sub 'EksCluster-${Environment}'
         Subnet1Id: !GetAtt VpcStack.Outputs.SubnetKubernetesAId
         Subnet2Id: !GetAtt VpcStack.Outputs.SubnetKubernetesBId
+        DynamoTableArn: !GetAtt DatabaseStack.Outputs.TableArn
 
   # The S3 bucket for the client app
   S3BucketApp:
-    Type: 'AWS::S3::Bucket'
+    Type: AWS::S3::Bucket
     Properties:
       BucketName:
         !Sub
@@ -112,7 +112,7 @@ Resources:
 
   # The S3 bucket policy for securing the client app bucket
   S3BucketPolicyApp:
-    Type: 'AWS::S3::BucketPolicy'
+    Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref S3BucketApp
       PolicyDocument:
@@ -133,7 +133,7 @@ Resources:
   # The S3 bucket for access logs from S3 (for the application) and CloudFront
   S3BucketLogging:
     # checkov:skip=CKV_AWS_18:This is a private bucket for logs, we don't need access logs
-    Type: 'AWS::S3::Bucket'
+    Type: AWS::S3::Bucket
     Properties:
       BucketName:
         !Sub
@@ -157,7 +157,7 @@ Resources:
 
   # The S3 bucket policy for securing the logging bucket
   S3BucketPolicyLogging:
-    Type: 'AWS::S3::BucketPolicy'
+    Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref S3BucketLogging
       PolicyDocument:
@@ -184,7 +184,7 @@ Resources:
                 AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CFDistribution}
 
   EksVpcOrigin:
-    Type: 'AWS::CloudFront::VpcOrigin'
+    Type: AWS::CloudFront::VpcOrigin
     Condition: CreateEksVpcOriginCondition
     Properties:
       VpcOriginEndpointConfig:
@@ -197,7 +197,7 @@ Resources:
   # The CloudFront distribution exposing both the client app and api
   CFDistribution:
     # checkov:skip=CKV_AWS_68:This is a demo, we don't need to pay for WAF
-    Type: 'AWS::CloudFront::Distribution'
+    Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
         Origins:
@@ -350,4 +350,3 @@ Outputs:
     Value: !GetAtt CFKeyValueStore.Arn
   KeyValueStoreId:
     Value: !GetAtt CFKeyValueStore.Id
-
