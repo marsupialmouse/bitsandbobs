@@ -113,6 +113,16 @@ Resources:
                 Action:
                   - dynamodb:ListTables
                 Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*'
+              - Sid: SSMDataProtectionAccess
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:GetParametersByPath
+                  - ssm:DeleteParameter
+                  - ssm:DeleteParameters
+                  - ssm:PutParameter
+                Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/BitsAndBobs/*/DataProtection/'
 
   EksPodIdentityAssociation:
     Type: AWS::EKS::PodIdentityAssociation

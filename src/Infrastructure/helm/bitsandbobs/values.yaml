@@ -65,10 +65,12 @@ livenessProbe:
   httpGet:
     path: /health/healthy
     port: http
+  periodSeconds: 20
 readinessProbe:
   httpGet:
     path: /health/ready
     port: http
+  periodSeconds: 20
 
 # This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:

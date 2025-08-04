@@ -183,6 +183,8 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CFDistribution}
 
+  # This is flaky. When EKS swaps the LB out (e.g. because you make changed to ingress) then the LB ARN changes and the VPC
+  # Origin will no longer work and will need to be recreated, but it can't easily be re-created because CloudFront depends on it.
   EksVpcOrigin:
     Type: AWS::CloudFront::VpcOrigin
     Condition: CreateEksVpcOriginCondition
@@ -191,7 +193,6 @@ Resources:
         Name: !Sub EksLbVpcOrigin-${Environment}
         Arn: !Ref EksLoadBalancerArn
         HTTPPort: 80
-        HTTPSPort: 443
         OriginProtocolPolicy: http-only
 
   # The CloudFront distribution exposing both the client app and api

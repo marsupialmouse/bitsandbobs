@@ -33,6 +33,13 @@ metadata:
   name: {{ include "bitsandbobs.fullname" . }}
   labels:
     {{- include "bitsandbobs.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.readinessProbe.httpGet }}
+    alb.ingress.kubernetes.io/healthcheck-port: {{ .Values.readinessProbe.httpGet.port | quote }}
+    alb.ingress.kubernetes.io/healthcheck-path: {{ .Values.readinessProbe.httpGet.path }}
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+    {{- end }}
 spec:
   ingressClassName: alb
   rules:

@@ -8,7 +8,8 @@ param(
     [string]$AwsProfile,
 
     [switch]$CreateEksCluster,
-    [switch]$DeployHelm
+    [switch]$DeployHelm,
+    [switch]$DropEksVpcEndpoint
 )
 
 $ErrorActionPreference = "Stop"
@@ -50,7 +51,7 @@ function Invoke-CfnDeploy {
 try {
     # Get existing LB info if we have an EKS cluster
     $lbInfo = @{ DomainName = ""; Arn = "" }
-    if ($CreateEksCluster) {
+    if ($CreateEksCluster -and !$DropEksVpcEndpoint) {
         $clusterName = kubectl config view --minify -o jsonpath='{.clusters[0].name}' 2>$null | ForEach-Object { $_.Split('/')[-1] }
         if ($clusterName -eq "EksCluster-$Environment") {
             $lbInfo = Get-EksLoadBalancerInfo
