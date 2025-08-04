@@ -12,6 +12,9 @@ Parameters:
   Subnet2Id:
     Type: String
     Description: The ID of the second subnet for EKS nodes
+  DynamoTableArn:
+    Type: String
+    Description: The ARN of the DynamoDB table used by the application
 
 Resources:
   EksCluster:
@@ -50,6 +53,71 @@ Resources:
         SupportType: STANDARD
       ZonalShiftConfig:
         Enabled: false
+
+  RolePodIdentity:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Sid: AllowEksAuthToAssumeRoleForPodIdentity
+          Effect: Allow
+          Principal:
+            Service:
+              - pods.eks.amazonaws.com
+          Action:
+            - sts:AssumeRole
+            - sts:TagSession
+      Policies:
+        - PolicyName: EksNodePodIdentity
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: DynamoDBIndexAndStreamAccess
+                Effect: Allow
+                Action:
+                  - dynamodb:GetShardIterator
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:ListStreams
+                Resource:
+                  - !Ref DynamoTableArn
+                  - !Sub ${DynamoTableArn}/index/*
+                  - !Sub ${DynamoTableArn}/stream/*
+              - Sid: DynamoDBTableAccess
+                Effect: Allow
+                Action:
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:ConditionCheckItem
+                  - dynamodb:PutItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                Resource:
+                  - !Ref DynamoTableArn
+              - Sid: DynamoDBDescribeLimitsAccess
+                Effect: Allow
+                Action:
+                  - dynamodb:DescribeLimits
+                Resource:
+                  - !Ref DynamoTableArn
+                  - !Sub ${DynamoTableArn}/index/*
+
+  EksPodIdentityAssociation:
+    Type: AWS::EKS::PodIdentityAssociation
+    DependsOn: EksCluster
+    Properties:
+      ClusterName: !Ref ClusterName
+      Namespace: default
+      RoleArn: !GetAtt RolePodIdentity.Arn
+      ServiceAccount: bitsandbobs
+
 
 Outputs:
   EksCluster:

@@ -157,7 +157,6 @@ Resources:
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
-    Condition: CreateNatGatewayCondition
     Properties:
       VpcId: !Ref VPC
       Tags:
@@ -174,31 +173,37 @@ Resources:
 
   SubnetKubernetesARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateNatGatewayCondition
     Properties:
       SubnetId: !Ref SubnetKubernetesA
       RouteTableId: !Ref PrivateRouteTable
 
   SubnetKubernetesBRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateNatGatewayCondition
     Properties:
       SubnetId: !Ref SubnetKubernetesB
       RouteTableId: !Ref PrivateRouteTable
 
   SubnetPrivateARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateNatGatewayCondition
     Properties:
       SubnetId: !Ref SubnetPrivateA
       RouteTableId: !Ref PrivateRouteTable
 
   SubnetPrivateBRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: CreateNatGatewayCondition
     Properties:
       SubnetId: !Ref SubnetPrivateB
       RouteTableId: !Ref PrivateRouteTable
+
+  DynamoGatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Gateway
+      VpcId: !Ref VPC
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.dynamodb
+      RouteTableIds:
+        - !Ref PublicRouteTable
+        - !Ref PrivateRouteTable
 
 Outputs:
   SubnetKubernetesAId:
