@@ -36,12 +36,13 @@ function Invoke-CfnDeploy {
     param($LbArn = "", $LbDomainName = "")
 
     $parameters = "Environment=$Environment", "CreateEksCluster=$($CreateEksCluster.ToString().ToLower())"
-    if ($LbArn) { $parameters += "EksLoadBalancerArn=$LbArn" }
-    if ($LbDomainName) { $parameters += "EksLoadBalancerDomainName=$LbDomainName" }
+    $parameters += "EksLoadBalancerArn=$LbArn"
+    $parameters += "EksLoadBalancerDomainName=$LbDomainName"
 
     aws cloudformation deploy `
         --template-file $PackagedTemplate `
         --stack-name "BitsAndBobs-$Environment" `
+        --capabilities CAPABILITY_IAM `
         --parameter-overrides $parameters `
         --profile $AwsProfile
 }
