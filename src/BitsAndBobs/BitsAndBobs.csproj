@@ -7,9 +7,9 @@
       <UserSecretsId>9c165170-1a0e-4805-87d6-9cbf86a9a79b</UserSecretsId>
       <ContainerFamily>alpine</ContainerFamily>
       <ContainerRepository>bitsandbobs-api</ContainerRepository>
-      <ContainerImageLabels>
+      <DockerImageLabels>
         org.opencontainers.image.description=API for the Bits and Bobs demo application
-      </ContainerImageLabels>
+      </DockerImageLabels>
   </PropertyGroup>
 
   <ItemGroup>
