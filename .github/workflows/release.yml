@@ -203,7 +203,6 @@ jobs:
               echo "eksLoadBalancerDomainName=$eksLoadBalancerDomainName"
             } >> $GITHUB_OUTPUT
           fi
-
       - name: Deploy to CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         env:
@@ -212,6 +211,7 @@ jobs:
         with:
           name: 'BitsAndBobs-${{ inputs.environment }}'
           template: 'https://${{ env.CfnBucket }}.s3.${{ env.Region }}.amazonaws.com/${{ env.version }}/bitsandbobs.packaged.yaml'
+          capabilities: CAPABILITY_IAM
           parameter-overrides: >-
             Environment=${{ inputs.environment }},
             CreateEksCluster=${{ inputs.enableEksCluster }},
