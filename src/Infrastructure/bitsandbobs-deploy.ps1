@@ -72,7 +72,7 @@ try {
     # Deploy Helm if requested
     if ($CreateEksCluster -and $DeployHelm) {
         aws eks update-kubeconfig --region "ap-southeast-2" --name "EksCluster-$Environment" --profile $AwsProfile
-        helm upgrade bitsandbobs (Join-Path $ScriptPath "helm/bitsandbobs") --install --wait
+        helm upgrade bitsandbobs (Join-Path $ScriptPath "helm/bitsandbobs") --install --wait --set "environment=$Environment" `
 
         # Check if LB info changed and redeploy
         $existingLbInfo = $lbInfo
