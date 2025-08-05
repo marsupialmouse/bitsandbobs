@@ -9,6 +9,15 @@ import {
   ResetPasswordRequest,
 } from '../../api/ApiGenerated.ts'
 
+export interface ChangeEmailRequest {
+  newEmail: string
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string
+  newPassword: string
+}
+
 export interface ConfirmEmailRequest {
   userId: string
   code: string
@@ -66,6 +75,28 @@ export const identityApi = api
         transformErrorResponse: (response) => response.data as ProblemDetails,
         invalidatesTags: ['Identity'],
       }),
+      changeEmail: builder.mutation<void, ChangeEmailRequest>({
+        query: (changeEmailRequest) => ({
+          url: '/identity/manage/info',
+          method: 'POST',
+          body: changeEmailRequest,
+        }),
+        transformErrorResponse: (response) =>
+          response.status === 400
+            ? (response.data as HttpValidationProblemDetails)
+            : response.data,
+      }),
+      changePassword: builder.mutation<void, ChangePasswordRequest>({
+        query: (changePasswordRequest) => ({
+          url: '/identity/manage/info',
+          method: 'POST',
+          body: changePasswordRequest,
+        }),
+        transformErrorResponse: (response) =>
+          response.status === 400
+            ? (response.data as HttpValidationProblemDetails)
+            : response.data,
+      }),
       forgotPassword: builder.mutation<void, ForgotPasswordRequest>({
         query: (forgotPasswordRequest) => ({
           url: '/identity/forgotPassword',
@@ -104,6 +135,8 @@ export const {
   useConfirmEmailMutation,
   useLoginMutation,
   useLogoutMutation,
+  useChangeEmailMutation,
+  useChangePasswordMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useGetInfoQuery,
