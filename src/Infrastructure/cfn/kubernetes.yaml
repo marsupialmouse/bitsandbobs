@@ -128,7 +128,7 @@ Resources:
                   - ssm:DeleteParameter
                   - ssm:DeleteParameters
                   - ssm:PutParameter
-                Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/BitsAndBobs/*/DataProtection/'
+                Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/BitsAndBobs/*/DataProtection/*'
 
   EksPodIdentityAssociation:
     Type: AWS::EKS::PodIdentityAssociation

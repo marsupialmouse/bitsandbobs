@@ -290,9 +290,6 @@ Resources:
                   - eks:DeleteCluster
                   - eks:TagResource
                   - eks:UntagResource
-                  - eks:CreateAccessEntry
-                  - eks:UpdateAccessEntry
-                  - eks:DeleteAccessEntry
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:eks:*:${AWS::AccountId}:cluster/*'
               - Sid: EKSNodeGroupActions
@@ -334,6 +331,18 @@ Resources:
                 Resource:
                   - !Sub 'arn:${AWS::Partition}:eks:*:${AWS::AccountId}:cluster/*'
                   - !Sub 'arn:${AWS::Partition}:eks:*:${AWS::AccountId}:podidentityassociation/*/*'
+              - Sid: AccessEntryActions
+                Effect: Allow
+                Action:
+                  - eks:CreateAccessEntry
+                  - eks:UpdateAccessEntry
+                  - eks:DeleteAccessEntry
+                  - eks:AssociateAccessPolicy
+                  - eks:DisassociateAccessPolicy
+                  - eks:ListAssociatedAccessPolicies
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:eks:*:${AWS::AccountId}:cluster/*'
+                  - !Sub 'arn:${AWS::Partition}:eks:*:${AWS::AccountId}:access-entry/*/*/*/*/*'
 
   RoleAssetDeploy:
     Type: AWS::IAM::Role
