@@ -23,7 +23,7 @@ env:
   DeployCfnRole: ${{ secrets.AWS_ROLE_DEPLOY_CFN_ARN }}
   DeployAssetsRole: ${{ secrets.AWS_ROLE_DEPLOY_ASSSETS_ARN }}
   DeployVersionRole: ${{ secrets.AWS_ROLE_DEPLOY_VERSION_ARN }}
-  Region: ${{ secrets.AWS_DEFAULT_REGION }}
+  Region: ${{ vars.AWS_DEFAULT_REGION }}
 
 jobs:
   createVersion:
