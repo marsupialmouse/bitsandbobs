@@ -27,7 +27,11 @@ describe('ConfirmEmail', () => {
   beforeAll(() => {
     server.listen()
   })
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
   afterEach(() => {
+    vi.useRealTimers()
     server.resetHandlers()
   })
   afterAll(() => {
@@ -58,6 +62,8 @@ describe('ConfirmEmail', () => {
       initialEntries: ['/confirmemail?userId=hello&code=olleh'],
     })
 
+    await vi.runAllTimersAsync()
+
     const successMessage = await screen.findByText(
       /thanks for confirming your account/i
     )
@@ -74,6 +80,8 @@ describe('ConfirmEmail', () => {
       ],
     })
 
+    await vi.runAllTimersAsync()
+
     const successMessage = await screen.findByText(
       /thanks for confirming your email address/i
     )
@@ -88,6 +96,8 @@ describe('ConfirmEmail', () => {
       initialEntries: ['/confirmemail?userId=hello&code=olleh'],
     })
 
+    await vi.runAllTimersAsync()
+
     const errorMessage = await screen.findByText(/something went wrong/i)
     expect(errorMessage).toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
@@ -99,6 +109,8 @@ describe('ConfirmEmail', () => {
     renderWithProvidersAndRouter(<ConfirmEmail />, {
       initialEntries: ['/confirmemail?userId=hello&code=olleh'],
     })
+
+    await vi.runAllTimersAsync()
 
     const errorMessage = await screen.findByText(/account confirmation failed/i)
     expect(errorMessage).toBeInTheDocument()
@@ -113,6 +125,8 @@ describe('ConfirmEmail', () => {
         '/confirmemail?userId=hello&code=olleh&changedEmail=mmmmm',
       ],
     })
+
+    await vi.runAllTimersAsync()
 
     const errorMessage = await screen.findByText(/email confirmation failed/i)
     expect(errorMessage).toBeInTheDocument()

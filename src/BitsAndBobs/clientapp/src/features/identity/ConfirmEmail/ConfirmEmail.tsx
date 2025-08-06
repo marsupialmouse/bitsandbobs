@@ -19,23 +19,30 @@ export default function ConfirmEmail() {
   useEffect(() => {
     if (!isValidRequest || isComplete) return
 
-    const apiRequest = async () => {
-      await confirmEmail({
-        userId,
-        code,
-        changedEmail: changedEmail ?? undefined,
-      }).unwrap()
-      setIsComplete(true)
-    }
+    // The stupid endpoint fails with a 401 when called repeatedly, so we add a delay to get around double mount in dev.
+    const timer = setTimeout(() => {
+      const apiRequest = async () => {
+        await confirmEmail({
+          userId,
+          code,
+          changedEmail: changedEmail ?? undefined,
+        }).unwrap()
+        setIsComplete(true)
+      }
 
-    apiRequest().catch((error: unknown) => {
-      const problemDetails = error as ProblemDetails
-      setApiError(
-        problemDetails.status === 401
-          ? `${changedEmail ? 'Email' : 'Account'} confirmation failed. Oh no!`
-          : 'Something went wrong, please try again later.'
-      )
-    })
+      apiRequest().catch((error: unknown) => {
+        const problemDetails = error as ProblemDetails
+        setApiError(
+          problemDetails.status === 401
+            ? `${changedEmail ? 'Email' : 'Account'} confirmation failed. Oh no!`
+            : 'Something went wrong, please try again later.'
+        )
+      })
+    }, 2000)
+
+    return () => {
+      clearTimeout(timer)
+    }
   }, [isValidRequest, userId, code, changedEmail, confirmEmail, isComplete])
 
   if (!isValidRequest)
