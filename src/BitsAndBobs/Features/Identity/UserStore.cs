@@ -128,8 +128,8 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
                         TableName = BitsAndBobsTable.FullName,
                         Key = new Dictionary<string, AttributeValue>
                         {
-                            { nameof(user.PK), new AttributeValue(user.PK) },
-                            { nameof(user.SK), new AttributeValue(user.SK) },
+                            { "PK", new AttributeValue(user.Id) },
+                            { "SK", new AttributeValue(user.SK) },
                         },
                     },
                 },
@@ -298,7 +298,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
     {
         var item = getKeyAttributes(user);
 
-        item["UserId"] = new AttributeValue(user.PK);
+        item["UserId"] = new AttributeValue(user.Id);
 
         return new Put
         {
@@ -309,13 +309,13 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
     }
 
     private Delete GetReservedEmailDelete(User user) =>
-        GetReservedItemDelete(user.PK, GetReservedEmailKeyAttributes(user));
+        GetReservedItemDelete(user.Id, GetReservedEmailKeyAttributes(user));
 
     private Delete GetReservedEmailDelete(UserMemo user) =>
         GetReservedItemDelete(user.PK, GetReservedEmailKeyAttributes(user));
 
     private Delete GetReservedUsernameDelete(User user) =>
-        GetReservedItemDelete(user.PK, GetReservedUsernameKeyAttributes(user));
+        GetReservedItemDelete(user.Id, GetReservedUsernameKeyAttributes(user));
 
     private Delete GetReservedUsernameDelete(UserMemo user) =>
         GetReservedItemDelete(user.PK, GetReservedUsernameKeyAttributes(user));
@@ -378,7 +378,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
 
     private record UserMemo(string PK, string? NormalizedEmailAddress, string? NormalizedUsername)
     {
-        public UserMemo(User user) : this(user.PK, user.NormalizedEmailAddress, user.NormalizedUsername)
+        public UserMemo(User user) : this(user.Id, user.NormalizedEmailAddress, user.NormalizedUsername)
         {
         }
     }

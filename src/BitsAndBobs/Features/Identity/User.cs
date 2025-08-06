@@ -12,10 +12,8 @@ public class User
     /// <summary>
     /// Gets the user ID.
     /// </summary>
-    [DynamoDBIgnore]
-    public string Id => PK;
-
-    public string PK { get; protected set; } = $"user#{Guid.NewGuid():n}";
+    [DynamoDBProperty("PK")]
+    public string Id { get; protected set; } = $"user#{Guid.NewGuid():n}";
 
     public string SK
     {

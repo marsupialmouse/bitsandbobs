@@ -68,7 +68,7 @@ public class EmailStore : IEmailStore, IEmailSender<User>
     public async Task<IEnumerable<EmailMessage>> GetRecentEmails(User user)
     {
         var query = _context.QueryAsync<EmailMessage>(
-            user.PK,
+            user.Id,
             QueryOperator.GreaterThan,
             [DateTime.UtcNow.AddDays(-1).ToString("O")],
             new QueryConfig { IndexName = "EmailsByUserId" }

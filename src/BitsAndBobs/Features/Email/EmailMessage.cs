@@ -38,7 +38,7 @@ public class EmailMessage
         PK = $"email#{recipientEmail.ToUpperInvariant()}";
         SK = SentAt.UtcDateTime.ToString("O");
         RecipientEmail = recipientEmail;
-        RecipientUserId = user.PK;
+        RecipientUserId = user.Id;
         Type = type;
         Body = body;
     }
