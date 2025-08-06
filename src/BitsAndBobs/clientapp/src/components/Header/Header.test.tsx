@@ -47,16 +47,25 @@ describe('Header', () => {
     expect(screen.getByText('Sign Up')).toBeInTheDocument()
     expect(screen.getByText('Sign In')).toBeInTheDocument()
     expect(screen.queryByText('Profile')).not.toBeInTheDocument()
+    expect(screen.queryByText('Change Password')).not.toBeInTheDocument()
     expect(screen.queryByText('Sign Out')).not.toBeInTheDocument()
   })
 
-  it('renders Profile and Sign Out links when authenticated', () => {
+  it('renders account links when authenticated', () => {
     renderWithProvidersAndRouter(<Header />, signedInState)
 
     expect(screen.getByText('Profile')).toBeInTheDocument()
+    expect(screen.getByText('Change Password')).toBeInTheDocument()
     expect(screen.getByText('Sign Out')).toBeInTheDocument()
     expect(screen.queryByText('Sign Up')).not.toBeInTheDocument()
     expect(screen.queryByText('Sign In')).not.toBeInTheDocument()
+  })
+
+  it('renders email address when authenticated', () => {
+    renderWithProvidersAndRouter(<Header />, signedInState)
+
+    expect(screen.getByText('Signed in as:')).toBeInTheDocument()
+    expect(screen.getByText('jam@man.com')).toBeInTheDocument()
   })
 
   it('signs user out when Sign Out clicked', async () => {
