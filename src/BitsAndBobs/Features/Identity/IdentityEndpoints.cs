@@ -66,9 +66,9 @@ public static class IdentityEndpoints
                 if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
                     return TypedResults.NotFound();
 
-                user.DisplayName = request.DisplayName!;
-                user.FirstName = request.FirstName;
-                user.LastName = request.LastName;
+                user.DisplayName = string.IsNullOrWhiteSpace(request.DisplayName) ? null! : request.DisplayName.Trim();
+                user.FirstName = request.FirstName?.Trim();
+                user.LastName = request.LastName?.Trim();
 
                 await userManager.UpdateAsync(user);
 

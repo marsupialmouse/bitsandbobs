@@ -1,8 +1,9 @@
 import { api } from '../../api/apiSlice'
 import {
+  DetailsRequest,
+  DetailsResponse,
   ForgotPasswordRequest,
   HttpValidationProblemDetails,
-  InfoResponse,
   LoginRequest,
   ProblemDetails,
   RegisterRequest,
@@ -122,9 +123,21 @@ export const identityApi = api
         }),
         invalidatesTags: ['Identity'],
       }),
-      getInfo: builder.query<InfoResponse, void>({
-        query: () => '/identity/info',
+      getDetails: builder.query<DetailsResponse, void>({
+        query: () => '/identity/details',
         providesTags: ['Identity'],
+      }),
+      updateDetails: builder.mutation<void, DetailsRequest>({
+        query: (detailsRequest) => ({
+          url: '/identity/details',
+          method: 'POST',
+          body: detailsRequest,
+        }),
+        transformErrorResponse: (response) =>
+          response.status === 400
+            ? (response.data as HttpValidationProblemDetails)
+            : response.data,
+        invalidatesTags: ['Identity'],
       }),
     }),
     overrideExisting: false,
@@ -139,5 +152,6 @@ export const {
   useChangePasswordMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
-  useGetInfoQuery,
+  useGetDetailsQuery,
+  useUpdateDetailsMutation,
 } = identityApi

@@ -13,6 +13,7 @@ import ForgotPassword from './features/identity/ForgotPassword/ForgotPassword.ts
 import ResetPassword from './features/identity/ResetPassword/ResetPassword.tsx'
 import ChangePassword from './features/identity/ChangePassword/ChangePassword.tsx'
 import ChangeEmail from './features/identity/ChangeEmail/ChangeEmail.tsx'
+import Profile from './features/identity/Profile/Profile.tsx'
 
 function App() {
   const { isLoading, isError } = useGetUserContextQuery()
@@ -54,6 +55,7 @@ function App() {
             element={<RecentEmailsByAddress />}
           />
           <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<Profile />} />
             <Route path="/changeemail" element={<ChangeEmail />} />
             <Route path="/changepassword" element={<ChangePassword />} />
             <Route path="/email/recent/u" element={<RecentEmailsByUser />} />
