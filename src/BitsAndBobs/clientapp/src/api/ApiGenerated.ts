@@ -102,3 +102,16 @@ export interface InfoRequest {
     readonly newPassword?: string | undefined;
     readonly oldPassword?: string | undefined;
 }
+
+export interface DetailsResponse {
+    readonly emailAddress: string;
+    readonly displayName: string;
+    readonly firstName?: string | undefined;
+    readonly lastName?: string | undefined;
+}
+
+export interface DetailsRequest {
+    readonly displayName?: string | undefined;
+    readonly firstName?: string | undefined;
+    readonly lastName?: string | undefined;
+}

@@ -56,6 +56,31 @@ public class User
     public bool EmailAddressConfirmed { get; set; }
 
     /// <summary>
+    /// Gets or sets the user's first name
+    /// </summary>
+    [ProtectedPersonalData]
+    public string? FirstName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user's last name
+    /// </summary>
+    [ProtectedPersonalData]
+    public string? LastName { get; set; }
+
+    /// <summary>
+    /// Gets or sets a display name, which is shown in auctions.
+    /// </summary>
+    [DynamoDBIgnore]
+    public string DisplayName
+    {
+        get => DisplayNameInternal ?? EmailAddress.Split('@')[0];
+        set => DisplayNameInternal = value;
+    }
+
+    [DynamoDBProperty("DisplayName")]
+    protected string? DisplayNameInternal { get; set; }
+
+    /// <summary>
     /// Gets or sets a salted and hashed representation of the password for this user.
     /// </summary>
     public string? PasswordHash { get; set; }

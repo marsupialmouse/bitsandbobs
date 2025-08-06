@@ -1,8 +1,11 @@
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -12,6 +15,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.Extensions;
 using NUnit.Framework;
@@ -55,6 +59,10 @@ public abstract class TestBase
             builder.ConfigureTestServices(services =>
             {
                 services.AddDataProtection().UseEphemeralDataProtectionProvider();
+
+                services
+                    .AddAuthentication("Test")
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
 
                 services.Replace(ServiceDescriptor.Singleton(Testing.Dynamo.Client));
                 services.Replace(ServiceDescriptor.Singleton(Testing.Dynamo.Context));
@@ -114,5 +122,44 @@ public abstract class TestBase
         AppFactory.Dispose();
         AppFactory = null!;
         _httpClient = null!;
+    }
+
+    protected void SetClaimsPrincipal(User user)
+    {
+       AppFactory.ConfiguringServices += services =>
+        {
+            services.AddSingleton(new TestAuthHandler.AuthenticatedUser(user));
+        };
+    }
+
+    public class TestAuthHandler(
+        IServiceProvider services,
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder
+    ) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+    {
+        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+        {
+            var user = services.GetService<AuthenticatedUser>();
+
+            if (user is null)
+                return Task.FromResult(AuthenticateResult.NoResult());
+
+            var identity = new ClaimsIdentity(user.Claims, "Test");
+            var principal = new ClaimsPrincipal(identity);
+            var ticket = new AuthenticationTicket(principal, "Test");
+
+            return Task.FromResult(AuthenticateResult.Success(ticket));
+        }
+
+        public class AuthenticatedUser(User user)
+        {
+            public IEnumerable<Claim> Claims =>
+            [
+                new(ClaimTypes.Name, user.Username),
+                new(ClaimTypes.NameIdentifier, user.Id),
+            ];
+        }
     }
 }

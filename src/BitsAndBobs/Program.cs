@@ -124,13 +124,7 @@ public class Program
         var endpoints = app.MapGroup("/api");
         endpoints.MapUserContextEndpoints();
         endpoints.MapEmailEndpoints();
-
-        var identityEndpoints = endpoints.MapGroup("/identity");
-        identityEndpoints.MapIdentityApi<User>();
-        identityEndpoints.MapPost(
-            "/logout",
-            async (SignInManager<User> signInManager) => { await signInManager.SignOutAsync().ConfigureAwait(false); }
-        );
+        endpoints.MapIdentityEndpoints();
 
        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
