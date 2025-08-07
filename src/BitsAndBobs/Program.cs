@@ -37,6 +37,11 @@ public class Program
                 .PersistKeysToAWSSystemsManager($"/BitsAndBobs/{builder.Environment.EnvironmentName}/DataProtection");
         }
 
+        builder
+            .Services.AddOptions<AwsResourceOptions>()
+            .Bind(builder.Configuration.GetSection(AwsResourceOptions.SectionName))
+            .ValidateDataAnnotations();
+
         // Add services to the container.
         var tablePrefix = $"{builder.Environment.EnvironmentName}-";
         builder.Services.AddAWSService<IAmazonDynamoDB>();
