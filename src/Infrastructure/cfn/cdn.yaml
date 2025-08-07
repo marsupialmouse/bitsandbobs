@@ -15,6 +15,13 @@ Parameters:
     Type: String
     Description: The domain name of the S3 bucket for the client app
 
+  EnableLogging:
+    Type: String
+    Description: Whether logging to S3 is enabled
+    AllowedValues:
+      - true
+      - false
+
   LoggingBucketDomainName:
     Type: String
     Description: The domain name of the S3 bucket for logs
@@ -34,6 +41,7 @@ Parameters:
     Description: The domain name of the load balancer created by EKS
 
 Conditions:
+  EnableLoggingCondition: !Equals [ !Ref EnableLogging, "true" ]
   EksClusterExistsCondition: !Not [ !Equals [ !Ref EksClusterArn, "" ] ]
   CreateEksVpcOriginCondition: !And
     - !Condition EksClusterExistsCondition
@@ -44,6 +52,7 @@ Resources:
   # The CloudFront distribution exposing both the client app and api
   CFDistribution:
     # checkov:skip=CKV_AWS_68:This is a demo, we don't need to pay for WAF
+    # checkov:skip=CKV_AWS_86:This is a demo, logging is optional
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
@@ -123,9 +132,11 @@ Resources:
               - EventType: viewer-request
                 FunctionARN: !GetAtt SpaPathFunction.FunctionARN
         PriceClass: PriceClass_All
-        Logging:
-          Bucket: !Ref LoggingBucketDomainName
-          Prefix: 'cf-access-logs'
+        Logging: !If
+          - EnableLoggingCondition
+          - Bucket: !Ref LoggingBucketDomainName
+            Prefix: 'cf-access-logs'
+          - !Ref AWS::NoValue
         ViewerCertificate:
           CloudFrontDefaultCertificate: true
           MinimumProtocolVersion: 'TLSv1.2_2021'

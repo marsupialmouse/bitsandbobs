@@ -13,9 +13,14 @@ on:
         type: string
         required: false
       enableEksCluster:
-        description: Whether the EKS cluster should be enabled ($$)
+        description: Enable EKS cluster ($$)
         type: boolean
         default: true
+        required: true
+      enableCloudFrontLogging:
+        description: Enable CloudFront logging
+        type: boolean
+        default: false
         required: true
 
 env:
@@ -216,6 +221,7 @@ jobs:
           parameter-overrides: >-
             Environment=${{ inputs.environment }},
             CreateEksCluster=${{ inputs.enableEksCluster }},
+            EnableCloudFrontLogging=${{ inputs.enableCloudFrontLogging }},
             EksLoadBalancerArn=${{ env.lbArn }},
             EksLoadBalancerDomainName=${{ env.lbDomain }},
             AdminPrincipalArn=${{ env.eksAdminArn }}
