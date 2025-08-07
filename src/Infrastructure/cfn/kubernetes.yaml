@@ -12,6 +12,9 @@ Parameters:
   Subnet2Id:
     Type: String
     Description: The ID of the second subnet for EKS nodes
+  AppBucketArn:
+    Type: String
+    Description: The ARN of the S3 bucket for the client app
   DynamoTableArn:
     Type: String
     Description: The ARN of the DynamoDB table used by the application
@@ -129,6 +132,14 @@ Resources:
                   - ssm:DeleteParameters
                   - ssm:PutParameter
                 Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/BitsAndBobs/*/DataProtection/*'
+              - Sid: AuctionImageAccess
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:DeleteObject
+                  - s3:PutObject
+                Resource:
+                  - !Sub '${AppBucketArn}/auctions/*'
 
   EksPodIdentityAssociation:
     Type: AWS::EKS::PodIdentityAssociation

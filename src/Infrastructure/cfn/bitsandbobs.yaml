@@ -97,6 +97,7 @@ Resources:
         ClusterName: !Sub 'EksCluster-${Environment}'
         Subnet1Id: !GetAtt VpcStack.Outputs.SubnetKubernetesAId
         Subnet2Id: !GetAtt VpcStack.Outputs.SubnetKubernetesBId
+        AppBucketArn: !GetAtt S3Stack.Outputs.AppBucketArn
         DynamoTableArn: !GetAtt DatabaseStack.Outputs.TableArn
         AdminPrincipalArn: !Ref AdminPrincipalArn
 

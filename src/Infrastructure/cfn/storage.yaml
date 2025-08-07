@@ -20,9 +20,15 @@ Mappings:
     Production:
       Moniker: prod
 
+Conditions:
+  IsDevelopment: !Equals [ !Ref Environment, 'Development' ]
+  IsFullEnvironment: !Not [ !Condition IsDevelopment ]
+
 Resources:
   # The S3 bucket for the client app
   S3BucketApp:
+    # checkov:skip=CKV_AWS_54: We want some public access...
+    # checkov:skip=CKV_AWS_56: Ibid
     Type: AWS::S3::Bucket
     Properties:
       BucketName:
@@ -31,18 +37,23 @@ Resources:
         - PlatformName: !FindInMap [ EnvironmentMap, !Ref Environment, Moniker ]
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
-        BlockPublicPolicy: true
+        BlockPublicPolicy: !If [ IsDevelopment, 'false', 'true' ]
         IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      LoggingConfiguration:
-        DestinationBucketName: !Ref S3BucketLogging
-        LogFilePrefix: s3-access-logs
+        RestrictPublicBuckets: !If [ IsDevelopment, 'false', 'true' ]
+      LoggingConfiguration: !If
+        - IsFullEnvironment
+        - DestinationBucketName: !Ref S3BucketLogging
+          LogFilePrefix: s3-access-logs
+        - !Ref AWS::NoValue
       VersioningConfiguration:
         Status: Enabled
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: 'AES256'
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
 
   # The S3 bucket policy for securing the client app bucket
   S3BucketPolicyApp:
@@ -53,20 +64,32 @@ Resources:
         Id: S3AppPolicy
         Version: 2012-10-17
         Statement:
-          - Sid: PolicyForCloudFrontPrivateContent
-            Effect: Allow
-            Resource: !Sub ${S3BucketApp.Arn}/*
-            Action: 's3:GetObject*'
-            Principal:
-              Service: cloudfront.amazonaws.com
-            Condition:
-              StringEquals:
-                AWS:SourceAccount: !Sub ${AWS::AccountId}
+          - !If
+            - IsDevelopment
+            - Sid: PublicAuctionImagesPolicy
+              Effect: Allow
+              Resource: !Sub ${S3BucketApp.Arn}/auctions/*
+              Action: 's3:GetObject'
+              Principal: '*'
+            - !Ref AWS::NoValue
+          - !If
+            - IsFullEnvironment
+            - Sid: PolicyForCloudFrontPrivateContent
+              Effect: Allow
+              Resource: !Sub ${S3BucketApp.Arn}/*
+              Action: 's3:GetObject*'
+              Principal:
+               Service: cloudfront.amazonaws.com
+              Condition:
+                StringEquals:
+                  AWS:SourceAccount: !Sub ${AWS::AccountId}
+            - !Ref AWS::NoValue
 
   # The S3 bucket for access logs from S3 (for the application) and CloudFront
   S3BucketLogging:
     # checkov:skip=CKV_AWS_18:This is a private bucket for logs, we don't need access logs
     Type: AWS::S3::Bucket
+    Condition: IsFullEnvironment
     Properties:
       BucketName:
         !Sub
@@ -90,6 +113,7 @@ Resources:
   # The S3 bucket policy for securing the logging bucket
   S3BucketPolicyLogging:
     Type: AWS::S3::BucketPolicy
+    Condition: IsFullEnvironment
     Properties:
       Bucket: !Ref S3BucketLogging
       PolicyDocument:
@@ -126,11 +150,14 @@ Outputs:
     Description: Regional domain name of the S3 bucket for the client app
     Value: !GetAtt S3BucketApp.RegionalDomainName
   LoggingBucketArn:
+    Condition: IsFullEnvironment
     Description: ARN of the S3 bucket for logging
     Value: !GetAtt S3BucketLogging.Arn
   LoggingBucketName:
+    Condition: IsFullEnvironment
     Description: Name of the S3 bucket for logging
     Value: !Ref S3BucketLogging
   LoggingBucketDomainName:
+    Condition: IsFullEnvironment
     Description: Regional domain name of the S3 bucket for logging
     Value: !GetAtt S3BucketLogging.RegionalDomainName
