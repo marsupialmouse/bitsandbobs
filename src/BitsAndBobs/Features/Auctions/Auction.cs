@@ -34,17 +34,17 @@ public class Auction
     /// <summary>
     /// Gets or sets the name of the item
     /// </summary>
-    public string Name { get; protected set; }
+    public string Name { get; protected set; } = "";
 
     /// <summary>
     /// Gets or sets the description of the item
     /// </summary>
-    public string Description { get; protected set; }
+    public string Description { get; protected set; } = "";
 
     /// <summary>
     /// Gets or sets the name of the image of the item
     /// </summary>
-    public string Image { get; protected set; }
+    public string Image { get; protected set; } = "";
 
     /// <summary>
     /// Gets or sets the initial price of the lot

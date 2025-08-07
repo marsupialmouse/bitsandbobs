@@ -2,13 +2,16 @@ using System.Runtime.CompilerServices;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.S3;
 using BitsAndBobs.Features;
+using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Features.UserContext;
 using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.AntiForgery;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using NJsonSchema.Generation;
 
@@ -44,6 +47,7 @@ public class Program
 
         // Add services to the container.
         var tablePrefix = $"{builder.Environment.EnvironmentName}-";
+        builder.Services.AddAWSService<IAmazonS3>();
         builder.Services.AddAWSService<IAmazonDynamoDB>();
         builder.Services.AddKeyedSingleton<Table>(
             BitsAndBobsTable.Name,
@@ -113,6 +117,12 @@ public class Program
                 o.Cookie.Name = "XSRF-VERIFICATION-TOKEN";
             }
         );
+        builder.Services.Configure<FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 1024 * 1024; // 1 MB
+            }
+        );
+
 
         builder.Services.AddHealthChecks().AddCheck<DynamoDbHealthCheck>("dynamodb");
 
@@ -130,6 +140,7 @@ public class Program
         endpoints.MapUserContextEndpoints();
         endpoints.MapEmailEndpoints();
         endpoints.MapIdentityEndpoints();
+        endpoints.MapAuctionEndpoints();
 
        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -139,17 +150,6 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-
-        app.MapGet(
-               "/api/tables",
-               async (IAmazonDynamoDB db) =>
-               {
-                   var tables = await db.ListTablesAsync();
-
-                   return tables.TableNames;
-               }
-           )
-           .WithName("GetTables");
 
         ConfigureApp?.Invoke(app);
 

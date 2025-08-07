@@ -115,3 +115,13 @@ export interface DetailsRequest {
     readonly firstName?: string | undefined;
     readonly lastName?: string | undefined;
 }
+
+export interface AuctionImageResponse {
+    readonly id: string;
+    readonly href: string;
+}
+
+export interface FileParameter {
+    data: any;
+    fileName: string;
+}

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.S3;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
 using Microsoft.AspNetCore.Antiforgery;
@@ -41,6 +42,16 @@ public abstract class TestBase
         public event Action<WebApplication>? ConfiguringApp;
 
         /// <summary>
+        /// Environment variables to set for the application. This is useful for overriding settings.
+        /// </summary>
+        public Dictionary<string, string> EnvironmentVariables { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// A mocked S3 client
+        /// </summary>
+        public IAmazonS3 S3Client { get;  } = Substitute.For<IAmazonS3>();
+
+        /// <summary>
         /// Allows tests to require anti forgery tokens for requests using non-safe HTTP methods. To simplify testing, the default is <c>false</c>.
         /// </summary>
         public bool ValidateAntiForgeryTokens { get; set; }
@@ -50,6 +61,10 @@ public abstract class TestBase
             Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "dummy");
             Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "dummy");
             Environment.SetEnvironmentVariable("AWS_REGION", "ap-southeast-2");
+            Environment.SetEnvironmentVariable("AWS__Resources__AppBucketName", "grandpa-joe");
+
+            foreach (var (key, value) in EnvironmentVariables)
+                Environment.SetEnvironmentVariable(key, value);
 
             builder
                 .UseEnvironment("Test")
@@ -64,6 +79,7 @@ public abstract class TestBase
                     .AddAuthentication("Test")
                     .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
 
+                services.Replace(ServiceDescriptor.Singleton(S3Client));
                 services.Replace(ServiceDescriptor.Singleton(Testing.Dynamo.Client));
                 services.Replace(ServiceDescriptor.Singleton(Testing.Dynamo.Context));
                 services.Replace(ServiceDescriptor.Singleton(Substitute.For<IEmailSender<User>>()));
@@ -109,6 +125,8 @@ public abstract class TestBase
     protected static IAmazonDynamoDB DynamoClient => Testing.Dynamo.Client;
     protected static IDynamoDBContext DynamoContext => Testing.Dynamo.Context;
 
+    protected IAmazonS3 S3Client => AppFactory.S3Client;
+
     [SetUp]
     public virtual void SetupApplicationFactory()
     {
@@ -124,6 +142,13 @@ public abstract class TestBase
         _httpClient = null!;
     }
 
+    protected string SetAuthenticatedClaimsPrincipal()
+    {
+        var user = new User { Username = "auth@enticated.com" };
+        SetClaimsPrincipal(user);
+        return user.Id;
+    }
+
     protected void SetClaimsPrincipal(User user)
     {
        AppFactory.ConfiguringServices += services =>
@@ -131,6 +156,12 @@ public abstract class TestBase
             services.AddSingleton(new TestAuthHandler.AuthenticatedUser(user));
         };
     }
+
+    /// <summary>
+    /// Sets an environment variable for the application. This is useful for overriding settings in tests.
+    /// </summary>
+    protected void SetEnv(string key, string value) =>
+        AppFactory.EnvironmentVariables[key] = value;
 
     public class TestAuthHandler(
         IServiceProvider services,

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Amazon.DynamoDBv2.DataModel;
 using BitsAndBobs.Infrastructure;
 
@@ -8,9 +9,9 @@ public class AuctionImage
 {
     public const string SortKey = "AuctionImage";
 
-    // Serialization constructor for DynamoDB
+    [Obsolete("This constructor is for DynamoDB only and should not be used directly.")]
     // ReSharper disable once MemberCanBePrivate.Global
-    protected AuctionImage()
+    public AuctionImage()
     {
     }
 
@@ -18,7 +19,7 @@ public class AuctionImage
     /// Gets the user ID.
     /// </summary>
     [DynamoDBProperty("PK")]
-    public string Id { get; protected set; } = $"auctionimage#{Guid.NewGuid():n}";
+    public string Id { get; protected set; } = "";
 
     protected string SK
     {
@@ -35,9 +36,14 @@ public class AuctionImage
     public string AuctionId { get; protected set; } = "none";
 
     /// <summary>
-    /// Gets or sets the file name
+    /// Gets the file name
     /// </summary>
     public string FileName { get; set; } = "";
+
+    /// <summary>
+    /// Gets the ID of the user who uploaded the image
+    /// </summary>
+    public string UserId { get; protected set; } = "";
 
     /// <summary>
     /// Gets the created date of the image
@@ -48,7 +54,7 @@ public class AuctionImage
     /// <summary>
     /// Gets whether the image has an associated auction
     /// </summary>
-    public bool HasAuction => AuctionId != "none";
+    public bool IsAssociatedWithAuction => AuctionId != "none";
 
     /// <summary>
     /// Gets the version string (for concurrency control)
@@ -61,12 +67,23 @@ public class AuctionImage
     [DynamoDBIgnore]
     public string InitialVersion { get; protected set; } = "";
 
+    // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
+    // ReSharper disable once UnusedMember.Global
+    [DynamoDBIgnore]
+    protected string? RecipientUserId { get; set; }
+
     /// <summary>
     /// Creates a new instance of the AuctionImage class with the specified file name
     /// </summary>
-    public static AuctionImage Create(string fileName)
+    public static AuctionImage Create(string fileExtension, ClaimsPrincipal user)
     {
-        var image = new AuctionImage { FileName = fileName };
+        var id = Guid.NewGuid().ToString("n");
+        var image = new AuctionImage
+        {
+            Id = $"auctionimage#{id}",
+            FileName = $"{id}{fileExtension}",
+            UserId = user.GetUserId(),
+        };
         image.UpdateVersion();
         return image;
     }
@@ -76,7 +93,7 @@ public class AuctionImage
     /// </summary>
     public void AssociateWithAuction(Auction auction)
     {
-        if (HasAuction)
+        if (IsAssociatedWithAuction)
             throw new InvalidOperationException("This image is already associated with an auction.");
 
         AuctionId = auction.Id;

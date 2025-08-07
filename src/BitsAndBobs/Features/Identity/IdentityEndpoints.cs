@@ -29,7 +29,7 @@ public static class IdentityEndpoints
     );
 
     /// <summary>
-    /// Maps endpoints for retrieving emails (since we don't want to mess around with actually sending emails).
+    /// Maps endpoints for identity-related functions.
     /// </summary>
     public static void MapIdentityEndpoints(this IEndpointRouteBuilder endpoints)
     {
