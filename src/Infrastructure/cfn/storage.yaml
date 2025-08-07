@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Storage infrastructure for the Bits & Bobs application
+
+Parameters:
+  Environment:
+    Type: String
+    Default: Development
+    Description: The environment for which the resources are being created
+    AllowedValues:
+      - Development
+      - Staging
+      - Production
+
+Mappings:
+  EnvironmentMap:
+    Development:
+      Moniker: dev
+    Staging:
+      Moniker: staging
+    Production:
+      Moniker: prod
+
+Resources:
+  # The S3 bucket for the client app
+  S3BucketApp:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        !Sub
+        - 'marsupialmouse-bitsandbobs-${PlatformName}'
+        - PlatformName: !FindInMap [ EnvironmentMap, !Ref Environment, Moniker ]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref S3BucketLogging
+        LogFilePrefix: s3-access-logs
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'
+
+  # The S3 bucket policy for securing the client app bucket
+  S3BucketPolicyApp:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3BucketApp
+      PolicyDocument:
+        Id: S3AppPolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: PolicyForCloudFrontPrivateContent
+            Effect: Allow
+            Resource: !Sub ${S3BucketApp.Arn}/*
+            Action: 's3:GetObject*'
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Sub ${AWS::AccountId}
+
+  # The S3 bucket for access logs from S3 (for the application) and CloudFront
+  S3BucketLogging:
+    # checkov:skip=CKV_AWS_18:This is a private bucket for logs, we don't need access logs
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        !Sub
+        - 'marsupialmouse-bitsandbobs-${PlatformName}-logs'
+        - PlatformName: !FindInMap [ EnvironmentMap, !Ref Environment, Moniker ]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+
+  # The S3 bucket policy for securing the logging bucket
+  S3BucketPolicyLogging:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3BucketLogging
+      PolicyDocument:
+        Id: S3LoggingPolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: PolicyForS3ServerLog
+            Effect: Allow
+            Resource: !Sub ${S3BucketLogging.Arn}/*
+            Action: 's3:PutObject'
+            Principal:
+              Service: logging.s3.amazonaws.com
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Sub ${AWS::AccountId}
+          - Sid: PolicyForCFLog
+            Effect: Allow
+            Resource: !Sub ${S3BucketLogging.Arn}/*
+            Action: 's3:PutObject'
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Sub ${AWS::AccountId}
+
+Outputs:
+  AppBucketArn:
+    Description: ARN of the S3 bucket for the client app
+    Value: !GetAtt S3BucketApp.Arn
+  AppBucketName:
+    Description: Name of the S3 bucket for the client app
+    Value: !Ref S3BucketApp
+  AppBucketDomainName:
+    Description: Regional domain name of the S3 bucket for the client app
+    Value: !GetAtt S3BucketApp.RegionalDomainName
+  LoggingBucketArn:
+    Description: ARN of the S3 bucket for logging
+    Value: !GetAtt S3BucketLogging.Arn
+  LoggingBucketName:
+    Description: Name of the S3 bucket for logging
+    Value: !Ref S3BucketLogging
+  LoggingBucketDomainName:
+    Description: Regional domain name of the S3 bucket for logging
+    Value: !GetAtt S3BucketLogging.RegionalDomainName

@@ -17,6 +17,8 @@
     <File Path="Infrastructure\cfn\database.yaml" />
     <File Path="Infrastructure\cfn\kubernetes.yaml" />
     <File Path="Infrastructure\cfn\vpc.yaml" />
+    <File Path="Infrastructure\cfn\cdn.yaml" />
+    <File Path="Infrastructure\cfn\storage.yaml" />
   </Folder>
   <Folder Name="/Infrastructure/helm/" />
   <Folder Name="/Infrastructure/helm/bitsandbobs/">

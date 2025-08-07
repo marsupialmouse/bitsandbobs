@@ -36,6 +36,7 @@ Parameters:
 
   AdminPrincipalArn:
     Type: String
+    Default: ''
     Description: The ARN of the IAM role to grant admin access to the EKS cluster
 
 Metadata:
@@ -47,22 +48,14 @@ Metadata:
 Mappings:
   EnvironmentMap:
     Development:
-      Moniker: dev
       Cidr: 10.16.0.0/20
     Staging:
-      Moniker: staging
       Cidr: 10.16.16.0/20
     Production:
-      Moniker: prod
       Cidr: 10.16.32.0/20
 
 Conditions:
   CreateEksClusterCondition: !Equals [ !Ref CreateEksCluster, 'true' ]
-  CreateEksVpcOriginCondition: !And
-    - !Condition CreateEksClusterCondition
-    - !Not [ !Equals [ !Ref EksLoadBalancerArn, ""] ]
-    - !Not [ !Equals [ !Ref EksLoadBalancerDomainName, "" ] ]
-
 
 Resources:
   VpcStack:
@@ -72,6 +65,13 @@ Resources:
       Parameters:
         Cidr: !FindInMap [EnvironmentMap, !Ref Environment, Cidr]
         CreateNatGateway: !Ref CreateEksCluster
+
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: storage.yaml
+      Parameters:
+        Environment: !Ref Environment
 
   DatabaseStack:
     Type: AWS::CloudFormation::Stack
@@ -92,267 +92,17 @@ Resources:
         DynamoTableArn: !GetAtt DatabaseStack.Outputs.TableArn
         AdminPrincipalArn: !Ref AdminPrincipalArn
 
-  # The S3 bucket for the client app
-  S3BucketApp:
-    Type: AWS::S3::Bucket
+  CfStack:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      BucketName:
-        !Sub
-          - 'marsupialmouse-bitsandbobs-${PlatformName}'
-          - PlatformName: !FindInMap [EnvironmentMap, !Ref Environment, Moniker]
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      LoggingConfiguration:
-        DestinationBucketName: !Ref S3BucketLogging
-        LogFilePrefix: s3-access-logs
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: 'AES256'
-
-  # The S3 bucket policy for securing the client app bucket
-  S3BucketPolicyApp:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref S3BucketApp
-      PolicyDocument:
-        Id: S3AppPolicy
-        Version: 2012-10-17
-        Statement:
-          - Sid: PolicyForCloudFrontPrivateContent
-            Effect: Allow
-            Resource: !Sub ${S3BucketApp.Arn}/*
-            Action: 's3:GetObject*'
-            Principal:
-              Service: cloudfront.amazonaws.com
-            Condition:
-              StringEquals:
-                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CFDistribution}
-
-
-  # The S3 bucket for access logs from S3 (for the application) and CloudFront
-  S3BucketLogging:
-    # checkov:skip=CKV_AWS_18:This is a private bucket for logs, we don't need access logs
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName:
-        !Sub
-        - 'marsupialmouse-bitsandbobs-${PlatformName}-logs'
-        - PlatformName: !FindInMap [ EnvironmentMap, !Ref Environment, Moniker ]
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: 'AES256'
-      OwnershipControls:
-        Rules:
-          - ObjectOwnership: BucketOwnerPreferred
-    DeletionPolicy: Delete
-
-  # The S3 bucket policy for securing the logging bucket
-  S3BucketPolicyLogging:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref S3BucketLogging
-      PolicyDocument:
-        Id: S3LoggingPolicy
-        Version: 2012-10-17
-        Statement:
-          - Sid: PolicyForS3ServerLog
-            Effect: Allow
-            Resource: !Sub ${S3BucketLogging.Arn}/*
-            Action: 's3:PutObject'
-            Principal:
-              Service: logging.s3.amazonaws.com
-            Condition:
-              StringEquals:
-                AWS:SourceAccount: !Sub ${AWS::AccountId}
-          - Sid: PolicyForCFLog
-            Effect: Allow
-            Resource: !Sub ${S3BucketLogging.Arn}/*
-            Action: 's3:PutObject'
-            Principal:
-              Service: cloudfront.amazonaws.com
-            Condition:
-              StringEquals:
-                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CFDistribution}
-
-  # This is flaky. When EKS swaps the LB out (e.g. because you make changed to ingress) then the LB ARN changes and the VPC
-  # Origin will no longer work and will need to be recreated, but it can't easily be re-created because CloudFront depends on it.
-  EksVpcOrigin:
-    Type: AWS::CloudFront::VpcOrigin
-    Condition: CreateEksVpcOriginCondition
-    Properties:
-      VpcOriginEndpointConfig:
-        Name: !Sub EksLbVpcOrigin-${Environment}
-        Arn: !Ref EksLoadBalancerArn
-        HTTPPort: 80
-        OriginProtocolPolicy: http-only
-
-  # The CloudFront distribution exposing both the client app and api
-  CFDistribution:
-    # checkov:skip=CKV_AWS_68:This is a demo, we don't need to pay for WAF
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Origins:
-          - DomainName: !GetAtt S3BucketApp.RegionalDomainName
-            Id: S3Origin
-            S3OriginConfig:
-              OriginAccessIdentity: ""
-            OriginAccessControlId: !GetAtt CloudFrontOriginAccessControl.Id
-          - !If
-            - CreateEksVpcOriginCondition
-            - DomainName: !Ref EksLoadBalancerDomainName
-              Id: EksOrigin
-              VpcOriginConfig:
-                VpcOriginId: !Ref EksVpcOrigin
-            - !Ref AWS::NoValue
-        Enabled: 'true'
-        DefaultRootObject: index.html
-        DefaultCacheBehavior:
-          AllowedMethods:
-            - GET
-            - HEAD
-            - OPTIONS
-          TargetOriginId: S3Origin
-          # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html#managed-cache-policy-caching-disabled
-          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # CachingDisabled
-          # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html
-          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # CORS-S3Origin
-          # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-response-headers-policies.html
-          #ResponseHeadersPolicyId: eaab4381-ed33-4a86-88ca-d9558dc6cd63 # CORS-with-preflight-and-SecurityHeadersPolicy
-          ViewerProtocolPolicy: redirect-to-https
-          Compress: true
-          FunctionAssociations:
-            - EventType: viewer-request
-              FunctionARN: !GetAtt SpaPathFunction.FunctionARN
-        CacheBehaviors:
-          - !If
-            - CreateEksVpcOriginCondition
-            - PathPattern: /api/*
-              AllowedMethods:
-                - GET
-                - HEAD
-                - OPTIONS
-                - PUT
-                - PATCH
-                - POST
-                - DELETE
-              TargetOriginId: EksOrigin
-              CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # CachingDisabled
-              OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3 # AllViewer
-              ViewerProtocolPolicy: redirect-to-https
-              Compress: true
-            - !Ref AWS::NoValue
-          - PathPattern: /images/*
-            AllowedMethods:
-              - GET
-              - HEAD
-              - OPTIONS
-            TargetOriginId: S3Origin
-            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # CachingOptimized
-            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # CORS-S3Origin
-            ViewerProtocolPolicy: redirect-to-https
-            FunctionAssociations:
-              - EventType: viewer-request
-                FunctionARN: !GetAtt SpaPathFunction.FunctionARN
-          - PathPattern: /assets/*
-            AllowedMethods:
-              - GET
-              - HEAD
-              - OPTIONS
-            TargetOriginId: S3Origin
-            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # CachingOptimized
-            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # CORS-S3Origin
-            ViewerProtocolPolicy: redirect-to-https
-            Compress: true
-            FunctionAssociations:
-              - EventType: viewer-request
-                FunctionARN: !GetAtt SpaPathFunction.FunctionARN
-        PriceClass: PriceClass_All
-        Logging:
-          Bucket: !GetAtt S3BucketLogging.RegionalDomainName
-          Prefix: 'cf-access-logs'
-        ViewerCertificate:
-          CloudFrontDefaultCertificate: true
-          MinimumProtocolVersion: 'TLSv1.2_2021'
-
-  # CloudFront origin access control
-  CloudFrontOriginAccessControl:
-    Type: AWS::CloudFront::OriginAccessControl
-    DependsOn:
-      - S3BucketApp
-    Properties:
-      OriginAccessControlConfig:
-        Description: Default Origin Access Control
-        Name: !Ref AWS::StackName
-        OriginAccessControlOriginType: s3
-        SigningBehavior: always
-        SigningProtocol: sigv4
-
-  CFKeyValueStore:
-    Type: AWS::CloudFront::KeyValueStore
-    Properties:
-      Name: !Sub 'CFKeyValueStore-${Environment}'
-
-  SpaPathFunction:
-    Type: AWS::CloudFront::Function
-    Properties:
-      Name: !Sub 'SpaPathFunction-${Environment}'
-      AutoPublish: true
-      FunctionConfig:
-        Comment: >
-          Prefixes SPA paths with the version number stored in the CFN KVS. Also rewrites all SPA routes (i.e. not
-          /assets or /images) to / so that they'll be handled by the SPA but won't generate 404 errors. Usually this
-          would be handled with custom error responses, but we don't want to mask errors from the API (or missing
-          assets or images).
-        Runtime: cloudfront-js-2.0
-        KeyValueStoreAssociations:
-          - KeyValueStoreARN: !GetAtt CFKeyValueStore.Arn
-      FunctionCode: |
-        import cf from 'cloudfront';
-
-        // This relies on the KVS being associated with the function
-        const kvs = cf.kvs();
-
-        async function handler(event) {
-          const request = event.request;
-          const originalUri = request.uri;
-          const pathSegments = request.uri.split('/')
-          if (!['assets', 'images'].includes(pathSegments[1])) {
-            request.uri = '/index.html'
-          }
-          try {
-            const hasVersion = await kvs.exists('current-version')
-            if (hasVersion) {
-              const version = await kvs.get('current-version', { format: 'string' });
-              request.uri = '/' + version + request.uri;
-            }
-            console.log(`${originalUri} -> ${request.uri}`);
-          } catch (error) {
-            console.log(`${request.uri} | ${err}`);
-          }
-          return request;
-        }
-
-Outputs:
-  BucketName:
-    Value: !Ref S3BucketApp
-  DomainName:
-    Value: !GetAtt CFDistribution.DomainName
-  KeyValueStoreArn:
-    Value: !GetAtt CFKeyValueStore.Arn
-  KeyValueStoreId:
-    Value: !GetAtt CFKeyValueStore.Id
+      TemplateURL: cdn.yaml
+      Parameters:
+        Environment: !Ref Environment
+        AppBucketDomainName: !GetAtt S3Stack.Outputs.AppBucketDomainName
+        LoggingBucketDomainName: !GetAtt S3Stack.Outputs.LoggingBucketDomainName
+        EksClusterArn: !If
+          - CreateEksClusterCondition
+          - !GetAtt EksStack.Outputs.EksClusterArn
+          - ''
+        EksLoadBalancerArn: !Ref EksLoadBalancerArn
+        EksLoadBalancerDomainName: !Ref EksLoadBalancerDomainName
