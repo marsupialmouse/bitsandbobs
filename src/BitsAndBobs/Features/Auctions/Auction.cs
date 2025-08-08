@@ -1,6 +1,7 @@
 using Amazon.DynamoDBv2.DataModel;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Infrastructure;
+using BitsAndBobs.Infrastructure.DynamoDb;
 
 namespace BitsAndBobs.Features.Auctions;
 

@@ -8,7 +8,7 @@ using System.Net.Http.Json;
 namespace BitsAndBobs.Tests.Features.Auctions;
 
 [TestFixture]
-public class ImagesEndpointTest : TestBase
+public class UploadImagesEndpointTest : TestBase
 {
     [Test]
     public async Task ShouldGet401ResponseWhenUploadingWithoutAuthentication()
@@ -49,7 +49,7 @@ public class ImagesEndpointTest : TestBase
     }
 
     [Test]
-    public async Task ShouldReturnImageResponseWithPathHrefWhenNoDomainSet()
+    public async Task ShouldReturnImageResponseWithFullUrlHrefWhenDomainSet()
     {
         SetAuthenticatedClaimsPrincipal();
         SetEnv("AWS__Resources__AppBucketDomainName", "charlie.bucket");
@@ -63,43 +63,7 @@ public class ImagesEndpointTest : TestBase
     }
 
     [Test]
-    public async Task ShouldAddImageToDatabase()
-    {
-        var userId = SetAuthenticatedClaimsPrincipal();
-
-        var httpResponse = await HttpClient.PostAsync("/api/auctions/images", CreateImageContent("image/jpeg"));
-        var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
-
-        var image = await DynamoContext.LoadAsync<AuctionImage>(response!.Id, AuctionImage.SortKey);
-        image.ShouldNotBeNull();
-        image.CreatedOn.ShouldBe(DateTimeOffset.Now, TimeSpan.FromSeconds(1));
-        image.AuctionId.ShouldBe("none");
-        image.UserId.ShouldBe(userId);
-        response.Href.ShouldEndWith(image.FileName);
-    }
-
-    [Test]
-    public async Task ShouldAddImageToS3()
-    {
-        SetAuthenticatedClaimsPrincipal();
-        SetEnv("AWS__Resources__AppBucketName", "grandma-georgina");
-
-        var httpResponse = await HttpClient.PostAsync("/api/auctions/images", CreateImageContent("image/jpeg"));
-        var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
-
-        var image = await DynamoContext.LoadAsync<AuctionImage>(response!.Id, AuctionImage.SortKey)!;
-        await S3Client
-              .Received(1)
-              .PutObjectAsync(
-                  Arg.Is<PutObjectRequest>(req => req.BucketName == "grandma-georgina"
-                                                  && req.Key == $"auctions/{image.FileName}"
-                                                  && req.InputStream != null
-                  )
-              );
-    }
-
-    [Test]
-    public async Task ShouldReturnImageResponseWithFullUrlHrefWhenDomainSet()
+    public async Task ShouldReturnImageResponseWithPathHrefWhenNoDomainSet()
     {
         SetAuthenticatedClaimsPrincipal();
         SetEnv("AWS__Resources__AppBucketDomainName", "");
@@ -112,6 +76,67 @@ public class ImagesEndpointTest : TestBase
         response.Href.ShouldEndWith(".png");
     }
 
+    [Test]
+    public async Task ShouldAddImageToDatabase()
+    {
+        var userId = SetAuthenticatedClaimsPrincipal();
+
+        var httpResponse = await HttpClient.PostAsync("/api/auctions/images", CreateImageContent("image/jpeg"));
+        var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
+
+        var image = await GetImageFromDb(response!.Id);
+        image.ShouldNotBeNull();
+        image.CreatedOn.ShouldBe(DateTimeOffset.Now, TimeSpan.FromSeconds(1));
+        image.AuctionId.ShouldBe("none");
+        image.UserId.ShouldBe(userId);
+        response.Href.ShouldEndWith(image.FileName);
+    }
+
+    [Test]
+    public async Task ShouldReturnFriendlyImageId()
+    {
+        SetAuthenticatedClaimsPrincipal();
+
+        var httpResponse = await HttpClient.PostAsync("/api/auctions/images", CreateImageContent("image/jpeg"));
+        var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
+
+        response.ShouldNotBeNull();
+        response.Id.ShouldBe(AuctionImageId.Parse(response.Id).FriendlyValue);
+    }
+
+    [Test]
+    public async Task ShouldUseFriendlyIdInFileName()
+    {
+        SetAuthenticatedClaimsPrincipal();
+
+        var httpResponse = await HttpClient.PostAsync("/api/auctions/images", CreateImageContent("image/webp"));
+        var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
+
+        var image = await GetImageFromDb(response!.Id);
+        image!.FileName.ShouldBe($"{image.Id.FriendlyValue}.webp");
+    }
+
+
+    [Test]
+    public async Task ShouldAddImageToS3()
+    {
+        SetAuthenticatedClaimsPrincipal();
+        SetEnv("AWS__Resources__AppBucketName", "grandma-georgina");
+
+        var httpResponse = await HttpClient.PostAsync("/api/auctions/images", CreateImageContent("image/jpeg"));
+        var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
+
+        var image = await GetImageFromDb(response!.Id);
+        await S3Client
+              .Received(1)
+              .PutObjectAsync(
+                  Arg.Is<PutObjectRequest>(req => req.BucketName == "grandma-georgina"
+                                                  && req.Key == $"auctions/{image!.FileName}"
+                                                  && req.InputStream != null
+                  )
+              );
+    }
+
     private static MultipartFormDataContent CreateImageContent(string contentType)
     {
         var fileContent = "fake image content"u8.ToArray();
@@ -121,4 +146,7 @@ public class ImagesEndpointTest : TestBase
         content.Add(streamContent, "file", "test-image");
         return content;
     }
+
+    private static Task<AuctionImage?> GetImageFromDb(string id) =>
+        DynamoContext.LoadAsync<AuctionImage>(AuctionImageId.Parse(id), AuctionImage.SortKey)!;
 }

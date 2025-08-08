@@ -1,7 +1,7 @@
 using Amazon.DynamoDBv2;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace BitsAndBobs.Infrastructure;
+namespace BitsAndBobs.Infrastructure.DynamoDb;
 
 public class DynamoDbHealthCheck(IAmazonDynamoDB dynamo) : IHealthCheck
 {

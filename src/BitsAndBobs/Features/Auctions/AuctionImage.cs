@@ -1,8 +1,16 @@
 using System.Security.Claims;
 using Amazon.DynamoDBv2.DataModel;
 using BitsAndBobs.Infrastructure;
+using BitsAndBobs.Infrastructure.DynamoDb;
+using StronglyTypedIds;
 
 namespace BitsAndBobs.Features.Auctions;
+
+[StronglyTypedId]
+public readonly partial struct AuctionImageId
+{
+    public static partial string Prefix => "auctionimage#";
+}
 
 [DynamoDBTable(BitsAndBobsTable.Name)]
 public class AuctionImage
@@ -15,11 +23,19 @@ public class AuctionImage
     {
     }
 
+    public AuctionImage(string fileExtension, string userId)
+    {
+        Id = AuctionImageId.Create();
+        FileName = $"{Id.FriendlyValue}{fileExtension}";
+        UserId = userId;
+        UpdateVersion();
+    }
+
     /// <summary>
     /// Gets the user ID.
     /// </summary>
-    [DynamoDBProperty("PK")]
-    public string Id { get; protected set; } = "";
+    [DynamoDBProperty("PK", typeof(AuctionImageId.DynamoConverter))]
+    public AuctionImageId Id { get; protected set; } = AuctionImageId.Empty;
 
     protected string SK
     {
@@ -75,18 +91,7 @@ public class AuctionImage
     /// <summary>
     /// Creates a new instance of the AuctionImage class with the specified file name
     /// </summary>
-    public static AuctionImage Create(string fileExtension, ClaimsPrincipal user)
-    {
-        var id = Guid.NewGuid().ToString("n");
-        var image = new AuctionImage
-        {
-            Id = $"auctionimage#{id}",
-            FileName = $"{id}{fileExtension}",
-            UserId = user.GetUserId(),
-        };
-        image.UpdateVersion();
-        return image;
-    }
+    public static AuctionImage Create(string fileExtension, ClaimsPrincipal user) => new(fileExtension, user.GetUserId());
 
     /// <summary>
     /// Sets the ID of the auction to which the image belongs.

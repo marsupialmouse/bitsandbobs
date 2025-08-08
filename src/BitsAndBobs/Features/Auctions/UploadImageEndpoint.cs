@@ -47,10 +47,12 @@ public static class UploadImageEndpoint
             {
                 BucketName = options.Value.AppBucketName,
                 Key = $"auctions/{image.FileName}",
-                InputStream = stream
+                InputStream = stream,
             }
         );
 
-        return TypedResults.Ok(new AuctionImageResponse(image.Id, options.Value.GetAuctionImageHref(image.FileName)));
+        return TypedResults.Ok(
+            new AuctionImageResponse(image.Id.FriendlyValue, options.Value.GetAuctionImageHref(image.FileName))
+        );
     }
 }

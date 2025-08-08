@@ -2,7 +2,7 @@ using System.Globalization;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 
-namespace BitsAndBobs.Infrastructure;
+namespace BitsAndBobs.Infrastructure.DynamoDb;
 
 /// <summary>
 /// Handles conversion of <see cref="DateTimeOffset"/> values to and from DynamoDB entries.

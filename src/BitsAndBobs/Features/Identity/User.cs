@@ -1,5 +1,5 @@
 using Amazon.DynamoDBv2.DataModel;
-using BitsAndBobs.Infrastructure;
+using BitsAndBobs.Infrastructure.DynamoDb;
 using Microsoft.AspNetCore.Identity;
 
 namespace BitsAndBobs.Features.Identity;

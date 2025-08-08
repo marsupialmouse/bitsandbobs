@@ -10,12 +10,15 @@ using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Features.UserContext;
 using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.AntiForgery;
+using BitsAndBobs.Infrastructure.DynamoDb;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using NJsonSchema.Generation;
+using StronglyTypedIds;
 
 [assembly: InternalsVisibleTo("BitsAndBobs.Tests")]
+[assembly: StronglyTypedIdDefaults("dynamodb-itemid")]
 
 namespace BitsAndBobs;
 
