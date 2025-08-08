@@ -9,6 +9,7 @@ public static class AuctionEndpoints
     {
         var group = endpoints.MapGroup("/auctions");
 
+        group.MapPost("/", CreateAuctionEndpoint.CreateAuction).RequireAuthorization();
         group.MapPost("/images", UploadImageEndpoint.UploadImage).RequireAuthorization().DisableAntiforgery();
     }
 }

@@ -37,7 +37,7 @@ public static class UploadImageEndpoint
         if (!ContentTypesAndExtensions.TryGetValue(file.ContentType, out var extension))
             return TypedResults.ValidationProblem(InvalidContentType);
 
-        var image = AuctionImage.Create(extension, claimsPrincipal);
+        var image = new AuctionImage(extension, claimsPrincipal.GetUserId());
 
         await dynamo.SaveAsync(image);
 

@@ -112,6 +112,7 @@ public class User : VersionedEntity
     public DateTimeOffset? LockoutEndDate { get; set; }
 
     // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
+    // "Value cannot be null. (Parameter 'key')"
     // ReSharper disable once UnusedMember.Global
     [DynamoDBIgnore]
     protected string? RecipientUserId { get; set; }

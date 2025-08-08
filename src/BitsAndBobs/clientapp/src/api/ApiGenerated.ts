@@ -116,6 +116,19 @@ export interface DetailsRequest {
     readonly lastName?: string | undefined;
 }
 
+export interface CreateAuctionResponse {
+    readonly id: string;
+}
+
+export interface CreateAuctionRequest {
+    readonly name: string;
+    readonly description: string;
+    readonly imageId: string;
+    readonly initialPrice: number;
+    readonly bidIncrement: number;
+    readonly period: string;
+}
+
 export interface AuctionImageResponse {
     readonly id: string;
     readonly href: string;

@@ -147,6 +147,38 @@ public abstract class TestBase
         _httpClient = null!;
     }
 
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="configure"></param>
+    /// <returns></returns>
+    protected async Task<User> CreateAuthenticatedUser(Action<User>? configure = null)
+    {
+        var uniqueness = Guid.NewGuid().ToString("n");
+
+        var user = new User
+        {
+            EmailAddress = $"upper@case.{uniqueness}.com",
+            NormalizedEmailAddress = $"UPPER@CASE.{uniqueness.ToUpperInvariant()}.COM",
+            EmailAddressConfirmed = true,
+            Username = $"upper@case.{uniqueness}.com",
+            NormalizedUsername = $"UPPER@CASE.{uniqueness.ToUpperInvariant()}.COM",
+            DisplayName = "UPPER_CASE",
+            FirstName = "Upper",
+            LastName = "Case",
+        };
+
+        configure?.Invoke(user);
+
+        user.UpdateConcurrency();
+
+        await new UserStore(Testing.DynamoClient, Testing.Dynamo.Context).CreateAsync(user, CancellationToken.None);
+
+        SetClaimsPrincipal(user);
+
+        return user;
+    }
+
     protected UserId SetAuthenticatedClaimsPrincipal()
     {
         var user = new User { Username = "auth@enticated.com" };

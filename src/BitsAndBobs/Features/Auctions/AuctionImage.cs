@@ -24,6 +24,9 @@ public class AuctionImage : VersionedEntity
     {
     }
 
+    /// <summary>
+    /// Creates a new instance of the AuctionImage class with the specified file extension
+    /// </summary>
     public AuctionImage(string fileExtension, UserId userId)
     {
         Id = AuctionImageId.Create();
@@ -77,14 +80,10 @@ public class AuctionImage : VersionedEntity
     public bool IsAssociatedWithAuction => AuctionId != "none";
 
     // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
+    // "Value cannot be null. (Parameter 'key')"
     // ReSharper disable once UnusedMember.Global
     [DynamoDBIgnore]
     protected string? RecipientUserId { get; set; }
-
-    /// <summary>
-    /// Creates a new instance of the AuctionImage class with the specified file name
-    /// </summary>
-    public static AuctionImage Create(string fileExtension, ClaimsPrincipal user) => new(fileExtension, user.GetUserId());
 
     /// <summary>
     /// Sets the ID of the auction to which the image belongs.

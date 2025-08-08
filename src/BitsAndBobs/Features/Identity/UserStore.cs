@@ -30,15 +30,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
 
             var items = new List<TransactWriteItem>
             {
-                new()
-                {
-                    Put = new Put
-                    {
-                        TableName = BitsAndBobsTable.FullName,
-                        Item = _context.ToDocument(user).ToAttributeMap(),
-                        ConditionExpression = UniqueItemCondition
-                    }
-                },
+                new() { Put = _context.CreateInsertPut(user) },
                 new() { Put = GetReservedEmailPut(user) },
                 new() { Put = GetReservedUsernamePut(user) },
             };

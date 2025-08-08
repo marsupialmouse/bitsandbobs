@@ -8,7 +8,7 @@ using System.Net.Http.Json;
 namespace BitsAndBobs.Tests.Features.Auctions;
 
 [TestFixture]
-public class UploadImagesEndpointTest : TestBase
+public class UploadImageEndpointTest : TestBase
 {
     [Test]
     public async Task ShouldGet401ResponseWhenUploadingWithoutAuthentication()

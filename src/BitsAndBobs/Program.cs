@@ -11,6 +11,7 @@ using BitsAndBobs.Features.UserContext;
 using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.AntiForgery;
 using BitsAndBobs.Infrastructure.DynamoDb;
+using FluentValidation;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
@@ -126,6 +127,7 @@ public class Program
             }
         );
 
+        builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
         builder.Services.AddHealthChecks().AddCheck<DynamoDbHealthCheck>("dynamodb");
 

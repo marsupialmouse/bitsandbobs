@@ -1,26 +1,56 @@
 using Amazon.DynamoDBv2.DataModel;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Infrastructure.DynamoDb;
+using StronglyTypedIds;
 
 namespace BitsAndBobs.Features.Auctions;
 
+[StronglyTypedId]
+public readonly partial struct AuctionId
+{
+    private static partial string Prefix => "auction#";
+}
+
 [DynamoDBTable(BitsAndBobsTable.Name)]
-public class Auction
+public class Auction : VersionedEntity
 {
     public const string SortKey = "Auction";
 
     [Obsolete("This constructor is for DynamoDB only and is none of your business.")]
     // ReSharper disable once MemberCanBePrivate.Global
+    // ReSharper disable once UnusedMember.Global
     public Auction()
     {
     }
 
     /// <summary>
+    /// Creates a new auction lot.
+    /// </summary>
+    public Auction(User seller, string name, string description, AuctionImage image, decimal initialPrice, decimal bidIncrement, TimeSpan period)
+    {
+        Id = AuctionId.Create();
+        Name = name;
+        Description = description;
+        Image = image.FileName;
+        InitialPrice = initialPrice;
+        CurrentPrice = initialPrice;
+        BidIncrement = bidIncrement;
+        EndDate = DateTimeOffset.Now.Add(period);
+        SellerId = seller.Id;
+        SellerDisplayName = seller.DisplayName;
+
+        image.AssociateWithAuction(this);
+
+        UpdateVersion();
+    }
+
+    /// <summary>
     /// Gets the user ID.
     /// </summary>
-    [DynamoDBProperty("PK")]
+    [DynamoDBProperty("PK", typeof(AuctionId.DynamoConverter))]
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global (DynamoDB)
-    public string Id { get; protected set; } = $"auction#{Guid.NewGuid():n}";
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
+    public AuctionId Id { get; protected set; }
 
     // ReSharper disable once UnusedMember.Global (DynamoDB)
     // ReSharper disable once InconsistentNaming
@@ -100,38 +130,11 @@ public class Auction
     [DynamoDBProperty(typeof(UserId.DynamoConverter))]
     public UserId? CurrentBidderId { get; protected set; }
 
-    /// <summary>
-    /// Gets the version string (for concurrency control)
-    /// </summary>
-    public string Version { get; protected set; } = "";
-
-    /// <summary>
-    /// Gets the version string before the last update (for concurrency control)
-    /// </summary>
+    // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
+    // "Value cannot be null. (Parameter 'key')"
+    // ReSharper disable once UnusedMember.Global
     [DynamoDBIgnore]
-    public string InitialVersion { get; protected set; } = "";
-
-    public static Auction Create(string name, string description, AuctionImage image, decimal initialPrice, decimal bidIncrement, DateTimeOffset endDate, User seller)
-    {
-        #pragma warning disable CS0618 // Type or member is obsolete
-        var auction = new Auction
-        {
-            Name = name,
-            Description = description,
-            Image = image.FileName,
-            InitialPrice = initialPrice,
-            BidIncrement = bidIncrement,
-            EndDate = endDate,
-            SellerId = seller.Id,
-            SellerDisplayName = seller.DisplayName,
-            CurrentPrice = initialPrice,
-            Version = Guid.NewGuid().ToString()
-        };
-        #pragma warning restore CS0618 // Type or member is obsolete
-        image.AssociateWithAuction(auction);
-        auction.UpdateVersion();
-        return auction;
-    }
+    protected string? RecipientUserId { get; set; }
 
     public void Cancel()
     {
@@ -140,11 +143,5 @@ public class Auction
 
         Status = AuctionStatus.Cancelled;
         UpdateVersion();
-    }
-
-    private void UpdateVersion()
-    {
-        InitialVersion = Version;
-        Version = Guid.NewGuid().ToString("n");
     }
 }
