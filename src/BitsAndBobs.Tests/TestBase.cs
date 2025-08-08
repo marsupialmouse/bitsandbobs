@@ -148,11 +148,11 @@ public abstract class TestBase
     }
 
     /// <summary>
-    ///
+    /// Creates a valid user and saves it to the DB .
     /// </summary>
-    /// <param name="configure"></param>
+    /// <param name="configure">An optional delegate for updating the user before saving</param>
     /// <returns></returns>
-    protected async Task<User> CreateAuthenticatedUser(Action<User>? configure = null)
+    protected async Task<User> CreateUser(Action<User>? configure = null)
     {
         var uniqueness = Guid.NewGuid().ToString("n");
 
@@ -174,8 +174,18 @@ public abstract class TestBase
 
         await new UserStore(Testing.DynamoClient, Testing.Dynamo.Context).CreateAsync(user, CancellationToken.None);
 
-        SetClaimsPrincipal(user);
+        return user;
+    }
 
+    /// <summary>
+    /// Creates a valid user, saves it to the DB and sets the current user in the claims principal.
+    /// </summary>
+    /// <param name="configure">An optional delegate for updating the user before saving</param>
+    /// <returns></returns>
+    protected async Task<User> CreateAuthenticatedUser(Action<User>? configure = null)
+    {
+        var user = await CreateUser(configure);
+        SetClaimsPrincipal(user);
         return user;
     }
 

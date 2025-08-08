@@ -39,6 +39,13 @@ public static class BitsAndBobsTable
                    "SK",
                    DynamoDBEntryType.String
                )
+                .AddGlobalSecondaryIndex(
+                     "AuctionsByStatus",
+                     "AuctionStatus",
+                     DynamoDBEntryType.Numeric,
+                     "EndDateUtcTimeStamp",
+                     DynamoDBEntryType.Numeric
+                )
                .Build();
     }
 }

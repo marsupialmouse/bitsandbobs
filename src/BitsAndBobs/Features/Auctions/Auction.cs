@@ -100,7 +100,17 @@ public class Auction : VersionedEntity
     [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
     public DateTimeOffset EndDate { get; protected set; }
 
-    [DynamoDBProperty("AuctionStatus")]
+
+    // ReSharper disable once UnusedMember.Global (this is here for a GSI)
+    protected long EndDateUtcTimeStamp
+    {
+        get => EndDate.UtcTicks;
+        // This is settable only so the AWS SDK recognises the property
+        // ReSharper disable once ValueParameterNotUsed
+        set { }
+    }
+
+   [DynamoDBProperty("AuctionStatus")]
     public AuctionStatus Status { get; protected set; } = AuctionStatus.Open;
 
     /// <summary>
