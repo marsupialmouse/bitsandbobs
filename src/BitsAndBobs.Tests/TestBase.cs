@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -44,7 +45,10 @@ public abstract class TestBase
         /// <summary>
         /// Environment variables to set for the application. This is useful for overriding settings.
         /// </summary>
-        public Dictionary<string, string> EnvironmentVariables { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, string?> Settings { get; } = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "AWS:Resources:AppBucketName", "grandpa-joe" }
+        };
 
         /// <summary>
         /// A mocked S3 client
@@ -61,14 +65,15 @@ public abstract class TestBase
             Environment.SetEnvironmentVariable("AWS_ACCESS_KEY_ID", "dummy");
             Environment.SetEnvironmentVariable("AWS_SECRET_ACCESS_KEY", "dummy");
             Environment.SetEnvironmentVariable("AWS_REGION", "ap-southeast-2");
-            Environment.SetEnvironmentVariable("AWS__Resources__AppBucketName", "grandpa-joe");
 
-            foreach (var (key, value) in EnvironmentVariables)
+            foreach (var (key, value) in Settings)
                 Environment.SetEnvironmentVariable(key, value);
 
             builder
                 .UseEnvironment("Test")
                 .ConfigureLogging(x => x.ClearProviders().AddDebug().AddConsole().SetMinimumLevel(LogLevel.Trace));
+
+            builder.ConfigureAppConfiguration(config => config.AddInMemoryCollection(Settings));
 
             // override config values from test (runs after Startup.ConfigureServices
             builder.ConfigureTestServices(services =>
@@ -77,7 +82,7 @@ public abstract class TestBase
 
                 services
                     .AddAuthentication("Test")
-                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
 
                 services.Replace(ServiceDescriptor.Singleton(S3Client));
                 services.Replace(ServiceDescriptor.Singleton(Testing.Dynamo.Client));
@@ -160,8 +165,8 @@ public abstract class TestBase
     /// <summary>
     /// Sets an environment variable for the application. This is useful for overriding settings in tests.
     /// </summary>
-    protected void SetEnv(string key, string value) =>
-        AppFactory.EnvironmentVariables[key] = value;
+    protected void UpdateSetting(string key, string value) =>
+        AppFactory.Settings[key] = value;
 
     public class TestAuthHandler(
         IServiceProvider services,

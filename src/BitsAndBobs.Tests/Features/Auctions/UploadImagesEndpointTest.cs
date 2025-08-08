@@ -52,7 +52,7 @@ public class UploadImagesEndpointTest : TestBase
     public async Task ShouldReturnImageResponseWithFullUrlHrefWhenDomainSet()
     {
         SetAuthenticatedClaimsPrincipal();
-        SetEnv("AWS__Resources__AppBucketDomainName", "charlie.bucket");
+        UpdateSetting("AWS:Resources:AppBucketDomainName", "charlie.bucket");
 
         var httpResponse = await HttpClient.PostAsync("/api/auctions/images", CreateImageContent("image/jpeg"));
         var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
@@ -66,7 +66,7 @@ public class UploadImagesEndpointTest : TestBase
     public async Task ShouldReturnImageResponseWithPathHrefWhenNoDomainSet()
     {
         SetAuthenticatedClaimsPrincipal();
-        SetEnv("AWS__Resources__AppBucketDomainName", "");
+        UpdateSetting("AWS:Resources:AppBucketDomainName", "");
 
         var httpResponse = await HttpClient.PostAsync("/api/auctions/images", CreateImageContent("image/png"));
         var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
@@ -121,7 +121,7 @@ public class UploadImagesEndpointTest : TestBase
     public async Task ShouldAddImageToS3()
     {
         SetAuthenticatedClaimsPrincipal();
-        SetEnv("AWS__Resources__AppBucketName", "grandma-georgina");
+        UpdateSetting("AWS:Resources:AppBucketName", "grandma-georgina");
 
         var httpResponse = await HttpClient.PostAsync("/api/auctions/images", CreateImageContent("image/jpeg"));
         var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
