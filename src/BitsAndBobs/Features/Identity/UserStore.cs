@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
+using BitsAndBobs.Infrastructure.DynamoDb;
 using Microsoft.AspNetCore.Identity;
 
 namespace BitsAndBobs.Features.Identity;
@@ -25,7 +26,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
     {
         try
         {
-            UpdateVersion(user);
+            user.UpdateConcurrency();
 
             var items = new List<TransactWriteItem>
             {
@@ -65,23 +66,11 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
         try
         {
             var currentVersion = user.Version;
-            UpdateVersion(user);
+            user.UpdateConcurrency();
 
             var items = new List<TransactWriteItem>
             {
-                new()
-                {
-                    Put = new Put
-                    {
-                        TableName = BitsAndBobsTable.FullName,
-                        Item = _context.ToDocument(user).ToAttributeMap(),
-                        ConditionExpression = "attribute_exists(PK) AND attribute_exists(SK) AND Version = :currentVersion",
-                        ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                        {
-                            { ":currentVersion", new AttributeValue(currentVersion) },
-                        },
-                    },
-                },
+                new() { Put = _context.CreateUpdatePut(user) },
             };
 
             if (userMemo.NormalizedEmailAddress != user.NormalizedEmailAddress)
@@ -356,8 +345,6 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
             { "PK", new AttributeValue(pk) },
             { "SK", new AttributeValue("Reserved") },
         };
-
-    private static void UpdateVersion(User user) => user.Version = Guid.NewGuid().ToString("n");
 
     private void CacheUniqueAttributes(User? user)
     {

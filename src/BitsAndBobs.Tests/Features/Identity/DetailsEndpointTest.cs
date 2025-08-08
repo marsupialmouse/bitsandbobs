@@ -120,7 +120,6 @@ public class DetailsEndpointTest : TestBase
             Username = emailAddress,
             NormalizedUsername = emailAddress.ToUpperInvariant(),
             EmailAddressConfirmed = true,
-            Version = Guid.NewGuid().ToString("n"),
             FirstName = firstName,
             LastName = lastName,
             DisplayName = displayName!,

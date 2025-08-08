@@ -12,7 +12,7 @@
         /// <summary>
         /// Gets the prefix used in the full ID. Should end with a hash (#).
         /// </summary>
-        public static partial string Prefix { get; }
+        private static partial string Prefix { get; }
 
         /// <summary>
         /// Gets a non-prefixed version of the ID suitable for use in URLs or other user-facing contexts.

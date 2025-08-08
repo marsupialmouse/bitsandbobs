@@ -8,11 +8,11 @@ namespace BitsAndBobs.Features.Identity;
 [StronglyTypedId]
 public readonly partial struct UserId
 {
-    public static partial string Prefix => "user#";
+    private static partial string Prefix => "user#";
 }
 
 [DynamoDBTable(BitsAndBobsTable.Name)]
-public class User
+public class User : VersionedEntity
 {
     public const string SortKey = "Profile";
 
@@ -111,11 +111,6 @@ public class User
     [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
     public DateTimeOffset? LockoutEndDate { get; set; }
 
-    /// <summary>
-    /// A random value that must change whenever a user is persisted to the store
-    /// </summary>
-    public string Version { get; set; } = "";
-
     // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
     // ReSharper disable once UnusedMember.Global
     [DynamoDBIgnore]
@@ -125,4 +120,6 @@ public class User
     /// Returns the username for this user.
     /// </summary>
     public override string ToString() => Username;
+
+    public void UpdateConcurrency() => UpdateVersion();
 }

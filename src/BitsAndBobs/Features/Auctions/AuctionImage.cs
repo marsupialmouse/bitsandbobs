@@ -10,11 +10,11 @@ namespace BitsAndBobs.Features.Auctions;
 [StronglyTypedId]
 public readonly partial struct AuctionImageId
 {
-    public static partial string Prefix => "auctionimage#";
+    private static partial string Prefix => "auctionimage#";
 }
 
 [DynamoDBTable(BitsAndBobsTable.Name)]
-public class AuctionImage
+public class AuctionImage : VersionedEntity
 {
     public const string SortKey = "AuctionImage";
 
@@ -36,7 +36,8 @@ public class AuctionImage
     /// Gets the user ID.
     /// </summary>
     [DynamoDBProperty("PK", typeof(AuctionImageId.DynamoConverter))]
-    public AuctionImageId Id { get; protected set; } = AuctionImageId.Empty;
+    // ReSharper disable once PropertyCanBeMadeInitOnly.Global
+    public AuctionImageId Id { get; protected set; }
 
     protected string SK
     {
@@ -50,6 +51,7 @@ public class AuctionImage
     /// <summary>
     /// Gets or sets the ID of thr auction this image belongs to (or "none" if it is not associated with an auction)
     /// </summary>
+    // This is a string rather than an AuctionId to allow for the "none" value.
     public string AuctionId { get; protected set; } = "none";
 
     /// <summary>
@@ -74,17 +76,6 @@ public class AuctionImage
     /// </summary>
     public bool IsAssociatedWithAuction => AuctionId != "none";
 
-    /// <summary>
-    /// Gets the version string (for concurrency control)
-    /// </summary>
-    public string Version { get; protected set; } = "";
-
-    /// <summary>
-    /// Gets the version string before the last update (for concurrency control)
-    /// </summary>
-    [DynamoDBIgnore]
-    public string InitialVersion { get; protected set; } = "";
-
     // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
     // ReSharper disable once UnusedMember.Global
     [DynamoDBIgnore]
@@ -103,13 +94,7 @@ public class AuctionImage
         if (IsAssociatedWithAuction)
             throw new InvalidOperationException("This image is already associated with an auction.");
 
-        AuctionId = auction.Id;
+        AuctionId = auction.Id.Value;
         UpdateVersion();
-    }
-
-    private void UpdateVersion()
-    {
-        InitialVersion = Version;
-        Version = Guid.NewGuid().ToString("n");
     }
 }
