@@ -131,8 +131,8 @@ public class DetailsEndpointTest : TestBase
         return user;
     }
 
-    private Task<User?> GetUser(string id) => new UserStore(Testing.DynamoClient, Testing.DynamoContext).FindByIdAsync(
-        id,
+    private static Task<User?> GetUser(UserId id) => new UserStore(Testing.DynamoClient, Testing.DynamoContext).FindByIdAsync(
+        id.Value,
         TestContext.CurrentContext.CancellationToken
     );
 }

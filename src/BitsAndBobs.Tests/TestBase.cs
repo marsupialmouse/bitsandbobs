@@ -142,7 +142,7 @@ public abstract class TestBase
         _httpClient = null!;
     }
 
-    protected string SetAuthenticatedClaimsPrincipal()
+    protected UserId SetAuthenticatedClaimsPrincipal()
     {
         var user = new User { Username = "auth@enticated.com" };
         SetClaimsPrincipal(user);
@@ -189,7 +189,7 @@ public abstract class TestBase
             public IEnumerable<Claim> Claims =>
             [
                 new(ClaimTypes.Name, user.Username),
-                new(ClaimTypes.NameIdentifier, user.Id),
+                new(ClaimTypes.NameIdentifier, user.Id.Value),
             ];
         }
     }

@@ -13,7 +13,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
     private readonly IAmazonDynamoDB _db;
     private readonly IDynamoDBContext _context;
 
-    private readonly ConcurrentDictionary<string, UserMemo> _uniqueAttributesCache = new();
+    private readonly ConcurrentDictionary<UserId, UserMemo> _uniqueAttributesCache = new();
 
     public UserStore(IAmazonDynamoDB db, IDynamoDBContext context)
     {
@@ -128,7 +128,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
                         TableName = BitsAndBobsTable.FullName,
                         Key = new Dictionary<string, AttributeValue>
                         {
-                            { "PK", new AttributeValue(user.Id) },
+                            { "PK", new AttributeValue(user.Id.Value) },
                             { "SK", new AttributeValue(user.SK) },
                         },
                     },
@@ -160,7 +160,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
 
     public async Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
-        var user = await _context.LoadAsync<User>(userId, User.SortKey, cancellationToken);
+        var user = await _context.LoadAsync<User>(UserId.Parse(userId), User.SortKey, cancellationToken);
         CacheUniqueAttributes(user);
         return user;
     }
@@ -189,7 +189,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
         return user;
     }
 
-    public Task<string> GetUserIdAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.Id);
+    public Task<string> GetUserIdAsync(User user, CancellationToken cancellationToken) => Task.FromResult(user.Id.Value);
 
     public Task<string?> GetUserNameAsync(User user, CancellationToken cancellationToken) =>
         Task.FromResult(user.Username)!;
@@ -298,7 +298,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
     {
         var item = getKeyAttributes(user);
 
-        item["UserId"] = new AttributeValue(user.Id);
+        item["UserId"] = new AttributeValue(user.Id.Value);
 
         return new Put
         {
@@ -309,18 +309,18 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
     }
 
     private Delete GetReservedEmailDelete(User user) =>
-        GetReservedItemDelete(user.Id, GetReservedEmailKeyAttributes(user));
+        GetReservedItemDelete(user.Id.Value, GetReservedEmailKeyAttributes(user));
 
     private Delete GetReservedEmailDelete(UserMemo user) =>
         GetReservedItemDelete(user.PK, GetReservedEmailKeyAttributes(user));
 
     private Delete GetReservedUsernameDelete(User user) =>
-        GetReservedItemDelete(user.Id, GetReservedUsernameKeyAttributes(user));
+        GetReservedItemDelete(user.Id.Value, GetReservedUsernameKeyAttributes(user));
 
     private Delete GetReservedUsernameDelete(UserMemo user) =>
         GetReservedItemDelete(user.PK, GetReservedUsernameKeyAttributes(user));
 
-    private Delete GetReservedItemDelete(string userPk, Dictionary<string, AttributeValue> keyAttributes) =>
+    private static Delete GetReservedItemDelete(string userPk, Dictionary<string, AttributeValue> keyAttributes) =>
         new()
         {
             TableName = BitsAndBobsTable.FullName,
@@ -378,7 +378,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
 
     private record UserMemo(string PK, string? NormalizedEmailAddress, string? NormalizedUsername)
     {
-        public UserMemo(User user) : this(user.Id, user.NormalizedEmailAddress, user.NormalizedUsername)
+        public UserMemo(User user) : this(user.Id.Value, user.NormalizedEmailAddress, user.NormalizedUsername)
         {
         }
     }

@@ -1,6 +1,5 @@
 using Amazon.DynamoDBv2.DataModel;
 using BitsAndBobs.Features.Identity;
-using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.DynamoDb;
 
 namespace BitsAndBobs.Features.Auctions;
@@ -10,7 +9,9 @@ public class Auction
 {
     public const string SortKey = "Auction";
 
-    protected Auction()
+    [Obsolete("This constructor is for DynamoDB only and is none of your business.")]
+    // ReSharper disable once MemberCanBePrivate.Global
+    public Auction()
     {
     }
 
@@ -80,7 +81,8 @@ public class Auction
     /// <summary>
     /// Gets or sets the user ID of the seller
     /// </summary>
-    public string SellerId { get; protected set; } = "";
+    [DynamoDBProperty(typeof(UserId.DynamoConverter))]
+    public UserId SellerId { get; protected set; }
 
     /// <summary>
     /// Gets or sets the seller's display name
@@ -95,7 +97,8 @@ public class Auction
     /// <summary>
     /// Gets or sets the user ID of the current winning bidder
     /// </summary>
-    public string? CurrentBidderId { get; protected set; }
+    [DynamoDBProperty(typeof(UserId.DynamoConverter))]
+    public UserId? CurrentBidderId { get; protected set; }
 
     /// <summary>
     /// Gets the version string (for concurrency control)
@@ -110,6 +113,7 @@ public class Auction
 
     public static Auction Create(string name, string description, AuctionImage image, decimal initialPrice, decimal bidIncrement, DateTimeOffset endDate, User seller)
     {
+        #pragma warning disable CS0618 // Type or member is obsolete
         var auction = new Auction
         {
             Name = name,
@@ -123,6 +127,7 @@ public class Auction
             CurrentPrice = initialPrice,
             Version = Guid.NewGuid().ToString()
         };
+        #pragma warning restore CS0618 // Type or member is obsolete
         image.AssociateWithAuction(auction);
         auction.UpdateVersion();
         return auction;

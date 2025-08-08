@@ -84,7 +84,7 @@ public class UserStoreTests
         ];
         await Task.WhenAll(userTasks);
 
-        var user = await store.FindByIdAsync(user2.Id, CancellationToken.None);
+        var user = await store.FindByIdAsync(user2.Id.Value, CancellationToken.None);
 
         user.ShouldNotBeNull();
         UsersShouldMatch(user, user2);
@@ -250,7 +250,7 @@ public class UserStoreTests
         var store = CreateUserStore();
         await store.CreateAsync(user, CancellationToken.None);
         var altStore = CreateUserStore();
-        var altUser = (await altStore.FindByIdAsync(user.Id, CancellationToken.None))!;
+        var altUser = (await altStore.FindByIdAsync(user.Id.Value, CancellationToken.None))!;
         altUser.PasswordHash = "alt-hashed-password";
         await altStore.UpdateAsync(altUser, CancellationToken.None);
         user.PasswordHash = "new-hashed-password";
@@ -380,7 +380,7 @@ public class UserStoreTests
             FailedAccessAttempts = 4,
         };
 
-    private static Task<User> GetUser(string userId) =>
+    private static Task<User> GetUser(UserId userId) =>
         Testing.DynamoContext.LoadAsync<User>(userId, User.SortKey, CancellationToken.None);
 
     private static Task<Dictionary<string, AttributeValue>?> GetEmailRecord(string normalizedEmail) =>

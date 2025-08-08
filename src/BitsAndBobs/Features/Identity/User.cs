@@ -1,8 +1,15 @@
 using Amazon.DynamoDBv2.DataModel;
 using BitsAndBobs.Infrastructure.DynamoDb;
 using Microsoft.AspNetCore.Identity;
+using StronglyTypedIds;
 
 namespace BitsAndBobs.Features.Identity;
+
+[StronglyTypedId]
+public readonly partial struct UserId
+{
+    public static partial string Prefix => "user#";
+}
 
 [DynamoDBTable(BitsAndBobsTable.Name)]
 public class User
@@ -12,8 +19,8 @@ public class User
     /// <summary>
     /// Gets the user ID.
     /// </summary>
-    [DynamoDBProperty("PK")]
-    public string Id { get; protected set; } = $"user#{Guid.NewGuid():n}";
+    [DynamoDBProperty("PK", typeof(UserId.DynamoConverter))]
+    public UserId Id { get; protected set; } = UserId.Create();
 
     public string SK
     {

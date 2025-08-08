@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Amazon.DynamoDBv2.DataModel;
+using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.DynamoDb;
 using StronglyTypedIds;
@@ -17,13 +18,13 @@ public class AuctionImage
 {
     public const string SortKey = "AuctionImage";
 
-    [Obsolete("This constructor is for DynamoDB only and should not be used directly.")]
+    [Obsolete("This constructor is for DynamoDB only and is none of your business.")]
     // ReSharper disable once MemberCanBePrivate.Global
     public AuctionImage()
     {
     }
 
-    public AuctionImage(string fileExtension, string userId)
+    public AuctionImage(string fileExtension, UserId userId)
     {
         Id = AuctionImageId.Create();
         FileName = $"{Id.FriendlyValue}{fileExtension}";
@@ -59,7 +60,8 @@ public class AuctionImage
     /// <summary>
     /// Gets the ID of the user who uploaded the image
     /// </summary>
-    public string UserId { get; protected set; } = "";
+    [DynamoDBProperty(typeof(UserId.DynamoConverter))]
+    public UserId UserId { get; protected set; }
 
     /// <summary>
     /// Gets the created date of the image

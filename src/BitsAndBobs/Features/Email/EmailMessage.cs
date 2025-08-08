@@ -18,8 +18,9 @@ public class EmailMessage
     public string SK { get; protected set; } = null!;
     public string RecipientEmail { get; protected set; } = null!;
 
+    [DynamoDBProperty(typeof(UserId.DynamoConverter))]
     [DynamoDBGlobalSecondaryIndexHashKey("EmailsByUserId")]
-    public string RecipientUserId { get; protected set; } = null!;
+    public UserId RecipientUserId { get; protected set; }
     public string Body { get; protected set; } = null!;
 
     [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
