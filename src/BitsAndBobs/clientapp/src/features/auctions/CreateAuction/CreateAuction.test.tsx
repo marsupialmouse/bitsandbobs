@@ -105,6 +105,8 @@ describe('CreateAuction Component', () => {
   it('validates required fields', async () => {
     renderWithProvidersAndRouter(<CreateAuction />)
 
+    await userEvent.clear(screen.getByLabelText('Initial Price ($)'))
+    await userEvent.clear(screen.getByLabelText('Bid Increment ($)'))
     const submitButton = screen.getByRole('button', { name: 'Create Auction' })
     await userEvent.click(submitButton)
 

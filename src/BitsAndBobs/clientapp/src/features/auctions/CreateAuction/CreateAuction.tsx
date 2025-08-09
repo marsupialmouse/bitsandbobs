@@ -174,6 +174,7 @@ export default function CreateAuction() {
             id="initialPrice"
             step="0.01"
             {...registerField('initialPrice', {
+              valueAsNumber: true,
               required: 'Initial price is required',
               min: {
                 value: 0.01,
@@ -201,10 +202,11 @@ export default function CreateAuction() {
             id="bidIncrement"
             step="0.01"
             {...registerField('bidIncrement', {
+              valueAsNumber: true,
               required: 'Bid increment is required',
               min: {
-                value: 0.11,
-                message: 'Bid increment must be greater than 10 cents',
+                value: 0.1,
+                message: 'Bid increment must be at least 10 cents',
               },
             })}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
@@ -232,6 +234,7 @@ export default function CreateAuction() {
                 type="number"
                 id="days"
                 {...registerField('days', {
+                  valueAsNumber: true,
                   min: { value: 0, message: 'Days cannot be negative' },
                   max: { value: 2, message: 'Maximum 2 days' },
                 })}
@@ -249,6 +252,7 @@ export default function CreateAuction() {
                 type="number"
                 id="hours"
                 {...registerField('hours', {
+                  valueAsNumber: true,
                   min: { value: 0, message: 'Hours cannot be negative' },
                   max: { value: 23, message: 'Maximum 23 hours' },
                 })}
@@ -266,6 +270,7 @@ export default function CreateAuction() {
                 type="number"
                 id="minutes"
                 {...registerField('minutes', {
+                  valueAsNumber: true,
                   min: { value: 0, message: 'Minutes cannot be negative' },
                   max: { value: 59, message: 'Maximum 59 minutes' },
                 })}

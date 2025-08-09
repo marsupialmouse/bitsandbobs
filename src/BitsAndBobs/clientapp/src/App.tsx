@@ -1,6 +1,5 @@
 import { Header } from './components/Header/Header.tsx'
 import { BrowserRouter, Route, Routes } from 'react-router'
-import Home from './features/home/Home.tsx'
 import { useGetUserContextQuery } from './features/usercontext/userContextApiSlice.ts'
 import Register from './features/identity/Register/Register.tsx'
 import RecentEmailsByAddress from './features/email/RecentEmailsByAddress/RecentEmailsByAddress.tsx'
@@ -15,6 +14,7 @@ import ChangePassword from './features/identity/ChangePassword/ChangePassword.ts
 import ChangeEmail from './features/identity/ChangeEmail/ChangeEmail.tsx'
 import Profile from './features/identity/Profile/Profile.tsx'
 import CreateAuction from './features/auctions/CreateAuction/CreateAuction.tsx'
+import CurrentAuctions from './features/auctions/CurrentAuctions/CurrentAuctions.tsx'
 
 function App() {
   const { isLoading, isError } = useGetUserContextQuery()
@@ -45,7 +45,7 @@ function App() {
       <Header />
       <main className="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8">
         <Routes>
-          <Route index element={<Home />} />
+          <Route index element={<CurrentAuctions />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/confirmemail" element={<ConfirmEmail />} />

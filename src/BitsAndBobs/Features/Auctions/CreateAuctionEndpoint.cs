@@ -110,11 +110,11 @@ public static class CreateAuctionEndpoint
                 .WithMessage("Initial price must be greater than zero");
 
             RuleFor(x => x.BidIncrement)
-                .GreaterThan(0.1m)
-                .WithMessage("Bid increment must be greater than 10 cents");
+                .GreaterThanOrEqualTo(0.1m)
+                .WithMessage("Bid increment must be at least 10 cents");
 
             RuleFor(x => x.Period)
-                .GreaterThan(TimeSpan.FromMinutes(10))
+                .GreaterThanOrEqualTo(TimeSpan.FromMinutes(10))
                 .LessThanOrEqualTo(TimeSpan.FromDays(2))
                 .WithMessage("Auction period must be at least 10 minutes and no more than 2 days");
         }
