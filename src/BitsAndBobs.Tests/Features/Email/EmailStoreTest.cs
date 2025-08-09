@@ -1,3 +1,5 @@
+using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
 using NUnit.Framework;
@@ -19,7 +21,6 @@ public class EmailStoreTest
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
-        email.RangeKey.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
         email.RecipientUserId.ShouldBe(user.Id);
         email.RecipientEmail.ShouldBe(emailAddress);
         email.Type.ShouldBe("Email Confirmation");
@@ -51,7 +52,6 @@ public class EmailStoreTest
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
-        email.RangeKey.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
         email.RecipientUserId.ShouldBe(user.Id);
         email.RecipientEmail.ShouldBe(emailAddress);
         email.Type.ShouldBe("Password Reset Link");
@@ -83,7 +83,6 @@ public class EmailStoreTest
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
-        email.RangeKey.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
         email.RecipientUserId.ShouldBe(user.Id);
         email.RecipientEmail.ShouldBe(emailAddress);
         email.Type.ShouldBe("Password Reset Link");
@@ -113,12 +112,12 @@ public class EmailStoreTest
 
         var recentEmails = (await emailStore.GetRecentEmails(users[0].EmailAddress))
             .OrderByDescending(email => email.SentAt)
-            .Select(email => (email.HashKey, email.RangeKey));
+            .Select(email => email.Id);
 
         var expectedEmails = emails
             .Where(email => email.RecipientEmail == users[0].EmailAddress && email.SentAt >= DateTimeOffset.Now.AddDays(-1))
             .OrderByDescending(email => email.SentAt)
-            .Select(email => (email.HashKey, email.RangeKey));
+            .Select(email => email.Id);
         recentEmails.ShouldBe(expectedEmails);
     }
 
@@ -144,12 +143,12 @@ public class EmailStoreTest
 
         var recentEmails = (await emailStore.GetRecentEmails(users[1]))
                            .OrderByDescending(email => email.SentAt)
-                           .Select(email => (email.HashKey, email.RangeKey));
+                           .Select(email => email.Id);
 
         var expectedEmails = emails
                              .Where(email => email.RecipientUserId == users[1].Id && email.SentAt >= DateTimeOffset.Now.AddDays(-1))
                              .OrderByDescending(email => email.SentAt)
-                             .Select(email => (email.HashKey, email.RangeKey));
+                             .Select(email => email.Id);
         recentEmails.ShouldBe(expectedEmails);
     }
 
@@ -165,7 +164,12 @@ public class EmailStoreTest
 
     private static async Task<EmailMessage?> GetLastEmailAsync(string emailAddress)
     {
-        var query = Testing.DynamoContext.QueryAsync<EmailMessage>($"email#{emailAddress.ToUpperInvariant()}");
+        var query = Testing.DynamoContext.QueryAsync<EmailMessage>(
+            emailAddress.ToUpperInvariant(),
+            QueryOperator.GreaterThan,
+            [DateTime.UtcNow.AddDays(-1).Ticks],
+            new QueryConfig { IndexName = "EmailsByRecipientEmail" }
+        );
         var emails = await query.GetRemainingAsync();
         return emails.OrderByDescending(email => email.SentAt).FirstOrDefault();
     }

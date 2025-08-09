@@ -32,6 +32,12 @@ Resources:
           AttributeType: N
         - AttributeName: EndDateUtcTimeStamp
           AttributeType: N
+        - AttributeName: NormalizedRecipientEmail
+          AttributeType: S
+        - AttributeName: RecipientUserId
+          AttributeType: S
+        - AttributeName: SentAtUtcTimeStamp
+          AttributeType: N
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -55,6 +61,22 @@ Resources:
             - AttributeName: AuctionStatus
               KeyType: HASH
             - AttributeName: EndDateUtcTimeStamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: EmailsByRecipientUser
+          KeySchema:
+            - AttributeName: RecipientUserId
+              KeyType: HASH
+            - AttributeName: SentAtUtcTimeStamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: EmailsByRecipientEmail
+          KeySchema:
+            - AttributeName: NormalizedRecipientEmail
+              KeyType: HASH
+            - AttributeName: SentAtUtcTimeStamp
               KeyType: RANGE
           Projection:
             ProjectionType: ALL

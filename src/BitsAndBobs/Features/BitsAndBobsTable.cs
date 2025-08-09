@@ -37,13 +37,27 @@ public static class BitsAndBobsTable
                    DynamoDBEntryType.String
                )
                .AddGlobalSecondaryIndex("UsersByNormalizedUsername", "NormalizedUsername", DynamoDBEntryType.String)
-                .AddGlobalSecondaryIndex(
-                     "AuctionsByStatus",
-                     "AuctionStatus",
-                     DynamoDBEntryType.Numeric,
-                     "EndDateUtcTimeStamp",
-                     DynamoDBEntryType.Numeric
-                )
+               .AddGlobalSecondaryIndex(
+                   "AuctionsByStatus",
+                   "AuctionStatus",
+                   DynamoDBEntryType.Numeric,
+                   "EndDateUtcTimeStamp",
+                   DynamoDBEntryType.Numeric
+               )
+               .AddGlobalSecondaryIndex(
+                   "EmailsByRecipientUser",
+                   "RecipientUserId",
+                   DynamoDBEntryType.String,
+                   "SentAtUtcTimeStamp",
+                   DynamoDBEntryType.Numeric
+               )
+               .AddGlobalSecondaryIndex(
+                   "EmailsByRecipientEmail",
+                   "NormalizedRecipientEmail",
+                   DynamoDBEntryType.String,
+                   "SentAtUtcTimeStamp",
+                   DynamoDBEntryType.Numeric
+               )
                .Build();
     }
 

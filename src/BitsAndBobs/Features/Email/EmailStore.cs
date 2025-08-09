@@ -57,9 +57,10 @@ public class EmailStore : IEmailStore, IEmailSender<User>
     public async Task<IEnumerable<EmailMessage>> GetRecentEmails(string emailAddress)
     {
         var query = _context.QueryAsync<EmailMessage>(
-            $"email#{emailAddress.ToUpperInvariant()}",
+            emailAddress.ToUpperInvariant(),
             QueryOperator.GreaterThan,
-            [DateTime.UtcNow.AddDays(-1).ToString("O")]
+            [DateTime.UtcNow.AddDays(-1).Ticks],
+            new QueryConfig { IndexName = "EmailsByRecipientEmail" }
         );
 
         return await query.GetRemainingAsync();
@@ -70,8 +71,8 @@ public class EmailStore : IEmailStore, IEmailSender<User>
         var query = _context.QueryAsync<EmailMessage>(
             user.Id,
             QueryOperator.GreaterThan,
-            [DateTime.UtcNow.AddDays(-1).ToString("O")],
-            new QueryConfig { IndexName = "EmailsByUserId" }
+            [DateTime.UtcNow.AddDays(-1).Ticks],
+            new QueryConfig { IndexName = "EmailsByRecipientUser" }
         );
 
         return await query.GetRemainingAsync();
