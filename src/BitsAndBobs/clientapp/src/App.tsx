@@ -14,6 +14,7 @@ import ResetPassword from './features/identity/ResetPassword/ResetPassword.tsx'
 import ChangePassword from './features/identity/ChangePassword/ChangePassword.tsx'
 import ChangeEmail from './features/identity/ChangeEmail/ChangeEmail.tsx'
 import Profile from './features/identity/Profile/Profile.tsx'
+import CreateAuction from './features/auctions/CreateAuction/CreateAuction.tsx'
 
 function App() {
   const { isLoading, isError } = useGetUserContextQuery()
@@ -58,6 +59,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/changeemail" element={<ChangeEmail />} />
             <Route path="/changepassword" element={<ChangePassword />} />
+            <Route path="/auctions/create" element={<CreateAuction />} />
             <Route path="/email/recent/u" element={<RecentEmailsByUser />} />
           </Route>
           {/*
