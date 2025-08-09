@@ -1,5 +1,10 @@
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
+using BitsAndBobs.Features.Auctions;
+using BitsAndBobs.Features.Email;
+using BitsAndBobs.Features.Identity;
 
 namespace BitsAndBobs.Features;
 
@@ -32,13 +37,6 @@ public static class BitsAndBobsTable
                    DynamoDBEntryType.String
                )
                .AddGlobalSecondaryIndex("UsersByNormalizedUsername", "NormalizedUsername", DynamoDBEntryType.String)
-               .AddGlobalSecondaryIndex(
-                   "EmailsByUserId",
-                   "RecipientUserId",
-                   DynamoDBEntryType.String,
-                   "SK",
-                   DynamoDBEntryType.String
-               )
                 .AddGlobalSecondaryIndex(
                      "AuctionsByStatus",
                      "AuctionStatus",
@@ -47,5 +45,70 @@ public static class BitsAndBobsTable
                      DynamoDBEntryType.Numeric
                 )
                .Build();
+    }
+
+    /// <summary>
+    /// Creates a <see cref="Put"/> object to insert a new entity.
+    /// </summary>
+    public static Put CreateInsertPut<T>(this IDynamoDBContext context, T entity) => new()
+    {
+        TableName = BitsAndBobsTable.FullName,
+        Item = context.ToDocument(entity).ToAttributeMap(),
+        ConditionExpression = "attribute_not_exists(PK) AND attribute_not_exists(SK)",
+    };
+
+    /// <summary>
+    /// Creates a <see cref="Put"/> object to update an existing entity with a concurrency check.
+    /// </summary>
+    public static Put CreateUpdatePut<T>(this IDynamoDBContext context, T entity) where T : VersionedEntity => new()
+    {
+        TableName = BitsAndBobsTable.FullName,
+        Item = context.ToDocument(entity).ToAttributeMap(),
+        ConditionExpression = "attribute_exists(PK) AND attribute_exists(SK) AND Version = :currentVersion",
+        ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+        {
+            { ":currentVersion", new AttributeValue(entity.InitialVersion) },
+        },
+    };
+
+    [DynamoDBPolymorphicType("A", typeof(Auction))]
+    [DynamoDBPolymorphicType("B", typeof(Bid))]
+    [DynamoDBPolymorphicType("E", typeof(EmailMessage))]
+    [DynamoDBPolymorphicType("I", typeof(AuctionImage))]
+    [DynamoDBPolymorphicType("U", typeof(User))]
+    [DynamoDBTable(Name)]
+    public abstract class Item
+    {
+        /// <summary>
+        /// The HashKey attribute
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
+        protected abstract string PK { get; set; }
+
+        /// <summary>
+        /// The RangeKey attribute
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
+        protected abstract string SK { get; set; }
+    }
+
+    public abstract class VersionedEntity : Item
+    {
+        /// <summary>
+        /// A random value that must change whenever a user is persisted to the store
+        /// </summary>
+        public string Version { get; protected set; } = "";
+
+        /// <summary>
+        /// Gets the version string before the last update (for concurrency control)
+        /// </summary>
+        [DynamoDBIgnore]
+        public string InitialVersion { get; private set; } = "";
+
+        protected void UpdateVersion()
+        {
+            InitialVersion = Version;
+            Version = Guid.NewGuid().ToString("n");
+        }
     }
 }

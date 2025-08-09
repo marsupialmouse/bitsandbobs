@@ -19,7 +19,7 @@ public class EmailStoreTest
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
-        email.SK.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
+        email.RangeKey.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
         email.RecipientUserId.ShouldBe(user.Id);
         email.RecipientEmail.ShouldBe(emailAddress);
         email.Type.ShouldBe("Email Confirmation");
@@ -51,7 +51,7 @@ public class EmailStoreTest
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
-        email.SK.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
+        email.RangeKey.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
         email.RecipientUserId.ShouldBe(user.Id);
         email.RecipientEmail.ShouldBe(emailAddress);
         email.Type.ShouldBe("Password Reset Link");
@@ -83,7 +83,7 @@ public class EmailStoreTest
 
         var email = await GetLastEmailAsync(emailAddress);
         email.ShouldNotBeNull();
-        email.SK.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
+        email.RangeKey.ShouldBe(email.SentAt.UtcDateTime.ToString("O"));
         email.RecipientUserId.ShouldBe(user.Id);
         email.RecipientEmail.ShouldBe(emailAddress);
         email.Type.ShouldBe("Password Reset Link");
@@ -113,12 +113,12 @@ public class EmailStoreTest
 
         var recentEmails = (await emailStore.GetRecentEmails(users[0].EmailAddress))
             .OrderByDescending(email => email.SentAt)
-            .Select(email => (email.PK, email.SK));
+            .Select(email => (email.HashKey, email.RangeKey));
 
         var expectedEmails = emails
             .Where(email => email.RecipientEmail == users[0].EmailAddress && email.SentAt >= DateTimeOffset.Now.AddDays(-1))
             .OrderByDescending(email => email.SentAt)
-            .Select(email => (email.PK, email.SK));
+            .Select(email => (email.HashKey, email.RangeKey));
         recentEmails.ShouldBe(expectedEmails);
     }
 
@@ -144,12 +144,12 @@ public class EmailStoreTest
 
         var recentEmails = (await emailStore.GetRecentEmails(users[1]))
                            .OrderByDescending(email => email.SentAt)
-                           .Select(email => (email.PK, email.SK));
+                           .Select(email => (email.HashKey, email.RangeKey));
 
         var expectedEmails = emails
                              .Where(email => email.RecipientUserId == users[1].Id && email.SentAt >= DateTimeOffset.Now.AddDays(-1))
                              .OrderByDescending(email => email.SentAt)
-                             .Select(email => (email.PK, email.SK));
+                             .Select(email => (email.HashKey, email.RangeKey));
         recentEmails.ShouldBe(expectedEmails);
     }
 

@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
-using BitsAndBobs.Infrastructure.DynamoDb;
 using Microsoft.AspNetCore.Identity;
 
 namespace BitsAndBobs.Features.Identity;
@@ -57,7 +56,6 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
 
         try
         {
-            var currentVersion = user.Version;
             user.UpdateConcurrency();
 
             var items = new List<TransactWriteItem>
@@ -110,7 +108,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
                         Key = new Dictionary<string, AttributeValue>
                         {
                             { "PK", new AttributeValue(user.Id.Value) },
-                            { "SK", new AttributeValue(user.SK) },
+                            { "SK", new AttributeValue(User.SortKey) },
                         },
                     },
                 },
@@ -141,7 +139,7 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
 
     public async Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
-        var user = await _context.LoadAsync<User>(UserId.Parse(userId), User.SortKey, cancellationToken);
+        var user = await _context.LoadAsync<User>(userId, User.SortKey, cancellationToken);
         CacheUniqueAttributes(user);
         return user;
     }

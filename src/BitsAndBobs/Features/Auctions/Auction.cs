@@ -1,4 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.SimpleSystemsManagement.Model;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Infrastructure.DynamoDb;
 using StronglyTypedIds;
@@ -11,10 +13,12 @@ public readonly partial struct AuctionId
     private static partial string Prefix => "auction#";
 }
 
-[DynamoDBTable(BitsAndBobsTable.Name)]
-public class Auction : VersionedEntity
+public class Auction : BitsAndBobsTable.VersionedEntity
 {
     public const string SortKey = "Auction";
+
+    private Bid? _currentBid;
+    private List<Bid> _bids = [];
 
     [Obsolete("This constructor is for DynamoDB only and is none of your business.")]
     // ReSharper disable once MemberCanBePrivate.Global
@@ -35,7 +39,7 @@ public class Auction : VersionedEntity
         InitialPrice = initialPrice;
         CurrentPrice = initialPrice;
         BidIncrement = bidIncrement;
-        EndDate = DateTimeOffset.Now.Add(period);
+        EndDate = DateTimeOffset.UtcNow.Add(period);
         SellerId = seller.Id;
         SellerDisplayName = seller.DisplayName;
 
@@ -47,14 +51,20 @@ public class Auction : VersionedEntity
     /// <summary>
     /// Gets the user ID.
     /// </summary>
-    [DynamoDBProperty("PK", typeof(AuctionId.DynamoConverter))]
+    [DynamoDBIgnore]
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global (DynamoDB)
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public AuctionId Id { get; protected set; }
 
+    protected override string PK
+    {
+        get => Id.Value;
+        set => Id = AuctionId.Parse(value);
+    }
+
     // ReSharper disable once UnusedMember.Global (DynamoDB)
     // ReSharper disable once InconsistentNaming
-    protected string SK
+    protected override string SK
     {
         get => SortKey;
         // This is settable only so the AWS SDK recognises the property
@@ -92,14 +102,13 @@ public class Auction : VersionedEntity
     /// Gets the created date of the lot
     /// </summary>
     [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
-    public DateTimeOffset CreatedDate { get; protected set; } = DateTimeOffset.Now;
+    public DateTimeOffset CreatedDate { get; protected set; } = DateTimeOffset.UtcNow;
 
     /// <summary>
     /// Gets the end date of the auction
     /// </summary>
     [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
     public DateTimeOffset EndDate { get; protected set; }
-
 
     // ReSharper disable once UnusedMember.Global (this is here for a GSI)
     protected long EndDateUtcTimeStamp
@@ -110,7 +119,16 @@ public class Auction : VersionedEntity
         set { }
     }
 
-   [DynamoDBProperty("AuctionStatus")]
+    /// <summary>
+    /// Gets the date the auction was cancelled, if it is cancelled
+    /// </summary>
+    [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
+    public DateTimeOffset? CancelledDate { get; protected set; }
+
+    /// <summary>
+    /// Gets the current auction status
+    /// </summary>
+    [DynamoDBProperty("AuctionStatus")]
     public AuctionStatus Status { get; protected set; } = AuctionStatus.Open;
 
     /// <summary>
@@ -119,23 +137,78 @@ public class Auction : VersionedEntity
     public bool IsOpen => Status == AuctionStatus.Open && EndDate > DateTimeOffset.Now;
 
     /// <summary>
-    /// Gets or sets the user ID of the seller
+    /// Gets the user ID of the seller
     /// </summary>
     [DynamoDBProperty(typeof(UserId.DynamoConverter))]
     public UserId SellerId { get; protected set; }
 
     /// <summary>
-    /// Gets or sets the seller's display name
+    /// Gets the seller's display name
     /// </summary>
     public string SellerDisplayName { get; protected set; } = "";
 
     /// <summary>
-    /// Gets or sets the current price of the lot
+    /// Gets the current price of the lot
     /// </summary>
     public decimal CurrentPrice { get; protected set; }
 
     /// <summary>
-    /// Gets or sets the user ID of the current winning bidder
+    /// Gets the minimum bid required to take part in the auction
+    /// </summary>
+    public decimal MinimumBid => HasBid ? CurrentPrice + BidIncrement : InitialPrice;
+
+    /// <summary>
+    /// Whether there are any bids
+    /// </summary>
+    private bool HasBid => NumberOfBids > 0;
+
+    /// <summary>
+    /// Gets the list of bids that have been placed on this auction.
+    /// </summary>
+    [DynamoDBIgnore]
+    public IReadOnlyCollection<Bid> Bids
+    {
+        get => _bids;
+        internal set
+        {
+            if (_bids.Count > 0 || NumberOfBids == 0)
+                throw new InvalidOperationException("Bids should only be set when retrieving the auction");
+            _bids = value.OrderBy(x => x.BidDate).ToList();
+        }
+    }
+
+    [NotNullIfNotNull(nameof(CurrentBidId))]
+    [NotNullIfNotNull(nameof(CurrentBidderId))]
+    private Bid? CurrentBid
+    {
+        get
+        {
+            if (_currentBid == null && CurrentBidId != null)
+            {
+                if (Bids.Count == 0)
+                    throw new ArgumentException("No bids have been set.");
+
+                _currentBid = Bids.FirstOrDefault(b => b.BidId == CurrentBidId);
+            }
+
+            return _currentBid;
+        }
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value, nameof(value));
+            _currentBid = value;
+            CurrentBidId = value.BidId;
+            CurrentBidderId = value.BidderId;
+        }
+    }
+
+    /// <summary>
+    /// Gets the ID of the current winning bid
+    /// </summary>
+    public string? CurrentBidId { get; protected set; }
+
+    /// <summary>
+    /// Gets ID of the current winning bidder
     /// </summary>
     [DynamoDBProperty(typeof(UserId.DynamoConverter))]
     public UserId? CurrentBidderId { get; protected set; }
@@ -145,18 +218,64 @@ public class Auction : VersionedEntity
     /// </summary>
     public int NumberOfBids { get; protected set; }
 
-    // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
-    // "Value cannot be null. (Parameter 'key')"
-    // ReSharper disable once UnusedMember.Global
-    [DynamoDBIgnore]
-    protected string? RecipientUserId { get; set; }
-
     public void Cancel()
     {
         if (!IsOpen)
             throw new InvalidOperationException("Cannot cancel an auction that is not open.");
 
         Status = AuctionStatus.Cancelled;
+        CancelledDate = DateTimeOffset.UtcNow;
         UpdateVersion();
+    }
+
+    public Bid AddBid(UserId bidder, decimal amount)
+    {
+        if (bidder == SellerId)
+            throw new InvalidOperationException("Seller cannot bid on their own auction.");
+
+        if (!IsOpen)
+            throw new InvalidBidException("Cannot add a bid to an auction that is not open.");
+
+        if (amount < MinimumBid)
+            throw new InvalidBidException($"Bid amount must be at least {MinimumBid}.");
+
+        var isCurrentBidder = bidder == CurrentBidderId;
+
+        // The current bidder can add a new bid to increase their limit without affecting the current price
+        if (isCurrentBidder && amount <= CurrentBid!.Amount)
+            throw new InvalidBidException("Cannot place a bid that is not higher than the current bid.");
+
+        var bid = new Bid(Id, bidder, amount);
+
+        if (!HasBid || isCurrentBidder)
+        {
+            CurrentBid = bid;
+        }
+        else if (amount > CurrentBid!.Amount)
+        {
+            CurrentBid = bid;
+            CurrentPrice = Math.Min(amount, CurrentBid.Amount + BidIncrement);
+        }
+        else
+        {
+            CurrentPrice = Math.Min(CurrentBid.Amount, amount + BidIncrement);
+        }
+
+        _bids.Add(bid);
+        NumberOfBids++;
+        UpdateVersion();
+
+        return bid;
+    }
+}
+
+public class InvalidBidException : Exception
+{
+    public InvalidBidException()
+    {
+    }
+
+    public InvalidBidException(string message) : base(message)
+    {
     }
 }

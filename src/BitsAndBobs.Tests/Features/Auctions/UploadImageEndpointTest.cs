@@ -148,5 +148,5 @@ public class UploadImageEndpointTest : TestBase
     }
 
     private static Task<AuctionImage?> GetImageFromDb(string id) =>
-        DynamoContext.LoadAsync<AuctionImage>(AuctionImageId.Parse(id), AuctionImage.SortKey)!;
+        DynamoContext.LoadAsync<AuctionImage>(AuctionImageId.Parse(id).Value, AuctionImage.SortKey)!;
 }

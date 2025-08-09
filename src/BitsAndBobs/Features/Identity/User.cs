@@ -11,24 +11,29 @@ public readonly partial struct UserId
     private static partial string Prefix => "user#";
 }
 
-[DynamoDBTable(BitsAndBobsTable.Name)]
-public class User : VersionedEntity
+public class User : BitsAndBobsTable.VersionedEntity
 {
     public const string SortKey = "Profile";
 
     /// <summary>
     /// Gets the user ID.
     /// </summary>
-    [DynamoDBProperty("PK", typeof(UserId.DynamoConverter))]
+    [DynamoDBIgnore]
     public UserId Id { get; protected set; } = UserId.Create();
 
-    public string SK
+    protected override string PK
+    {
+        get => Id.Value;
+        set => Id = UserId.Parse(value);
+    }
+
+    protected override string SK
     {
         get => SortKey;
         // This is settable only so the AWS SDK recognises the property
         // ReSharper disable once ValueParameterNotUsed
         // ReSharper disable once PropertyCanBeMadeInitOnly.Global
-        protected set { }
+        set { }
     }
 
     /// <summary>
@@ -110,12 +115,6 @@ public class User : VersionedEntity
     /// </summary>
     [DynamoDBProperty(typeof(DateTimeOffsetConverter))]
     public DateTimeOffset? LockoutEndDate { get; set; }
-
-    // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
-    // "Value cannot be null. (Parameter 'key')"
-    // ReSharper disable once UnusedMember.Global
-    [DynamoDBIgnore]
-    protected string? RecipientUserId { get; set; }
 
     /// <summary>
     /// Returns the username for this user.

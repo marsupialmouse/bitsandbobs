@@ -55,7 +55,7 @@ public static class CreateAuctionEndpoint
             return TypedResults.NotFound();
 
         var image = await dynamoContext.LoadAsync<AuctionImage>(
-                        AuctionImageId.Parse(request.ImageId),
+                        AuctionImageId.Parse(request.ImageId).Value,
                         AuctionImage.SortKey
                     );
 

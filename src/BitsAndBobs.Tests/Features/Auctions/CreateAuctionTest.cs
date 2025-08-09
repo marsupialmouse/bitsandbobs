@@ -244,8 +244,8 @@ public class CreateAuctionEndpointTest : TestBase
     }
 
     private static Task<Auction?> GetAuctionFromDb(string id) =>
-        DynamoContext.LoadAsync<Auction>(AuctionId.Parse(id), Auction.SortKey)!;
+        DynamoContext.LoadAsync<Auction>(AuctionId.Parse(id).Value, Auction.SortKey)!;
 
     private static Task<AuctionImage?> GetImageFromDb(AuctionImageId id) =>
-        DynamoContext.LoadAsync<AuctionImage>(id, AuctionImage.SortKey)!;
+        DynamoContext.LoadAsync<AuctionImage>(id.Value, AuctionImage.SortKey)!;
 }

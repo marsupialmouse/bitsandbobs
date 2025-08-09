@@ -1,7 +1,5 @@
-using System.Security.Claims;
 using Amazon.DynamoDBv2.DataModel;
 using BitsAndBobs.Features.Identity;
-using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.DynamoDb;
 using StronglyTypedIds;
 
@@ -13,8 +11,7 @@ public readonly partial struct AuctionImageId
     private static partial string Prefix => "auctionimage#";
 }
 
-[DynamoDBTable(BitsAndBobsTable.Name)]
-public class AuctionImage : VersionedEntity
+public class AuctionImage : BitsAndBobsTable.VersionedEntity
 {
     public const string SortKey = "AuctionImage";
 
@@ -38,11 +35,17 @@ public class AuctionImage : VersionedEntity
     /// <summary>
     /// Gets the user ID.
     /// </summary>
-    [DynamoDBProperty("PK", typeof(AuctionImageId.DynamoConverter))]
+    [DynamoDBIgnore]
     // ReSharper disable once PropertyCanBeMadeInitOnly.Global
     public AuctionImageId Id { get; protected set; }
 
-    protected string SK
+    protected override string PK
+    {
+        get => Id.Value;
+        set => Id = AuctionImageId.Parse(value);
+    }
+
+    protected override string SK
     {
         get => SortKey;
         // This is settable only so the AWS SDK recognises the property
@@ -78,12 +81,6 @@ public class AuctionImage : VersionedEntity
     /// Gets whether the image has an associated auction
     /// </summary>
     public bool IsAssociatedWithAuction => AuctionId != "none";
-
-    // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
-    // "Value cannot be null. (Parameter 'key')"
-    // ReSharper disable once UnusedMember.Global
-    [DynamoDBIgnore]
-    protected string? RecipientUserId { get; set; }
 
     /// <summary>
     /// Sets the ID of the auction to which the image belongs.
