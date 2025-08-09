@@ -126,6 +126,7 @@ export interface SummaryAuctionResponse {
     readonly description: string;
     readonly imageUrl: string;
     readonly currentPrice: number;
+    readonly numberOfBids: number;
     readonly endDate: Date;
     readonly sellerDisplayName: string;
 }

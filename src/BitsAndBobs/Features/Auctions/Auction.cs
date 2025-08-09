@@ -140,6 +140,11 @@ public class Auction : VersionedEntity
     [DynamoDBProperty(typeof(UserId.DynamoConverter))]
     public UserId? CurrentBidderId { get; protected set; }
 
+    /// <summary>
+    /// Gets the number of bids that have been placed on this auction
+    /// </summary>
+    public int NumberOfBids { get; protected set; }
+
     // This is here as the property is the hash key of a GSI and the AWS Document Model gets upset without it.
     // "Value cannot be null. (Parameter 'key')"
     // ReSharper disable once UnusedMember.Global

@@ -16,6 +16,7 @@ public static class GetAuctionsEndpoint
         [property: Required] string Description,
         [property: Required] string ImageUrl,
         [property: Required] decimal CurrentPrice,
+        [property: Required] int NumberOfBids,
         [property: Required] DateTimeOffset EndDate,
         [property: Required] string SellerDisplayName
     );
@@ -43,6 +44,7 @@ public static class GetAuctionsEndpoint
                 auction.Description,
                 options.Value.GetAuctionImageHref(auction.Image),
                 auction.CurrentPrice,
+                auction.NumberOfBids,
                 auction.EndDate,
                 auction.SellerDisplayName
             ))
