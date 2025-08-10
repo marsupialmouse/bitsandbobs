@@ -10,10 +10,6 @@ import {
 
 const server = setupServer()
 
-const mockUploadResponse = {
-  id: 'test-image-id-123',
-}
-
 describe('ImageUpload Component', () => {
   beforeAll(() => {
     server.listen()
@@ -59,7 +55,7 @@ describe('ImageUpload Component', () => {
   it('handles successful image upload', async () => {
     server.use(
       http.post('/api/auctions/images', () => {
-        return HttpResponse.json(mockUploadResponse)
+        return HttpResponse.json({ id: 'success-image' })
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
@@ -84,7 +80,7 @@ describe('ImageUpload Component', () => {
     server.use(
       http.post('/api/auctions/images', async () => {
         await new Promise((resolve) => setTimeout(resolve, 100))
-        return HttpResponse.json(mockUploadResponse)
+        return HttpResponse.json({ id: 'uploading-state-image' })
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
@@ -100,7 +96,7 @@ describe('ImageUpload Component', () => {
   it('clears file input after uploading', async () => {
     server.use(
       http.post('/api/auctions/images', () =>
-        HttpResponse.json(mockUploadResponse)
+        HttpResponse.json({ id: 'clears-file-image' })
       )
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
@@ -176,7 +172,7 @@ describe('ImageUpload Component', () => {
   it('allows removing uploaded image', async () => {
     server.use(
       http.post('/api/auctions/images', () => {
-        return HttpResponse.json(mockUploadResponse)
+        return HttpResponse.json({ id: 'removing-image' })
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
@@ -202,7 +198,7 @@ describe('ImageUpload Component', () => {
     server.use(
       http.post('/api/auctions/images', async () => {
         await new Promise((resolve) => setTimeout(resolve, 100))
-        return HttpResponse.json(mockUploadResponse)
+        return HttpResponse.json({ id: 'disables-input-image' })
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
