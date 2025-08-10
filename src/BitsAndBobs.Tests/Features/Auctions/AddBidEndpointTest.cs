@@ -92,9 +92,6 @@ public class AddBidEndpointTest : AuctionTestBase
         updatedAuction.CurrentPrice.ShouldBe(135m);
     }
 
-    private static Task<Auction?> GetAuctionFromDb(AuctionId id) =>
-        DynamoContext.LoadAsync<Auction>(id.Value, Auction.SortKey)!;
-
     private static Task<Bid?> GetBidFromDb(AuctionId auctionId, string bidId) =>
         DynamoContext.LoadAsync<Bid>(auctionId.Value, bidId)!;
 }

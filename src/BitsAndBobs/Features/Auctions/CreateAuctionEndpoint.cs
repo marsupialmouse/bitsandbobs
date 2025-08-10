@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.Model;
+using BitsAndBobs.Features.Auctions.Diagnostics;
 using BitsAndBobs.Features.Identity;
+using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.DynamoDb;
 using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -40,54 +39,61 @@ public static class CreateAuctionEndpoint
         ClaimsPrincipal claimsPrincipal,
         [FromServices] IValidator<CreateAuctionRequest> validator,
         [FromServices] UserManager<User> userManager,
-        [FromServices] IAmazonDynamoDB dynamoClient,
-        [FromServices] IDynamoDBContext dynamoContext
+        [FromServices] AuctionService auctionService
     )
     {
-        var validationResult = await validator.ValidateAsync(request);
+        var imageId = AuctionImageId.Parse(request.ImageId);
+        var userId = claimsPrincipal.GetUserId();
 
-        if (!validationResult.IsValid)
-            return TypedResults.ValidationProblem(validationResult.ToDictionary());
-
-        var seller = await userManager.GetUserAsync(claimsPrincipal);
-
-        if (seller == null)
-            return TypedResults.NotFound();
-
-        var image = await dynamoContext.LoadAsync<AuctionImage>(
-                        AuctionImageId.Parse(request.ImageId).Value,
-                        AuctionImage.SortKey
-                    );
-
-        if (image == null || image.UserId != seller.Id)
-            return TypedResults.ValidationProblem(ImageNotFound);
-
-        var auction = new Auction(
-            seller,
-            request.Name,
-            request.Description,
-            image,
-            request.InitialPrice,
-            request.BidIncrement,
-            request.Period
-        );
+        using var diagnostics = new CreateAuctionDiagnostics(imageId, userId);
 
         try
         {
-            var items = new List<TransactWriteItem>
-            {
-                new() { Put = dynamoContext.CreateInsertPut(auction) },
-                new() { Put = dynamoContext.CreateUpdatePut(image) },
-            };
+            var validationResult = await validator.ValidateAsync(request);
 
-            await dynamoClient.TransactWriteItemsAsync(new TransactWriteItemsRequest { TransactItems = items });
+            if (!validationResult.IsValid)
+            {
+                diagnostics.Invalid();
+                return TypedResults.ValidationProblem(validationResult.ToDictionary());
+            }
+
+            var seller = await userManager.GetUserAsync(claimsPrincipal);
+
+            if (seller == null)
+            {
+                diagnostics.UserNotFound();
+                return TypedResults.NotFound();
+            }
+
+            var auction = await auctionService.CreateAuction(
+                              seller,
+                              request.Name,
+                              request.Description,
+                              imageId,
+                              request.InitialPrice,
+                              request.BidIncrement,
+                              request.Period
+                          );
+
+            diagnostics.Created(auction);
+
+            return TypedResults.Ok(new CreateAuctionResponse(auction.Id.FriendlyValue));
         }
-        catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        catch (DynamoDbConcurrencyException e)
         {
+            diagnostics.Failed(e);
             return TypedResults.ValidationProblem(ConcurrencyError);
         }
-
-        return TypedResults.Ok(new CreateAuctionResponse(auction.Id.FriendlyValue));
+        catch (ImageNotFoundException)
+        {
+            diagnostics.ImageNotFound();
+            return TypedResults.ValidationProblem(ImageNotFound);
+        }
+        catch (Exception e)
+        {
+            diagnostics.Failed(e);
+            throw;
+        }
     }
 
     public class CreateAuctionValidator : AbstractValidator<CreateAuctionRequest>

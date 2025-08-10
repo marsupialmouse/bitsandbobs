@@ -37,7 +37,7 @@ internal readonly struct CancelAuctionDiagnostics : IDisposable
         if (_activity is { IsAllDataRequested: true })
         {
             _activity.SetTag("auction.id", auction.Value);
-            _activity.SetTag("user_id", user.Value);
+            _activity.SetTag("user.id", user.Value);
         }
     }
 
@@ -49,8 +49,8 @@ internal readonly struct CancelAuctionDiagnostics : IDisposable
 
     public void AuctionNotFound()
     {
-        TotalFailedCount.Add(1);
         _activity?.AddEvent(new ActivityEvent("auction.not_found"));
+        Failed();
     }
 
     public void Failed(Exception? e = null)

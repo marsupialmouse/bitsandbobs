@@ -20,6 +20,41 @@ public class AuctionService
         _dynamoContext = dynamoContext;
     }
 
+    public async Task<Auction> CreateAuction(
+        User seller,
+        string name,
+        string description,
+        AuctionImageId imageId,
+        decimal initialPrice,
+        decimal bidIncrement,
+        TimeSpan period
+    )
+    {
+        var image = await _dynamoContext.LoadAsync<AuctionImage>(imageId.Value, AuctionImage.SortKey);
+
+        if (image == null || image.UserId != seller.Id)
+            throw new ImageNotFoundException();
+
+        var auction = new Auction(seller, name, description, image, initialPrice, bidIncrement, period);
+
+        try
+        {
+            var items = new List<TransactWriteItem>
+            {
+                new() { Put = _dynamoContext.CreateInsertPut(auction) },
+                new() { Put = _dynamoContext.CreateUpdatePut(image) },
+            };
+
+            await _dynamo.TransactWriteItemsAsync(new TransactWriteItemsRequest { TransactItems = items });
+
+            return auction;
+        }
+        catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        {
+            throw new DynamoDbConcurrencyException();
+        }
+    }
+
     /// <summary>
     /// Gets an auction without loading bids.
     /// </summary>
@@ -101,4 +136,8 @@ public class AuctionService
             throw new DynamoDbConcurrencyException();
         }
     }
+}
+
+public class ImageNotFoundException : Exception
+{
 }
