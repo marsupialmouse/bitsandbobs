@@ -1,5 +1,4 @@
 using System.Net;
-using BitsAndBobs.Infrastructure.AntiForgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -31,7 +30,7 @@ public class AntiForgeryTests : TestBase
         AppFactory.ConfiguringApp += app =>
         {
             app.Map("/api/test_xsrf", () => Results.Ok());
-            app.MapPost("/api/test_xsrf_excluded", () => Results.Ok()).DoNotRequireAntiForgery();
+            app.MapPost("/api/test_xsrf_excluded", () => Results.Ok()).DisableAntiforgery();
             app.MapGet("/not_api/test_xsrf", () => Results.Ok());
             app.MapGet(
                 "/api/test_xsrf_cached",
