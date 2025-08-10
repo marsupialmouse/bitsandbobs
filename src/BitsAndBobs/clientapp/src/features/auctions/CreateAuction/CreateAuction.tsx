@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { HttpValidationProblemDetails } from '../../../api/ApiGenerated'
-import { useCreateActionMutation } from '../auctionsApiSlice.ts'
+import { useCreateAuctionMutation } from '../auctionsApiSlice.ts'
 import ImageUpload from './ImageUpload.tsx'
 
 interface FormData {
@@ -17,7 +17,7 @@ interface FormData {
 
 export default function CreateAuction() {
   const navigate = useNavigate()
-  const [createAuction] = useCreateActionMutation()
+  const [createAuction] = useCreateAuctionMutation()
   const [uploadedImageId, setUploadedImageId] = useState<string | null>(null)
 
   const {

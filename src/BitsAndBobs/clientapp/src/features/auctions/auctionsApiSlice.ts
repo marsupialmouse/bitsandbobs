@@ -1,10 +1,14 @@
 import { api } from '../../api/apiSlice.ts'
 import {
+  AddBidRequest,
+  AddBidResponse,
   AuctionImageResponse,
   CreateAuctionRequest,
   CreateAuctionResponse,
+  GetAuctionResponse,
   GetAuctionsResponse,
   HttpValidationProblemDetails,
+  ProblemDetails,
 } from '../../api/ApiGenerated.ts'
 
 export interface UploadImageRequest {
@@ -15,6 +19,11 @@ const auctionsApi = api
   .enhanceEndpoints({ addTagTypes: ['Auctions', 'Auction'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      getAuction: builder.query<GetAuctionResponse, string>({
+        query: (id) => `/auctions/${id}`,
+        providesTags: ['Auction'],
+        keepUnusedDataFor: 1,
+      }),
       getAuctions: builder.query<GetAuctionsResponse, void>({
         query: () => '/auctions',
         providesTags: ['Auctions'],
@@ -36,7 +45,7 @@ const auctionsApi = api
             ? (response.data as HttpValidationProblemDetails)
             : response.data,
       }),
-      createAction: builder.mutation<
+      createAuction: builder.mutation<
         CreateAuctionResponse,
         CreateAuctionRequest
       >({
@@ -51,12 +60,38 @@ const auctionsApi = api
             : response.data,
         invalidatesTags: ['Auctions'],
       }),
+      addBid: builder.mutation<AddBidResponse, AddBidRequest>({
+        query: (request) => ({
+          url: `/auctions/${request.auctionId}/bids`,
+          method: 'POST',
+          body: request,
+        }),
+        transformErrorResponse: (response) =>
+          response.status === 400
+            ? (response.data as ProblemDetails)
+            : response.data,
+        invalidatesTags: ['Auctions', 'Auction'],
+      }),
+      cancelAuction: builder.mutation<void, string>({
+        query: (id) => ({
+          url: `/auctions/${id}/cancel`,
+          method: 'POST',
+        }),
+        transformErrorResponse: (response) =>
+          response.status === 400
+            ? (response.data as ProblemDetails)
+            : response.data,
+        invalidatesTags: ['Auctions', 'Auction'],
+      }),
     }),
     overrideExisting: false,
   })
 
 export const {
+  useGetAuctionQuery,
   useGetAuctionsQuery,
   useUploadImageMutation,
-  useCreateActionMutation,
+  useCreateAuctionMutation,
+  useCancelAuctionMutation,
+  useAddBidMutation,
 } = auctionsApi

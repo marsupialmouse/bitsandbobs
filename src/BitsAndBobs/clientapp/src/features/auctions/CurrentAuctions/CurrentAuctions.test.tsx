@@ -14,7 +14,7 @@ const mockAuctionsResponse = {
       name: 'Vintage Camera',
       description:
         "A beautiful vintage camera from the 1960s in excellent condition. This classic piece would make a great addition to any photography enthusiast's collection.",
-      imageUrl: 'https://example.com/camera.jpg',
+      imageHref: 'https://example.com/camera.jpg',
       currentPrice: 125.5,
       numberOfBids: 5,
       endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
@@ -24,7 +24,7 @@ const mockAuctionsResponse = {
       id: 'auction-2',
       name: 'Antique Vase',
       description: 'Small antique vase',
-      imageUrl: 'https://example.com/vase.jpg',
+      imageHref: 'https://example.com/vase.jpg',
       currentPrice: 45.0,
       numberOfBids: 1,
       endDate: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(), // 3 hours from now
@@ -34,7 +34,7 @@ const mockAuctionsResponse = {
       id: 'auction-3',
       name: 'Old Book',
       description: 'Rare first edition book',
-      imageUrl: 'https://example.com/book.jpg',
+      imageHref: 'https://example.com/book.jpg',
       currentPrice: 85.25,
       numberOfBids: 0,
       endDate: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes from now
