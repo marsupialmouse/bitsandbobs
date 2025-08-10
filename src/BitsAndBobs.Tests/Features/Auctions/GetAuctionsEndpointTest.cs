@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using BitsAndBobs.Features;
 using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Identity;
 using NUnit.Framework;
@@ -146,7 +147,7 @@ public class GetAuctionsEndpointTest : TestBase
         );
 
         configure?.Invoke(auction);
-        await DynamoContext.SaveAsync(auction);
+        await DynamoContext.SaveItem(auction);
         return auction;
     }
 }

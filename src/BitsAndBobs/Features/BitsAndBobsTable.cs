@@ -62,12 +62,18 @@ public static class BitsAndBobsTable
     }
 
     /// <summary>
+    /// Saves an <see cref="Item"/> entity with the correct type so that the polymorphic attribute will work.
+    /// </summary>
+    public static Task SaveItem<T>(this IDynamoDBContext context, T entity) where T : Item =>
+        context.SaveAsync<Item>(entity);
+
+    /// <summary>
     /// Creates a <see cref="Put"/> object to insert a new entity.
     /// </summary>
-    public static Put CreateInsertPut<T>(this IDynamoDBContext context, T entity) => new()
+    public static Put CreateInsertPut<T>(this IDynamoDBContext context, T entity) where T : Item => new()
     {
-        TableName = BitsAndBobsTable.FullName,
-        Item = context.ToDocument(entity).ToAttributeMap(),
+        TableName = FullName,
+        Item = context.ToDocument<Item>(entity).ToAttributeMap(),
         ConditionExpression = "attribute_not_exists(PK) AND attribute_not_exists(SK)",
     };
 
@@ -76,8 +82,8 @@ public static class BitsAndBobsTable
     /// </summary>
     public static Put CreateUpdatePut<T>(this IDynamoDBContext context, T entity) where T : VersionedEntity => new()
     {
-        TableName = BitsAndBobsTable.FullName,
-        Item = context.ToDocument(entity).ToAttributeMap(),
+        TableName = FullName,
+        Item = context.ToDocument<Item>(entity).ToAttributeMap(),
         ConditionExpression = "attribute_exists(PK) AND attribute_exists(SK) AND Version = :currentVersion",
         ExpressionAttributeValues = new Dictionary<string, AttributeValue>
         {
@@ -91,19 +97,19 @@ public static class BitsAndBobsTable
     [DynamoDBPolymorphicType("I", typeof(AuctionImage))]
     [DynamoDBPolymorphicType("U", typeof(User))]
     [DynamoDBTable(Name)]
-    public abstract class Item
+    public class Item
     {
         /// <summary>
         /// The HashKey attribute
         /// </summary>
         // ReSharper disable once InconsistentNaming
-        protected abstract string PK { get; set; }
+        protected virtual string PK { get; set; }
 
         /// <summary>
         /// The RangeKey attribute
         /// </summary>
         // ReSharper disable once InconsistentNaming
-        protected abstract string SK { get; set; }
+        protected virtual string SK { get; set; }
     }
 
     public abstract class VersionedEntity : Item
@@ -111,6 +117,7 @@ public static class BitsAndBobsTable
         /// <summary>
         /// A random value that must change whenever a user is persisted to the store
         /// </summary>
+        // ReSharper disable once MemberCanBePrivate.Global
         public string Version { get; protected set; } = "";
 
         /// <summary>

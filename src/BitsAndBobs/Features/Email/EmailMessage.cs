@@ -14,7 +14,6 @@ public readonly partial struct EmailId
 // This class only uses the DynamoDBHashKey / DynamoDBRangeKey / DynamoDBGlobalSecondaryIndexRangeKey attributes
 // because there's a bug in the SDK that manifests itself when using RegisterTableDefinition and a GSI uses the
 // table's range key as one of the index keys.
-[DynamoDBTable(BitsAndBobsTable.Name)]
 public class EmailMessage : BitsAndBobsTable.Item
 {
     public const string SortKey = "Email";

@@ -39,7 +39,7 @@ public static class UploadImageEndpoint
 
         var image = new AuctionImage(extension, claimsPrincipal.GetUserId());
 
-        await dynamo.SaveAsync(image);
+        await dynamo.SaveItem(image);
 
         await using var stream = file.OpenReadStream();
         await s3.PutObjectAsync(

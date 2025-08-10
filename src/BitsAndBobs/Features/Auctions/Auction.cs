@@ -171,7 +171,7 @@ public class Auction : BitsAndBobsTable.VersionedEntity
         get => _bids;
         internal set
         {
-            if (_bids.Count > 0 || NumberOfBids == 0)
+            if (_bids.Count > 0 || NumberOfBids == 0 && value.Count > 0)
                 throw new InvalidOperationException("Bids should only be set when retrieving the auction");
             _bids = value.OrderBy(x => x.BidDate).ToList();
         }

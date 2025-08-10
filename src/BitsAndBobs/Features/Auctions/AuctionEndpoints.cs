@@ -11,7 +11,8 @@ public static class AuctionEndpoints
 
         group.MapGet("/", GetAuctionsEndpoint.GetAuctions);
         group.MapPost("/", CreateAuctionEndpoint.CreateAuction).RequireAuthorization();
-        group.MapGet("/{id}", GetAuctionEndpoint.GetAuction);
+        //group.MapGet("/{id}", GetAuctionEndpoint.GetAuction);
+        group.MapPost("/{auctionId}/bids", AddBidEndpoint.AddBid).RequireAuthorization();
         group.MapPost("/images", UploadImageEndpoint.UploadImage).RequireAuthorization().DisableAntiforgery();
     }
 }

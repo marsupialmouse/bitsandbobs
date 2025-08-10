@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using BitsAndBobs.Features;
 using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Identity;
 using NUnit.Framework;
@@ -239,7 +240,7 @@ public class CreateAuctionEndpointTest : TestBase
     private static async Task<AuctionImage> CreateTestImage(UserId userId)
     {
         var image = new AuctionImage(".jpg", userId);
-        await DynamoContext.SaveAsync(image);
+        await DynamoContext.SaveItem(image);
         return image;
     }
 

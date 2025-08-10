@@ -26,7 +26,7 @@ public class EmailStore : IEmailStore, IEmailSender<User>
             $"Please confirm your account by [clicking here](/confirmemail{query})."
         );
 
-        return _context.SaveAsync(message);
+        return _context.SaveItem(message);
     }
 
     public Task SendPasswordResetLinkAsync(User user, string email, string resetLink)
@@ -39,7 +39,7 @@ public class EmailStore : IEmailStore, IEmailSender<User>
             $"Please reset your password by [clicking here](/resetpassword{query})."
         );
 
-        return _context.SaveAsync(message);
+        return _context.SaveItem(message);
     }
 
     public Task SendPasswordResetCodeAsync(User user, string email, string resetCode)
@@ -51,7 +51,7 @@ public class EmailStore : IEmailStore, IEmailSender<User>
             $"Please reset your password by [clicking here](/resetpassword?email={WebUtility.UrlEncode(email)}&code={resetCode})."
         );
 
-        return _context.SaveAsync(message);
+        return _context.SaveItem(message);
     }
 
     public async Task<IEnumerable<EmailMessage>> GetRecentEmails(string emailAddress)
