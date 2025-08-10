@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
+using BitsAndBobs.Features.Auctions.Diagnostics;
 using BitsAndBobs.Infrastructure;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -24,32 +23,41 @@ public static class GetAuctionsEndpoint
     public sealed record GetAuctionsResponse([property: Required] List<SummaryAuctionResponse> Auctions);
 
     public static async Task<Ok<GetAuctionsResponse>> GetAuctions(
-        [FromServices] IDynamoDBContext dynamo,
+        [FromServices] AuctionService auctionService,
         [FromServices] IOptions<AwsResourceOptions> options
     )
     {
-        var search = dynamo.QueryAsync<Auction>(
-            AuctionStatus.Open,
-            QueryOperator.GreaterThan,
-            [DateTimeOffset.Now.UtcTicks],
-            new QueryConfig { IndexName = "AuctionsByStatus" }
-        );
-        var auctions = await search.GetRemainingAsync();
+        using var diagnostics = new GetAuctionsDiagnostics();
 
-        var auctionResponses = auctions
-            .OrderBy(a => a.EndDate)
-            .Select(auction => new SummaryAuctionResponse(
-                auction.Id.FriendlyValue,
-                auction.Name,
-                auction.Description,
-                options.Value.GetAuctionImageHref(auction.Image),
-                auction.CurrentPrice,
-                auction.NumberOfBids,
-                auction.EndDate,
-                auction.SellerDisplayName
-            ))
-            .ToList();
+        try
+        {
+            var auctions = await auctionService.GetActiveAuctions();
 
-        return TypedResults.Ok(new GetAuctionsResponse(auctionResponses));
+            var auctionResponses = auctions
+                                   .OrderBy(a => a.EndDate)
+                                   .Select(auction => new SummaryAuctionResponse(
+                                               auction.Id.FriendlyValue,
+                                               auction.Name,
+                                               auction.Description,
+                                               options.Value.GetAuctionImageHref(auction.Image),
+                                               auction.CurrentPrice,
+                                               auction.NumberOfBids,
+                                               auction.EndDate,
+                                               auction.SellerDisplayName
+                                           )
+                                   )
+                                   .ToList();
+
+            var response = new GetAuctionsResponse(auctionResponses);
+
+            diagnostics.Succeeded();
+
+            return TypedResults.Ok(response);
+        }
+        catch (Exception e)
+        {
+            diagnostics.Failed(e);
+            throw;
+        }
     }
 }

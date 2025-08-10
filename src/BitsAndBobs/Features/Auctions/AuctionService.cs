@@ -1,8 +1,9 @@
-using System.Globalization;
+
+
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using BitsAndBobs.Features.Auctions.Diagnostics;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Infrastructure.DynamoDb;
 
@@ -87,6 +88,22 @@ public class AuctionService
         auction.Bids = bids;
 
         return auction;
+    }
+
+    /// <summary>
+    /// Gets all active auctions
+    /// </summary>
+    /// <returns></returns>
+    public async Task<IEnumerable<Auction>> GetActiveAuctions()
+    {
+        var search = _dynamoContext.QueryAsync<Auction>(
+            AuctionStatus.Open,
+            QueryOperator.GreaterThan,
+            [DateTimeOffset.Now.UtcTicks],
+            new QueryConfig { IndexName = "AuctionsByStatus" }
+        );
+
+        return await search.GetRemainingAsync();
     }
 
     /// <summary>
