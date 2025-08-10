@@ -23,4 +23,15 @@ internal static class BitsAndBobsDiagnostics
                 }
             )
         );
+
+    internal readonly struct ValueStopwatch
+    {
+        private readonly long _startingTimestamp;
+
+        private ValueStopwatch(long startingTimestamp) => _startingTimestamp = startingTimestamp;
+
+        public TimeSpan Elapsed => Stopwatch.GetElapsedTime(_startingTimestamp);
+
+        public static ValueStopwatch StartNew() => new(Stopwatch.GetTimestamp());
+    }
 }

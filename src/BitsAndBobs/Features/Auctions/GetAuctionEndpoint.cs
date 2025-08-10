@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using BitsAndBobs.Features.Auctions.Diagnostics;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Infrastructure;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -80,41 +81,56 @@ public static class GetAuctionEndpoint
         [FromServices] IOptions<AwsResourceOptions> options
     )
     {
-        var auction = await auctionService.GetAuctionWithBids(id);
+        using var diagnostics = new GetAuctionDiagnostics(id);
 
-        if (auction is null)
-            return TypedResults.NotFound();
+        try
+        {
+            var auction = await auctionService.GetAuctionWithBids(id);
 
-        var isAuthenticated = claimsPrincipal.Identity?.IsAuthenticated ?? false;
-        var userId = isAuthenticated ? claimsPrincipal.GetUserId() : UserId.Empty;
-        var currentBidder = auction.CurrentBidderId;
-        var isUserCurrentBidder = userId == currentBidder;
-        var displayNames = await GetBidderDisplayNames(auction, isAuthenticated, userStore);
+            if (auction is null)
+            {
+                diagnostics.NotFound();
+                return TypedResults.NotFound();
+            }
 
-        var response = new GetAuctionResponse(
-            Id: auction.Id.FriendlyValue,
-            Name: auction.Name,
-            Description: auction.Description,
-            ImageHref: options.Value.GetAuctionImageHref(auction.Image),
-            SellerDisplayName: auction.SellerDisplayName,
-            IsOpen: auction.IsOpen,
-            IsClosed: !auction.IsOpen && auction.Status != AuctionStatus.Cancelled,
-            IsCancelled: auction.Status == AuctionStatus.Cancelled,
-            IsUserSeller: userId == auction.SellerId,
-            IsUserCurrentBidder: isUserCurrentBidder,
-            InitialPrice: auction.InitialPrice,
-            CurrentPrice: auction.CurrentPrice,
-            CurrentBidderDisplayName: displayNames.CurrentBidderName,
-            MinimumBid: isUserCurrentBidder
-                            ? Math.Max(auction.MinimumBid, auction.CurrentBid!.Amount + 0.01m)
-                            : auction.MinimumBid,
-            NumberOfBids: auction.NumberOfBids,
-            Bids: isAuthenticated ? auction.Bids.Select(b => Bid(b, auction, userId, displayNames)).ToList() : null,
-            EndDate: auction.EndDate,
-            CancelledDate: auction.CancelledDate
-        );
+            var isAuthenticated = claimsPrincipal.Identity?.IsAuthenticated ?? false;
+            var userId = isAuthenticated ? claimsPrincipal.GetUserId() : UserId.Empty;
+            var currentBidder = auction.CurrentBidderId;
+            var isUserCurrentBidder = userId == currentBidder;
+            var displayNames = await GetBidderDisplayNames(auction, isAuthenticated, userStore);
 
-        return TypedResults.Ok(response);
+            var response = new GetAuctionResponse(
+                Id: auction.Id.FriendlyValue,
+                Name: auction.Name,
+                Description: auction.Description,
+                ImageHref: options.Value.GetAuctionImageHref(auction.Image),
+                SellerDisplayName: auction.SellerDisplayName,
+                IsOpen: auction.IsOpen,
+                IsClosed: !auction.IsOpen && auction.Status != AuctionStatus.Cancelled,
+                IsCancelled: auction.Status == AuctionStatus.Cancelled,
+                IsUserSeller: userId == auction.SellerId,
+                IsUserCurrentBidder: isUserCurrentBidder,
+                InitialPrice: auction.InitialPrice,
+                CurrentPrice: auction.CurrentPrice,
+                CurrentBidderDisplayName: displayNames.CurrentBidderName,
+                MinimumBid: isUserCurrentBidder
+                                ? Math.Max(auction.MinimumBid, auction.CurrentBid!.Amount + 0.01m)
+                                : auction.MinimumBid,
+                NumberOfBids: auction.NumberOfBids,
+                Bids: isAuthenticated ? auction.Bids.Select(b => Bid(b, auction, userId, displayNames)).ToList() : null,
+                EndDate: auction.EndDate,
+                CancelledDate: auction.CancelledDate
+            );
+
+            diagnostics.Succeeded();
+
+            return TypedResults.Ok(response);
+        }
+        catch (Exception e)
+        {
+            diagnostics.Failed(e);
+            throw;
+        }
     }
 
     private static async Task<BidderDisplayNames> GetBidderDisplayNames(
