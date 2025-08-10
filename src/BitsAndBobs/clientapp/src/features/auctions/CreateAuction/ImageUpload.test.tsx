@@ -27,13 +27,13 @@ describe('ImageUpload Component', () => {
     server.close()
   })
 
-  const mockProps = {
+  const mockProps = () => ({
     onImageUploaded: vi.fn(),
     onImageRemoved: vi.fn(),
-  }
+  })
 
   it('renders upload area initially', () => {
-    renderWithProvidersAndRouter(<ImageUpload {...mockProps} />)
+    renderWithProvidersAndRouter(<ImageUpload {...mockProps()} />)
 
     expect(screen.getByText('Auction Image')).toBeInTheDocument()
     expect(screen.getByText('Upload an image')).toBeInTheDocument()
@@ -45,7 +45,7 @@ describe('ImageUpload Component', () => {
     const errorMessage = 'Please select an image'
 
     renderWithProvidersAndRouter(
-      <ImageUpload {...mockProps} error={errorMessage} />
+      <ImageUpload {...mockProps()} error={errorMessage} />
     )
 
     expect(screen.getByText(errorMessage)).toBeInTheDocument()
@@ -59,15 +59,14 @@ describe('ImageUpload Component', () => {
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
+    const props = mockProps()
 
-    renderWithProvidersAndRouter(<ImageUpload {...mockProps} />)
+    renderWithProvidersAndRouter(<ImageUpload {...props} />)
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, file)
 
     await waitFor(() => {
-      expect(mockProps.onImageUploaded).toHaveBeenCalledWith(
-        'test-image-id-123'
-      )
+      expect(props.onImageUploaded).toHaveBeenCalledWith('image-upload-input')
     })
     expect(screen.getByRole('img', { name: 'Preview' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Preview' })).toHaveAttribute(
@@ -85,7 +84,7 @@ describe('ImageUpload Component', () => {
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
 
-    renderWithProvidersAndRouter(<ImageUpload {...mockProps} />)
+    renderWithProvidersAndRouter(<ImageUpload {...mockProps()} />)
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, file)
 
@@ -100,13 +99,14 @@ describe('ImageUpload Component', () => {
       )
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
+    const props = mockProps()
 
-    renderWithProvidersAndRouter(<ImageUpload {...mockProps} />)
+    renderWithProvidersAndRouter(<ImageUpload {...props} />)
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, file)
 
     await waitFor(() => {
-      expect(mockProps.onImageUploaded).toHaveBeenCalled()
+      expect(props.onImageUploaded).toHaveBeenCalled()
     })
     expect(fileInput).toHaveValue('')
   })
@@ -115,15 +115,16 @@ describe('ImageUpload Component', () => {
     const largeFile = new File(['x'.repeat(1024 * 1024 + 1)], 'large.jpg', {
       type: 'image/jpeg',
     })
+    const props = mockProps()
 
-    renderWithProvidersAndRouter(<ImageUpload {...mockProps} />)
+    renderWithProvidersAndRouter(<ImageUpload {...props} />)
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, largeFile)
 
     expect(
       await screen.findByText('Image must be smaller than 1MB')
     ).toBeInTheDocument()
-    expect(mockProps.onImageUploaded).not.toHaveBeenCalled()
+    expect(props.onImageUploaded).not.toHaveBeenCalled()
   })
 
   it('handles upload API errors with validation details', async () => {
@@ -140,15 +141,16 @@ describe('ImageUpload Component', () => {
       })
     )
     const file = new File(['test'], 'test.jpeg', { type: 'image/jpeg' })
+    const props = mockProps()
 
-    renderWithProvidersAndRouter(<ImageUpload {...mockProps} />)
+    renderWithProvidersAndRouter(<ImageUpload {...props} />)
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, file)
 
     expect(
       await screen.findByText('Image format not supported')
     ).toBeInTheDocument()
-    expect(mockProps.onImageUploaded).not.toHaveBeenCalled()
+    expect(props.onImageUploaded).not.toHaveBeenCalled()
   })
 
   it('handles generic upload API errors', async () => {
@@ -158,15 +160,16 @@ describe('ImageUpload Component', () => {
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
+    const props = mockProps()
 
-    renderWithProvidersAndRouter(<ImageUpload {...mockProps} />)
+    renderWithProvidersAndRouter(<ImageUpload {...props} />)
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, file)
 
     expect(
       await screen.findByText('Failed to upload image. Please try again.')
     ).toBeInTheDocument()
-    expect(mockProps.onImageUploaded).not.toHaveBeenCalled()
+    expect(props.onImageUploaded).not.toHaveBeenCalled()
   })
 
   it('allows removing uploaded image', async () => {
@@ -176,8 +179,9 @@ describe('ImageUpload Component', () => {
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
+    const props = mockProps()
 
-    renderWithProvidersAndRouter(<ImageUpload {...mockProps} />)
+    renderWithProvidersAndRouter(<ImageUpload {...props} />)
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, file)
 
@@ -187,7 +191,7 @@ describe('ImageUpload Component', () => {
     const removeButton = screen.getByTestId('image-upload-remove-button')
     await userEvent.click(removeButton)
 
-    expect(mockProps.onImageRemoved).toHaveBeenCalled()
+    expect(props.onImageRemoved).toHaveBeenCalled()
     expect(screen.getByText('Upload an image')).toBeInTheDocument()
     expect(
       screen.queryByRole('img', { name: 'Preview' })
@@ -203,7 +207,7 @@ describe('ImageUpload Component', () => {
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
 
-    renderWithProvidersAndRouter(<ImageUpload {...mockProps} />)
+    renderWithProvidersAndRouter(<ImageUpload {...mockProps()} />)
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, file)
 
