@@ -223,7 +223,7 @@ public class Auction : BitsAndBobsTable.VersionedEntity
     public void Cancel()
     {
         if (!IsOpen)
-            throw new InvalidOperationException("Cannot cancel an auction that is not open.");
+            throw new InvalidAuctionStateException("Cannot cancel an auction that is not open.");
 
         Status = AuctionStatus.Cancelled;
         CancelledDate = DateTimeOffset.UtcNow;
@@ -236,16 +236,16 @@ public class Auction : BitsAndBobsTable.VersionedEntity
             throw new InvalidOperationException("Seller cannot bid on their own auction.");
 
         if (!IsOpen)
-            throw new InvalidBidException("Cannot add a bid to an auction that is not open.");
+            throw new InvalidAuctionStateException("Cannot add a bid to an auction that is not open.");
 
         if (amount < MinimumBid)
-            throw new InvalidBidException($"Bid amount must be at least {MinimumBid}.");
+            throw new InvalidAuctionStateException($"Bid amount must be at least {MinimumBid}.");
 
         var isCurrentBidder = bidder == CurrentBidderId;
 
         // The current bidder can add a new bid to increase their limit without affecting the current price
         if (isCurrentBidder && amount <= CurrentBid!.Amount)
-            throw new InvalidBidException("Cannot place a bid that is not higher than the current bid.");
+            throw new InvalidAuctionStateException("Cannot place a bid that is not higher than the current bid.");
 
         var bid = new Bid(Id, bidder, amount);
 
@@ -268,16 +268,5 @@ public class Auction : BitsAndBobsTable.VersionedEntity
         UpdateVersion();
 
         return bid;
-    }
-}
-
-public class InvalidBidException : Exception
-{
-    public InvalidBidException()
-    {
-    }
-
-    public InvalidBidException(string message) : base(message)
-    {
     }
 }

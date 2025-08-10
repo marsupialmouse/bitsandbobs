@@ -23,7 +23,7 @@ public class AuctionAddBidTests
     {
         var auction = CreateAuction(initialPrice: 100m, bidIncrement: 10m, period: TimeSpan.FromMinutes(-10));
 
-        var exception = Should.Throw<InvalidBidException>(() => auction.AddBid(UserId.Create(), 110m));
+        var exception = Should.Throw<InvalidAuctionStateException>(() => auction.AddBid(UserId.Create(), 110m));
 
         exception.Message.ShouldBe("Cannot add a bid to an auction that is not open.");
     }
@@ -34,7 +34,7 @@ public class AuctionAddBidTests
         var auction = CreateAuction(initialPrice: 100m, bidIncrement: 10m);
         auction.Cancel();
 
-        var exception = Should.Throw<InvalidBidException>(() => auction.AddBid(UserId.Create(), 110m));
+        var exception = Should.Throw<InvalidAuctionStateException>(() => auction.AddBid(UserId.Create(), 110m));
 
         exception.Message.ShouldBe("Cannot add a bid to an auction that is not open.");
     }
@@ -44,7 +44,7 @@ public class AuctionAddBidTests
     {
         var auction = CreateAuction(initialPrice: 100m, bidIncrement: 10m);
 
-        var exception = Should.Throw<InvalidBidException>(() => auction.AddBid(UserId.Create(), 99m));
+        var exception = Should.Throw<InvalidAuctionStateException>(() => auction.AddBid(UserId.Create(), 99m));
 
         exception.Message.ShouldBe("Bid amount must be at least 100.");
     }
@@ -132,7 +132,7 @@ public class AuctionAddBidTests
         var auction = CreateAuction(initialPrice: 100m, bidIncrement: 10m);
         auction.AddBid(bidder, 120m);
 
-        var exception = Should.Throw<InvalidBidException>(() => auction.AddBid(bidder, 120m));
+        var exception = Should.Throw<InvalidAuctionStateException>(() => auction.AddBid(bidder, 120m));
 
         exception.Message.ShouldBe("Cannot place a bid that is not higher than the current bid.");
     }

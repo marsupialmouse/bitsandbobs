@@ -7,7 +7,10 @@ namespace BitsAndBobs.Tests.Features.Auctions;
 public class AuctionTestBase : TestBase
 {
     protected static Task<Auction?> GetAuctionFromDb(string id) =>
-        DynamoContext.LoadAsync<Auction>(AuctionId.Parse(id).Value, Auction.SortKey)!;
+        GetAuctionFromDb(AuctionId.Parse(id));
+
+    protected static Task<Auction?> GetAuctionFromDb(AuctionId id) =>
+        DynamoContext.LoadAsync<Auction>(id.Value, Auction.SortKey)!;
 
     protected static async Task<Auction> CreateAuction(
         User? seller = null,

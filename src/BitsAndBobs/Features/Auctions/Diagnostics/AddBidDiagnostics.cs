@@ -30,7 +30,7 @@ internal readonly struct BidDiagnostics : IDisposable
 
     public BidDiagnostics(AuctionId auction, UserId user, decimal amount)
     {
-        _activity = BitsAndBobsDiagnostics.ActivitySource.StartActivity("BitsAndBobs.Api.Auctions.Bid");
+        _activity = BitsAndBobsDiagnostics.ActivitySource.StartActivity();
 
         TotalRequestCount.Add(1);
 
@@ -58,6 +58,12 @@ internal readonly struct BidDiagnostics : IDisposable
         _activity?.AddEvent(new ActivityEvent("bid.accepted"));
     }
 
+    public void AuctionNotFound()
+    {
+        TotalFailedCount.Add(1);
+        _activity?.AddEvent(new ActivityEvent("auction.not_found"));
+    }
+
     public void Failed(Exception? e = null)
     {
         TotalFailedCount.Add(1);
@@ -69,7 +75,7 @@ internal readonly struct BidDiagnostics : IDisposable
 
     public void Invalid()
     {
-        TotalFailedCount.Add(1);
+        TotalInvalidCount.Add(1);
         _activity?.AddEvent(new ActivityEvent("bid.invalid"));
     }
 

@@ -13,6 +13,7 @@ public static class AuctionEndpoints
         group.MapPost("/", CreateAuctionEndpoint.CreateAuction).RequireAuthorization();
         group.MapGet("/{id}", GetAuctionEndpoint.GetAuction);
         group.MapPost("/{auctionId}/bids", AddBidEndpoint.AddBid).RequireAuthorization();
+        group.MapPost("/{auctionId}/cancel", CancelAuctionEndpoint.CancelAuction).RequireAuthorization();
         group.MapPost("/images", UploadImageEndpoint.UploadImage).RequireAuthorization().DisableAntiforgery();
     }
 }
