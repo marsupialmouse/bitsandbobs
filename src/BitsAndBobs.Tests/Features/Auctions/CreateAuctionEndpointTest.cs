@@ -8,7 +8,7 @@ using Shouldly;
 namespace BitsAndBobs.Tests.Features.Auctions;
 
 [TestFixture]
-public class CreateAuctionEndpointTest : TestBase
+public class CreateAuctionEndpointTest : AuctionTestBase
 {
     [Test]
     public async Task ShouldGet401ResponseWhenCreatingAuctionWithoutAuthentication()
@@ -243,9 +243,6 @@ public class CreateAuctionEndpointTest : TestBase
         await DynamoContext.SaveItem(image);
         return image;
     }
-
-    private static Task<Auction?> GetAuctionFromDb(string id) =>
-        DynamoContext.LoadAsync<Auction>(AuctionId.Parse(id).Value, Auction.SortKey)!;
 
     private static Task<AuctionImage?> GetImageFromDb(AuctionImageId id) =>
         DynamoContext.LoadAsync<AuctionImage>(id.Value, AuctionImage.SortKey)!;

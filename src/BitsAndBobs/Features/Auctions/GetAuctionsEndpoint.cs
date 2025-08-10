@@ -14,7 +14,7 @@ public static class GetAuctionsEndpoint
         [property: Required] string Id,
         [property: Required] string Name,
         [property: Required] string Description,
-        [property: Required] string ImageUrl,
+        [property: Required] string ImageHref,
         [property: Required] decimal CurrentPrice,
         [property: Required] int NumberOfBids,
         [property: Required] DateTimeOffset EndDate,

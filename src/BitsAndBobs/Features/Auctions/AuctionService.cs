@@ -48,8 +48,8 @@ public class AuctionService
     /// <summary>
     /// Gets an auction without loading bids.
     /// </summary>
-    public async Task<Auction?> GetAuction(AuctionId id) =>
-        await _dynamoContext.LoadAsync<Auction>(id, Auction.SortKey);
+    public Task<Auction?> GetAuction(AuctionId id) =>
+        _dynamoContext.LoadAsync<Auction>(id, Auction.SortKey)!;
 
     /// <summary>
     /// Loads and auction and all of its bids.

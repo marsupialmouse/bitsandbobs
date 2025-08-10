@@ -269,7 +269,33 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
         return Task.CompletedTask;
     }
 
-        private Put GetReservedEmailPut(User user) => GetReservedItemPut(user, GetReservedEmailKeyAttributes);
+    public async Task<Dictionary<UserId, string>> GetDisplayNames(IReadOnlySet<UserId> users)
+    {
+        var result = await _db.BatchGetItemAsync(
+                         new Dictionary<string, KeysAndAttributes>
+                         {
+                             {
+                                 BitsAndBobsTable.FullName, new KeysAndAttributes
+                                 {
+                                     Keys = users.Select(Key).ToList(),
+                                     ProjectionExpression = $"PK,{nameof(User.DisplayName)}"
+                                 }
+                             }
+                         }
+                     );
+
+        if (!result.Responses.TryGetValue(BitsAndBobsTable.FullName, out var items))
+            return new Dictionary<UserId, string>();
+
+        return items.ToDictionary(i => UserId.Parse(i["PK"].S), i => i[nameof(User.DisplayName)].S);
+
+        static Dictionary<string, AttributeValue> Key(UserId id) => new()
+        {
+            { "PK", new AttributeValue(id.Value) }
+        };
+    }
+
+    private Put GetReservedEmailPut(User user) => GetReservedItemPut(user, GetReservedEmailKeyAttributes);
 
     private Put GetReservedUsernamePut(User user) => GetReservedItemPut(user, GetReservedUsernameKeyAttributes);
 

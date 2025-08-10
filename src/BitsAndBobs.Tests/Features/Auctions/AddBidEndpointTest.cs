@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using BitsAndBobs.Features;
 using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Identity;
 using NUnit.Framework;
@@ -8,7 +7,7 @@ using Shouldly;
 namespace BitsAndBobs.Tests.Features.Auctions;
 
 [TestFixture]
-public class AddBidEndpointTest : TestBase
+public class AddBidEndpointTest : AuctionTestBase
 {
     [Test]
     public async Task ShouldGet401ResponseWhenAddingBidWithoutAuthentication()
@@ -91,34 +90,6 @@ public class AddBidEndpointTest : TestBase
         updatedAuction.CurrentBidId.ShouldBe(response!.Id);
         updatedAuction.CurrentBidderId.ShouldBe(bidder);
         updatedAuction.CurrentPrice.ShouldBe(135m);
-    }
-
-    private static async Task<Auction> CreateAuction(
-        decimal initialPrice = 100m,
-        decimal bidIncrement = 10m,
-        DateTimeOffset? endDate = null
-    )
-    {
-        var seller = new User { DisplayName = "Puffy Dog" };
-        var image = new AuctionImage(".jpg", seller.Id);
-        var auction = new Auction(
-            seller,
-            "Test Item",
-            "A test auction item",
-            image,
-            initialPrice,
-            bidIncrement,
-            endDate?.Subtract(DateTimeOffset.Now) ?? TimeSpan.FromHours(1)
-        );
-        await DynamoContext.SaveItem(auction);
-        return auction;
-    }
-
-    private static async Task AddBidToAuction(Auction auction, UserId bidderId, decimal amount)
-    {
-        var bid = auction.AddBid(bidderId, amount);
-        await DynamoContext.SaveItem(auction);
-        await DynamoContext.SaveItem(bid);
     }
 
     private static Task<Auction?> GetAuctionFromDb(AuctionId id) =>

@@ -181,7 +181,7 @@ public class Auction : BitsAndBobsTable.VersionedEntity
     /// Gets the current bid. Note that this only works if bids have been loaded.
     /// </summary>
     /// <exception cref="ArgumentException"></exception>
-    private Bid? CurrentBid
+    public Bid? CurrentBid
     {
         get
         {
@@ -195,7 +195,7 @@ public class Auction : BitsAndBobsTable.VersionedEntity
 
             return _currentBid;
         }
-        set
+        private set
         {
             ArgumentNullException.ThrowIfNull(value, nameof(value));
             _currentBid = value;
