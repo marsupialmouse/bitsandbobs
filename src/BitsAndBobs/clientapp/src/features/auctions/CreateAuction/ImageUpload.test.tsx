@@ -66,7 +66,7 @@ describe('ImageUpload Component', () => {
     await userEvent.upload(fileInput, file)
 
     await waitFor(() => {
-      expect(props.onImageUploaded).toHaveBeenCalledWith('image-upload-input')
+      expect(props.onImageUploaded).toHaveBeenCalledWith('success-image')
     })
     expect(screen.getByRole('img', { name: 'Preview' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Preview' })).toHaveAttribute(
