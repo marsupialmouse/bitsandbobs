@@ -15,6 +15,8 @@ public class User : BitsAndBobsTable.VersionedEntity
 {
     public const string SortKey = "Profile";
 
+    private string? _displayName;
+
     /// <summary>
     /// Gets the user ID.
     /// </summary>
@@ -80,15 +82,11 @@ public class User : BitsAndBobsTable.VersionedEntity
     /// <summary>
     /// Gets or sets a display name, which is shown in auctions.
     /// </summary>
-    [DynamoDBIgnore]
     public string DisplayName
     {
-        get => DisplayNameInternal ?? EmailAddress.Split('@')[0];
-        set => DisplayNameInternal = value;
+        get => _displayName ?? EmailAddress.Split('@')[0];
+        set => _displayName = value;
     }
-
-    [DynamoDBProperty("DisplayName")]
-    protected string? DisplayNameInternal { get; set; }
 
     /// <summary>
     /// Gets or sets a salted and hashed representation of the password for this user.
