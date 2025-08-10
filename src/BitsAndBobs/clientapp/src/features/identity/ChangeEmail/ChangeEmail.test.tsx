@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { describe, expect, it } from 'vitest'
@@ -107,11 +107,9 @@ describe('Change Email Component', () => {
       screen.getByRole('button', { name: 'Change email address' })
     )
 
-    await waitFor(() => {
-      expect(
-        screen.getByText('It was a great success!', { exact: false })
-      ).toBeInTheDocument()
-    })
+    expect(
+      await screen.findByText('It was a great success!', { exact: false })
+    ).toBeInTheDocument()
   })
 
   it('handles successful email change', async () => {
@@ -133,15 +131,13 @@ describe('Change Email Component', () => {
       screen.getByRole('button', { name: 'Change email address' })
     )
 
-    await waitFor(() => {
-      expect(
-        screen.getByText('It was a great success!', { exact: false })
-      ).toBeInTheDocument()
-      const emailPageLink = screen.getByRole('link', {
-        name: 'Check your email',
-      })
-      expect(emailPageLink).toHaveAttribute('href', '/email/recent/u')
+    expect(
+      await screen.findByText('It was a great success!', { exact: false })
+    ).toBeInTheDocument()
+    const emailPageLink = screen.getByRole('link', {
+      name: 'Check your email',
     })
+    expect(emailPageLink).toHaveAttribute('href', '/email/recent/u')
   })
 
   it('shows loading state while submitting', async () => {
@@ -189,12 +185,10 @@ describe('Change Email Component', () => {
       screen.getByRole('button', { name: 'Change email address' })
     )
 
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          'An unexpected error occurred changing your email address, please try again later'
-        )
-      ).toBeInTheDocument()
-    })
+    expect(
+      await screen.findByText(
+        'An unexpected error occurred changing your email address, please try again later'
+      )
+    ).toBeInTheDocument()
   })
 })

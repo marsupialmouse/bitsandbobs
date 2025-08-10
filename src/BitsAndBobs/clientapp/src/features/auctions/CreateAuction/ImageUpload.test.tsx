@@ -125,7 +125,7 @@ describe('ImageUpload Component', () => {
     await userEvent.upload(fileInput, largeFile)
 
     expect(
-      screen.getByText('Image must be smaller than 1MB')
+      await screen.findByText('Image must be smaller than 1MB')
     ).toBeInTheDocument()
     expect(mockProps.onImageUploaded).not.toHaveBeenCalled()
   })
@@ -149,9 +149,9 @@ describe('ImageUpload Component', () => {
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, file)
 
-    await waitFor(() => {
-      expect(screen.getByText('Image format not supported')).toBeInTheDocument()
-    })
+    expect(
+      await screen.findByText('Image format not supported')
+    ).toBeInTheDocument()
     expect(mockProps.onImageUploaded).not.toHaveBeenCalled()
   })
 
@@ -167,11 +167,9 @@ describe('ImageUpload Component', () => {
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, file)
 
-    await waitFor(() => {
-      expect(
-        screen.getByText('Failed to upload image. Please try again.')
-      ).toBeInTheDocument()
-    })
+    expect(
+      await screen.findByText('Failed to upload image. Please try again.')
+    ).toBeInTheDocument()
     expect(mockProps.onImageUploaded).not.toHaveBeenCalled()
   })
 
@@ -186,9 +184,10 @@ describe('ImageUpload Component', () => {
     renderWithProvidersAndRouter(<ImageUpload {...mockProps} />)
     const fileInput = screen.getByTestId('image-upload-input')
     await userEvent.upload(fileInput, file)
-    await waitFor(() => {
-      expect(screen.getByRole('img', { name: 'Preview' })).toBeInTheDocument()
-    })
+
+    expect(
+      await screen.findByRole('img', { name: 'Preview' })
+    ).toBeInTheDocument()
     const removeButton = screen.getByTestId('image-upload-remove-button')
     await userEvent.click(removeButton)
 
