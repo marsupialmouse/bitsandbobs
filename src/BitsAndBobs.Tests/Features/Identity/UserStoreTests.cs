@@ -1,7 +1,6 @@
 using Amazon.DynamoDBv2.Model;
 using BitsAndBobs.Features.Identity;
 using Microsoft.AspNetCore.Identity;
-using NUnit.Framework;
 using Shouldly;
 
 namespace BitsAndBobs.Tests.Features.Identity;

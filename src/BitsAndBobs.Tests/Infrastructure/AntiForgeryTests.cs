@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Net.Http.Headers;
-using NUnit.Framework;
 using Shouldly;
 
 namespace BitsAndBobs.Tests.Infrastructure;

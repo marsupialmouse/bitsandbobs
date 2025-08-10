@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using NUnit.Framework;
 
 [assembly: SetCulture("en-AU")]
 [assembly: Parallelizable(ParallelScope.Fixtures), LevelOfParallelism(4)]

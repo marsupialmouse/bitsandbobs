@@ -2,7 +2,6 @@ using System.Net.Http.Json;
 using BitsAndBobs.Features;
 using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Identity;
-using NUnit.Framework;
 using Shouldly;
 
 namespace BitsAndBobs.Tests.Features.Auctions;

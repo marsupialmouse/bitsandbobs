@@ -1,6 +1,5 @@
 using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Identity;
-using NUnit.Framework;
 using Shouldly;
 
 namespace BitsAndBobs.Tests.Features.Auctions;

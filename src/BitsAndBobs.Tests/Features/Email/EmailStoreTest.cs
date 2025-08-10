@@ -2,7 +2,6 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
-using NUnit.Framework;
 using Shouldly;
 
 namespace BitsAndBobs.Tests.Features.Email;

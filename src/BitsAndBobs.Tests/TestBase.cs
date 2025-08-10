@@ -20,7 +20,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.Extensions;
-using NUnit.Framework;
 
 namespace BitsAndBobs.Tests;
 

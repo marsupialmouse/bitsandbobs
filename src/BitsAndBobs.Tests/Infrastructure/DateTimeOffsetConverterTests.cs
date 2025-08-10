@@ -1,8 +1,6 @@
 using System.Globalization;
 using Amazon.DynamoDBv2.DocumentModel;
-using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.DynamoDb;
-using NUnit.Framework;
 using Shouldly;
 
 namespace BitsAndBobs.Tests.Infrastructure;

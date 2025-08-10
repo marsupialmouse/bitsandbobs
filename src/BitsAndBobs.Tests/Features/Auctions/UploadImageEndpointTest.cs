@@ -1,7 +1,6 @@
 using Amazon.S3.Model;
 using BitsAndBobs.Features.Auctions;
 using NSubstitute;
-using NUnit.Framework;
 using Shouldly;
 using System.Net.Http.Json;
 
