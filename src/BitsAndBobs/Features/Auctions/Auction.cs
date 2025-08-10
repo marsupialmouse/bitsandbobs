@@ -177,8 +177,10 @@ public class Auction : BitsAndBobsTable.VersionedEntity
         }
     }
 
-    [NotNullIfNotNull(nameof(CurrentBidId))]
-    [NotNullIfNotNull(nameof(CurrentBidderId))]
+    /// <summary>
+    /// Gets the current bid. Note that this only works if bids have been loaded.
+    /// </summary>
+    /// <exception cref="ArgumentException"></exception>
     private Bid? CurrentBid
     {
         get
@@ -253,8 +255,8 @@ public class Auction : BitsAndBobsTable.VersionedEntity
         }
         else if (amount > CurrentBid!.Amount)
         {
-            CurrentBid = bid;
             CurrentPrice = Math.Min(amount, CurrentBid.Amount + BidIncrement);
+            CurrentBid = bid;
         }
         else
         {
