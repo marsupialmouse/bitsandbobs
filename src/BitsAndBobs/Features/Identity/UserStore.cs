@@ -291,7 +291,8 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
 
         static Dictionary<string, AttributeValue> Key(UserId id) => new()
         {
-            { "PK", new AttributeValue(id.Value) }
+            { "PK", new AttributeValue(id.Value) },
+            { "SK", new AttributeValue(User.SortKey) },
         };
     }
 

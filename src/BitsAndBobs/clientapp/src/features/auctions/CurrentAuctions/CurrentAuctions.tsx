@@ -37,7 +37,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
     >
       <div className="aspect-w-16 aspect-h-9 overflow-hidden bg-gray-100">
         <img
-          src={auction.imageUrl}
+          src={auction.imageHref}
           alt={auction.name}
           className="h-48 w-full object-cover transition-transform group-hover:scale-105"
         />

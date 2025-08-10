@@ -124,7 +124,7 @@ export interface SummaryAuctionResponse {
     readonly id: string;
     readonly name: string;
     readonly description: string;
-    readonly imageUrl: string;
+    readonly imageHref: string;
     readonly currentPrice: number;
     readonly numberOfBids: number;
     readonly endDate: Date;
@@ -142,6 +142,49 @@ export interface CreateAuctionRequest {
     readonly initialPrice: number;
     readonly bidIncrement: number;
     readonly period: string;
+}
+
+export interface GetAuctionResponse {
+    readonly id: string;
+    readonly name: string;
+    readonly description: string;
+    readonly imageHref: string;
+    readonly sellerDisplayName: string;
+    readonly isOpen: boolean;
+    readonly isClosed: boolean;
+    readonly isCancelled: boolean;
+    readonly isUserSeller: boolean;
+    readonly isUserCurrentBidder: boolean;
+    readonly initialPrice: number;
+    readonly currentPrice: number;
+    readonly currentBidderDisplayName?: string | undefined;
+    readonly minimumBid: number;
+    readonly numberOfBids: number;
+    readonly bids: BidDetails[];
+    readonly endDate: Date;
+    readonly cancelledDate?: Date | undefined;
+}
+
+export interface BidDetails {
+    readonly amount: number;
+    readonly bidderDisplayName: string;
+    readonly bidDate: Date;
+    readonly isUserBid: boolean;
+    readonly isCurrentBid: boolean;
+}
+
+export interface AuctionId {
+    readonly friendlyValue?: string;
+    readonly value?: string;
+}
+
+export interface AddBidResponse {
+    readonly id: string;
+}
+
+export interface AddBidRequest {
+    readonly auctionId: string;
+    readonly amount: number;
 }
 
 export interface AuctionImageResponse {

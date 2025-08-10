@@ -100,16 +100,24 @@ public static class BitsAndBobsTable
     public class Item
     {
         /// <summary>
-        /// The HashKey attribute
+        /// The HashKey attribute. Any class that inherits from this class should implement this property.
         /// </summary>
+        /// <remarks>
+        /// This should be abstract, but the DynamoDB SDK doesn't like abstract classes.
+        /// </remarks>
         // ReSharper disable once InconsistentNaming
-        protected virtual string PK { get; set; }
+        // ReSharper disable once PropertyCanBeMadeInitOnly.Global
+        protected virtual string PK { get; set; } = "";
 
         /// <summary>
-        /// The RangeKey attribute
+        /// The RangeKey attribute. Any class that inherits from this class should implement this property.
         /// </summary>
+        /// <remarks>
+        /// This should be abstract, but the DynamoDB SDK doesn't like abstract classes.
+        /// </remarks>
         // ReSharper disable once InconsistentNaming
-        protected virtual string SK { get; set; }
+        // ReSharper disable once PropertyCanBeMadeInitOnly.Global
+        protected virtual string SK { get; set; } = "";
     }
 
     public abstract class VersionedEntity : Item
