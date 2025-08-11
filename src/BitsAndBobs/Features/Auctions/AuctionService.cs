@@ -167,6 +167,21 @@ public class AuctionService
     }
 
     /// <summary>
+    /// Gets all auctions won by the user
+    /// </summary>
+    public async Task<IEnumerable<Auction>> GetWonAuctions(UserId userId)
+    {
+        var search = _dynamoContext.QueryAsync<Auction>(
+            userId,
+            QueryOperator.Equal,
+            [AuctionStatus.Complete],
+            new QueryConfig { IndexName = "AuctionsByCurrentBidder" }
+        );
+
+        return await search.GetRemainingAsync();
+    }
+
+    /// <summary>
     /// Gets all auctions belonging to the user
     /// </summary>
     public async Task<IEnumerable<UserAuctionParticipation>> GetUserAuctionParticipation(UserId userId)

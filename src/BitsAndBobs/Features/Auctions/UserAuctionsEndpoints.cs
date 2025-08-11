@@ -55,6 +55,25 @@ public static class UserAuctionsEndpoints
         return TypedResults.Ok(new GetUserAuctionsResponse(auctionResponses));
     }
 
+    public static async Task<Ok<GetUserAuctionsResponse>> GetWonAuctions(
+        ClaimsPrincipal claimsPrincipal,
+        [FromServices] AuctionService auctionService,
+        [FromServices] IOptions<AwsResourceOptions> options
+    )
+    {
+        var auctions = await auctionService.GetWonAuctions(claimsPrincipal.GetUserId());
+        var auctionResponses = auctions
+                               .OrderByDescending(a => a.EndDate)
+                               .Select(auction => UserAuction.Create(auction, options) with
+                                   {
+                                       IsUserCurrentBidder = true
+                                   }
+                               )
+                               .ToList();
+
+        return TypedResults.Ok(new GetUserAuctionsResponse(auctionResponses));
+    }
+
     public static async Task<Ok<GetUserAuctionsResponse>> GetParticipantAuctions(
         ClaimsPrincipal claimsPrincipal,
         [FromServices] AuctionService auctionService,

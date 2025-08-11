@@ -40,6 +40,8 @@ Resources:
           AttributeType: N
         - AttributeName: SellerId
           AttributeType: S
+        - AttributeName: CurrentBidderId
+          AttributeType: S
         - AttributeName: LastUserBidUtcTimestamp
           AttributeType: N
       KeySchema:
@@ -72,6 +74,14 @@ Resources:
           KeySchema:
             - AttributeName: SellerId
               KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: AuctionsByCurrentBidder
+          KeySchema:
+            - AttributeName: CurrentBidderId
+              KeyType: HASH
+            - AttributeName: AuctionStatus
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
         - IndexName: UserAuctionBidsByDate

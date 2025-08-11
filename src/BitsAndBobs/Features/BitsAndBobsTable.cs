@@ -50,6 +50,13 @@ public static class BitsAndBobsTable
                    DynamoDBEntryType.String
                )
                .AddGlobalSecondaryIndex(
+                   "AuctionsByCurrentBidder",
+                   "CurrentBidderId",
+                   DynamoDBEntryType.String,
+                   "AuctionStatus",
+                   DynamoDBEntryType.Numeric
+               )
+               .AddGlobalSecondaryIndex(
                    "UserAuctionBidsByDate",
                    "PK",
                    DynamoDBEntryType.String,
