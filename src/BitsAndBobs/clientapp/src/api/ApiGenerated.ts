@@ -160,7 +160,7 @@ export interface GetAuctionResponse {
     readonly currentBidderDisplayName?: string | undefined;
     readonly minimumBid: number;
     readonly numberOfBids: number;
-    readonly bids: BidDetails[];
+    readonly bids?: BidDetails[] | undefined;
     readonly endDate: Date;
     readonly cancelledDate?: Date | undefined;
 }

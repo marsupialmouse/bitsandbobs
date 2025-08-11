@@ -49,7 +49,7 @@ public static class GetAuctionEndpoint
         string? CurrentBidderDisplayName,
         [property: Required] decimal MinimumBid,
         [property: Required] int NumberOfBids,
-        [property: Required] IReadOnlyList<BidDetails>? Bids,
+        IReadOnlyList<BidDetails>? Bids,
         [property: Required] DateTimeOffset EndDate,
         DateTimeOffset? CancelledDate
     );
