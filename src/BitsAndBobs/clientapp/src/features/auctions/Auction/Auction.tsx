@@ -35,13 +35,8 @@ export default function Auction() {
     return <Loading />
   }
 
-  if (error) {
-    return (
-      <ErrorMessage message="Unable to load auction details. Please try again later." />
-    )
-  }
-
-  if (!auction) {
+  // Check if error is a 404 (Not Found) error
+  if (error && 'status' in error && error.status === 404) {
     return (
       <div className="py-12 text-center">
         <h2 className="text-2xl font-bold text-gray-900">Auction not found</h2>
@@ -49,6 +44,12 @@ export default function Auction() {
           The auction you&apos;re looking for doesn&apos;t exist.
         </p>
       </div>
+    )
+  }
+
+  if (error || !auction) {
+    return (
+      <ErrorMessage message="Unable to load auction details. Please try again later." />
     )
   }
 

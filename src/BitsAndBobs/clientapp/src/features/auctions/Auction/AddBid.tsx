@@ -7,7 +7,7 @@ interface BidFormData {
   amount: number
 }
 
-interface AddBidProps {
+export interface AddBidProps {
   auctionId: string
   minimumBid: number
   isUserCurrentBidder: boolean
