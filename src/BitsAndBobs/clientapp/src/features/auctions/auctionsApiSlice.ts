@@ -34,6 +34,10 @@ const auctionsApi = api
         query: () => '/auctions/seller',
         keepUnusedDataFor: 1,
       }),
+      getWonAuctions: builder.query<GetUserAuctionsResponse, void>({
+        query: () => '/auctions/won',
+        keepUnusedDataFor: 1,
+      }),
       getParticipantAuctions: builder.query<GetUserAuctionsResponse, void>({
         query: () => '/auctions/participant',
         keepUnusedDataFor: 1,
@@ -101,6 +105,7 @@ export const {
   useGetAuctionsQuery,
   useGetParticipantAuctionsQuery,
   useGetSellerAuctionsQuery,
+  useGetWonAuctionsQuery,
   useUploadImageMutation,
   useCreateAuctionMutation,
   useCancelAuctionMutation,

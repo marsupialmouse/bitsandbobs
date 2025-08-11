@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   useGetParticipantAuctionsQuery,
   useGetSellerAuctionsQuery,
+  useGetWonAuctionsQuery,
 } from '../auctionsApiSlice.ts'
 import AuctionList from './AuctionList.tsx'
 
@@ -44,7 +45,7 @@ export default function UserAuctions() {
       {/* Tab Content */}
       <div className="mt-4">
         {activeTab === 'seller' && <SellerAuctions />}
-        {activeTab === 'won' && <ComingSoon text="Won auctions" />}
+        {activeTab === 'won' && <WonAuctions />}
         {activeTab === 'participating' && <ParticipantAuctions />}
       </div>
     </div>
@@ -75,15 +76,6 @@ function TabButton({
   )
 }
 
-function ComingSoon({ text }: { text: string }) {
-  return (
-    <div className="rounded-lg bg-gray-50 py-16 text-center">
-      <h3 className="mb-2 text-lg font-medium text-gray-900">Coming Soon</h3>
-      <p className="text-gray-500">{text} will be available soon!</p>
-    </div>
-  )
-}
-
 function ParticipantAuctions() {
   const { data, isLoading, isError } = useGetParticipantAuctionsQuery()
 
@@ -110,6 +102,21 @@ function SellerAuctions() {
       emptyMessage="You haven't created any auctions yet."
       errorMessage="Unable to load your auctions. Please try again later."
       showCreateButton={true}
+    />
+  )
+}
+
+function WonAuctions() {
+  const { data, isLoading, isError } = useGetWonAuctionsQuery()
+
+  return (
+    <AuctionList
+      auctions={data?.auctions}
+      isLoading={isLoading}
+      isError={isError}
+      emptyMessage="You haven't won any auctions yet."
+      errorMessage="Unable to load your auctions. Please try again later."
+      showCreateButton={false}
     />
   )
 }
