@@ -16,6 +16,7 @@ import Profile from './features/identity/Profile/Profile.tsx'
 import CreateAuction from './features/auctions/CreateAuction/CreateAuction.tsx'
 import CurrentAuctions from './features/auctions/CurrentAuctions/CurrentAuctions.tsx'
 import Auction from './features/auctions/Auction/Auction.tsx'
+import UserAuctions from './features/auctions/UserAuctions/UserAuctions.tsx'
 
 function App() {
   const { isLoading, isError } = useGetUserContextQuery()
@@ -62,6 +63,7 @@ function App() {
             <Route path="/changeemail" element={<ChangeEmail />} />
             <Route path="/changepassword" element={<ChangePassword />} />
             <Route path="/auctions/create" element={<CreateAuction />} />
+            <Route path="/auctions/my" element={<UserAuctions />} />
             <Route path="/email/recent/u" element={<RecentEmailsByUser />} />
           </Route>
         </Routes>

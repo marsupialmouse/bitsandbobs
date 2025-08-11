@@ -7,6 +7,7 @@ import {
   CreateAuctionResponse,
   GetAuctionResponse,
   GetAuctionsResponse,
+  GetUserAuctionsResponse,
   HttpValidationProblemDetails,
   ProblemDetails,
 } from '../../api/ApiGenerated.ts'
@@ -27,6 +28,10 @@ const auctionsApi = api
       getAuctions: builder.query<GetAuctionsResponse, void>({
         query: () => '/auctions',
         providesTags: ['Auctions'],
+        keepUnusedDataFor: 1,
+      }),
+      getSellerAuctions: builder.query<GetUserAuctionsResponse, void>({
+        query: () => '/auctions/seller',
         keepUnusedDataFor: 1,
       }),
       uploadImage: builder.mutation<AuctionImageResponse, UploadImageRequest>({
@@ -90,6 +95,7 @@ const auctionsApi = api
 export const {
   useGetAuctionQuery,
   useGetAuctionsQuery,
+  useGetSellerAuctionsQuery,
   useUploadImageMutation,
   useCreateAuctionMutation,
   useCancelAuctionMutation,

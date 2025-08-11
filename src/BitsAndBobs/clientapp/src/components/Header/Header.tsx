@@ -77,8 +77,12 @@ export const Header = () => {
                       </p>
                     </li>
                     <li className="border-t border-lime-400 p-2 text-sm hover:bg-lime-400">
+                      <Link to="/auctions/my">My Auctions</Link>
+                    </li>
+                    <li className="border-t border-lime-400 p-2 text-sm hover:bg-lime-400">
                       <Link to="/profile">Profile</Link>
                     </li>
+
                     <li className="border-t border-lime-400 p-2 text-sm hover:bg-lime-400">
                       <Link to="/changepassword">Change Password</Link>
                     </li>
