@@ -82,6 +82,9 @@ export const Header = () => {
                     <li className="border-t border-lime-400 p-2 text-sm hover:bg-lime-400">
                       <Link to="/changepassword">Change Password</Link>
                     </li>
+                    <li className="border-t border-lime-400 p-2 text-sm hover:bg-lime-400">
+                      <Link to="/email/recent/u">Recent Emails</Link>
+                    </li>
                     <li className="mb-2 border-t border-b border-lime-400 p-2 text-sm hover:bg-lime-400">
                       <a href="#" onClick={handleSignOut}>
                         Sign Out

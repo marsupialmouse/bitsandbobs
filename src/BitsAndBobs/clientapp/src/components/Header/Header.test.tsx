@@ -48,6 +48,7 @@ describe('Header', () => {
     expect(screen.getByText('Sign In')).toBeInTheDocument()
     expect(screen.queryByText('Profile')).not.toBeInTheDocument()
     expect(screen.queryByText('Change Password')).not.toBeInTheDocument()
+    expect(screen.queryByText('Recent Emails')).not.toBeInTheDocument()
     expect(screen.queryByText('Sign Out')).not.toBeInTheDocument()
   })
 
@@ -57,6 +58,7 @@ describe('Header', () => {
     expect(screen.getByText('Profile')).toBeInTheDocument()
     expect(screen.getByText('Change Password')).toBeInTheDocument()
     expect(screen.getByText('Sign Out')).toBeInTheDocument()
+    expect(screen.getByText('Recent Emails')).toBeInTheDocument()
     expect(screen.queryByText('Sign Up')).not.toBeInTheDocument()
     expect(screen.queryByText('Sign In')).not.toBeInTheDocument()
   })

@@ -34,7 +34,7 @@ export interface LoginResponse {
 }
 
 export const identityApi = api
-  .enhanceEndpoints({ addTagTypes: ['Identity'] })
+  .enhanceEndpoints({ addTagTypes: ['Identity', 'UserContext'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       register: builder.mutation<void, RegisterRequest>({
@@ -121,7 +121,7 @@ export const identityApi = api
           url: '/identity/logout',
           method: 'POST',
         }),
-        invalidatesTags: ['Identity'],
+        invalidatesTags: ['Identity', 'UserContext'],
       }),
       getDetails: builder.query<DetailsResponse, void>({
         query: () => '/identity/details',
