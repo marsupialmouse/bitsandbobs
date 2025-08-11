@@ -45,6 +45,11 @@ public static class BitsAndBobsTable
                    DynamoDBEntryType.Numeric
                )
                .AddGlobalSecondaryIndex(
+                   "AuctionsBySeller",
+                   "SellerId",
+                   DynamoDBEntryType.String
+               )
+               .AddGlobalSecondaryIndex(
                    "EmailsByRecipientUser",
                    "RecipientUserId",
                    DynamoDBEntryType.String,

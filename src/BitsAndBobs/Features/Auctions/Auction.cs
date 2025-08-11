@@ -1,6 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.SimpleSystemsManagement.Model;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Infrastructure.DynamoDb;
 using StronglyTypedIds;
@@ -135,6 +133,16 @@ public class Auction : BitsAndBobsTable.VersionedEntity
     /// Whether the auction is currently open for bidding
     /// </summary>
     public bool IsOpen => Status == AuctionStatus.Open && EndDate > DateTimeOffset.Now;
+
+    /// <summary>
+    ///  Whether the auction is closed to more bids.
+    /// </summary>
+    public bool IsClosed => Status != AuctionStatus.Cancelled && !IsOpen;
+
+    /// <summary>
+    /// Whether the auction has been cancelled
+    /// </summary>
+    public bool IsCancelled => Status == AuctionStatus.Cancelled;
 
     /// <summary>
     /// Gets the user ID of the seller

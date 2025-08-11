@@ -15,5 +15,6 @@ public static class AuctionEndpoints
         group.MapPost("/{auctionId}/bids", AddBidEndpoint.AddBid).RequireAuthorization();
         group.MapPost("/{auctionId}/cancel", CancelAuctionEndpoint.CancelAuction).RequireAuthorization();
         group.MapPost("/images", UploadImageEndpoint.UploadImage).RequireAuthorization().DisableAntiforgery();
+        group.MapGet("/seller", UserAuctionsEndpoints.GetSellerAuctions).RequireAuthorization();
     }
 }

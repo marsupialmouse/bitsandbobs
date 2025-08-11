@@ -38,6 +38,8 @@ Resources:
           AttributeType: S
         - AttributeName: SentAtUtcTimeStamp
           AttributeType: N
+        - AttributeName: SellerId
+          AttributeType: S
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -62,6 +64,12 @@ Resources:
               KeyType: HASH
             - AttributeName: EndDateUtcTimeStamp
               KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: AuctionsBySeller
+          KeySchema:
+            - AttributeName: SellerId
+              KeyType: HASH
           Projection:
             ProjectionType: ALL
         - IndexName: EmailsByRecipientUser

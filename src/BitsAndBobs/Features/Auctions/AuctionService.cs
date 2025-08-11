@@ -152,6 +152,19 @@ public class AuctionService
             throw new DynamoDbConcurrencyException();
         }
     }
+
+    /// <summary>
+    /// Gets all auctions belonging to the user
+    /// </summary>
+    public async Task<IEnumerable<Auction>> GetUserAuctions(UserId userId)
+    {
+        var search = _dynamoContext.QueryAsync<Auction>(
+            userId,
+            new QueryConfig { IndexName = "AuctionsBySeller" }
+        );
+
+        return await search.GetRemainingAsync();
+    }
 }
 
 public class ImageNotFoundException : Exception

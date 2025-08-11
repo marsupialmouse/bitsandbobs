@@ -188,6 +188,24 @@ export interface AuctionImageResponse {
     readonly href: string;
 }
 
+export interface GetUserAuctionsResponse {
+    readonly auctions: UserAuction[];
+}
+
+export interface UserAuction {
+    readonly id: string;
+    readonly name: string;
+    readonly imageHref: string;
+    readonly currentPrice: number;
+    readonly endDate: Date;
+    readonly isOpen: boolean;
+    readonly isClosed: boolean;
+    readonly isCancelled: boolean;
+    readonly cancelledDate?: Date | undefined;
+    readonly isUserCurrentBidder: boolean;
+    readonly userMaximumBid?: number | undefined;
+}
+
 export interface FileParameter {
     data: any;
     fileName: string;
