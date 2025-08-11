@@ -40,6 +40,8 @@ Resources:
           AttributeType: N
         - AttributeName: SellerId
           AttributeType: S
+        - AttributeName: LastUserBidUtcTimestamp
+          AttributeType: N
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -70,6 +72,14 @@ Resources:
           KeySchema:
             - AttributeName: SellerId
               KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: UserAuctionBidsByDate
+          KeySchema:
+            - AttributeName: PK
+              KeyType: HASH
+            - AttributeName: LastUserBidUtcTimestamp
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
         - IndexName: EmailsByRecipientUser

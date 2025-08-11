@@ -228,6 +228,9 @@ public class Auction : BitsAndBobsTable.VersionedEntity
     /// </summary>
     public int NumberOfBids { get; protected set; }
 
+    /// <summary>
+    /// Cancels an open auction.
+    /// </summary>
     public void Cancel()
     {
         if (!IsOpen)
@@ -235,6 +238,21 @@ public class Auction : BitsAndBobsTable.VersionedEntity
 
         Status = AuctionStatus.Cancelled;
         CancelledDate = DateTimeOffset.UtcNow;
+        UpdateVersion();
+    }
+
+    /// <summary>
+    /// Marks a finished auction as complete.
+    /// </summary>
+    public void Complete()
+    {
+        if (Status != AuctionStatus.Open)
+            throw new InvalidAuctionStateException("Cannot complete an auction that is not open.");
+
+        if (EndDate > DateTimeOffset.Now)
+            throw new InvalidAuctionStateException("Cannot complete an auction that has not ended.");
+
+        Status = AuctionStatus.Complete;
         UpdateVersion();
     }
 

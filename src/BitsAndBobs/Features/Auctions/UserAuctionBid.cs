@@ -21,7 +21,7 @@ public class UserAuctionBid : BitsAndBobsTable.Item
         UserId = bid.BidderId;
         AuctionId = bid.AuctionId;
         Amount = bid.Amount;
-        LastBidDate = DateTimeOffset.Now;
+        LastBidDate = bid.BidDate;
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public class UserAuctionBid : BitsAndBobsTable.Item
 
     // This property forms part of a GSI
     // ReSharper disable once UnusedMember.Global
-    protected long LastUserBidTimestamp
+    protected long LastUserBidUtcTimestamp
     {
         get => LastBidDate.UtcTicks;
         // ReSharper disable once ValueParameterNotUsed

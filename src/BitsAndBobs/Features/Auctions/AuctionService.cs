@@ -165,6 +165,33 @@ public class AuctionService
 
         return await search.GetRemainingAsync();
     }
+
+    /// <summary>
+    /// Gets all auctions belonging to the user
+    /// </summary>
+    public async Task<IEnumerable<UserAuctionParticipation>> GetUserAuctionParticipation(UserId userId)
+    {
+        var bidsQuery = _dynamoContext.QueryAsync<UserAuctionBid>(
+            userId.Value,
+            new QueryConfig { IndexName = "UserAuctionBidsByDate", BackwardQuery = true }
+        );
+        var bids = (await bidsQuery.GetRemainingAsync()).ToDictionary(x => x.AuctionId);
+
+        var batch = _dynamoContext.CreateBatchGet<Auction>();
+
+        foreach (var item in bids)
+            batch.AddKey(item.Value.AuctionId.Value, Auction.SortKey);
+
+        await _dynamoContext.ExecuteBatchGetAsync(batch);
+
+        return batch.Results.Select(x => UserAuctionParticipation.Create(x, bids[x.Id]));
+    }
+}
+
+public record UserAuctionParticipation(UserId UserId, Auction Auction, DateTimeOffset LastBidDate, decimal MaximumBid)
+{
+    public static UserAuctionParticipation Create(Auction auction, UserAuctionBid bid) =>
+        new(bid.UserId, auction, bid.LastBidDate, bid.Amount);
 }
 
 public class ImageNotFoundException : Exception

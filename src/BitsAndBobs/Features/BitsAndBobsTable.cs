@@ -50,6 +50,13 @@ public static class BitsAndBobsTable
                    DynamoDBEntryType.String
                )
                .AddGlobalSecondaryIndex(
+                   "UserAuctionBidsByDate",
+                   "PK",
+                   DynamoDBEntryType.String,
+                   "LastUserBidUtcTimestamp",
+                   DynamoDBEntryType.Numeric
+               )
+               .AddGlobalSecondaryIndex(
                    "EmailsByRecipientUser",
                    "RecipientUserId",
                    DynamoDBEntryType.String,

@@ -10,7 +10,7 @@ public enum AuctionStatus
     /// <summary>
     /// The auction has ended
     /// </summary>
-    Ended,
+    Complete,
 
     /// <summary>
     /// The auction has been cancelled

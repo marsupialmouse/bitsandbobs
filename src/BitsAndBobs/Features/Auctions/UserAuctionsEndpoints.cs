@@ -23,7 +23,20 @@ public static class UserAuctionsEndpoints
         DateTimeOffset? CancelledDate
     )
     {
-        [Required] public bool IsUserCurrentBidder { get; init; }
+        public static UserAuction Create(Auction auction, IOptions<AwsResourceOptions> options) => new(
+            Id: auction.Id.FriendlyValue,
+            Name: auction.Name,
+            ImageHref: options.Value.GetAuctionImageHref(auction.Image),
+            CurrentPrice: auction.CurrentPrice,
+            EndDate: auction.EndDate,
+            IsOpen: auction.IsOpen,
+            IsClosed: auction.IsClosed,
+            IsCancelled: auction.IsCancelled,
+            CancelledDate: auction.CancelledDate
+        );
+
+        [Required]
+        public bool IsUserCurrentBidder { get; init; }
         public decimal? UserMaximumBid { get; init; }
     }
 
@@ -36,17 +49,26 @@ public static class UserAuctionsEndpoints
         var auctions = await auctionService.GetUserAuctions(claimsPrincipal.GetUserId());
         var auctionResponses = auctions
                                .OrderByDescending(a => a.EndDate)
-                               .Select(auction => new UserAuction(
-                                           Id: auction.Id.FriendlyValue,
-                                           Name: auction.Name,
-                                           ImageHref: options.Value.GetAuctionImageHref(auction.Image),
-                                           CurrentPrice: auction.CurrentPrice,
-                                           EndDate: auction.EndDate,
-                                           IsOpen: auction.IsOpen,
-                                           IsClosed: auction.IsClosed,
-                                           IsCancelled: auction.IsCancelled,
-                                           CancelledDate: auction.CancelledDate
-                                       )
+                               .Select(auction => UserAuction.Create(auction, options))
+                               .ToList();
+
+        return TypedResults.Ok(new GetUserAuctionsResponse(auctionResponses));
+    }
+
+    public static async Task<Ok<GetUserAuctionsResponse>> GetParticipantAuctions(
+        ClaimsPrincipal claimsPrincipal,
+        [FromServices] AuctionService auctionService,
+        [FromServices] IOptions<AwsResourceOptions> options
+    )
+    {
+        var auctions = await auctionService.GetUserAuctionParticipation(claimsPrincipal.GetUserId());
+        var auctionResponses = auctions
+                               .OrderByDescending(a => a.LastBidDate)
+                               .Select(p => UserAuction.Create(p.Auction, options) with
+                                   {
+                                       IsUserCurrentBidder = p.Auction.CurrentBidderId == p.UserId,
+                                       UserMaximumBid = p.MaximumBid,
+                                   }
                                )
                                .ToList();
 
