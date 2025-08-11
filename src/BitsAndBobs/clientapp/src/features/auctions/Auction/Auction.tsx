@@ -1,0 +1,216 @@
+import {
+  useCancelAuctionMutation,
+  useGetAuctionQuery,
+} from '../auctionsApiSlice.ts'
+import Loading from '../../../components/Loading.tsx'
+import ErrorMessage from '../../../components/ErrorMessage.tsx'
+import formatTimeRemaining from '../formatTimeRemaining.ts'
+import BidList from './BidList.tsx'
+import { useParams } from 'react-router'
+//import { useSelector } from 'react-redux'
+//import { selectIsAuthenticated } from '../../usercontext/userContextSlice.ts'
+
+export default function Auction() {
+  const { id } = useParams() as { id: string }
+  const { data: auction, isLoading, error } = useGetAuctionQuery(id)
+  const [cancelAuction, { isLoading: isCancelling }] =
+    useCancelAuctionMutation()
+  //const isAuthenticated = useSelector(selectIsAuthenticated)
+
+  const handleCancelAuction = async () => {
+    if (
+      auction &&
+      window.confirm('Are you sure you want to cancel this auction?')
+    ) {
+      try {
+        await cancelAuction(auction.id).unwrap()
+      } catch (error) {
+        console.error('Failed to cancel auction:', error)
+      }
+    }
+  }
+
+  if (isLoading) {
+    return <Loading />
+  }
+
+  if (error) {
+    return (
+      <ErrorMessage message="Unable to load auction details. Please try again later." />
+    )
+  }
+
+  if (!auction) {
+    return (
+      <div className="py-12 text-center">
+        <h2 className="text-2xl font-bold text-gray-900">Auction not found</h2>
+        <p className="mt-2 text-sm text-gray-500">
+          The auction you&apos;re looking for doesn&apos;t exist.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-md">
+        {/* Image Section */}
+        <div className="aspect-w-16 aspect-h-9 overflow-hidden bg-gray-100">
+          <img
+            src={auction.imageHref}
+            alt={auction.name}
+            className="h-64 w-full object-cover sm:h-80 lg:h-96"
+          />
+        </div>
+
+        {/* Content Section */}
+        <div className="p-6 sm:p-8">
+          <div className="mb-6">
+            <div className="flex items-start justify-between">
+              <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
+                {auction.name}
+              </h1>
+              {auction.isCancelled && (
+                <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-800">
+                  Cancelled
+                </span>
+              )}
+              {auction.isClosed && !auction.isCancelled && (
+                <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800">
+                  Ended
+                </span>
+              )}
+              {auction.isOpen && (
+                <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+                  Active
+                </span>
+              )}
+            </div>
+            <p className="mt-4 text-lg leading-relaxed text-gray-600">
+              {auction.description}
+            </p>
+          </div>
+
+          {/* Pricing and Time Info */}
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h3 className="text-sm font-medium tracking-wide text-gray-500 uppercase">
+                Current Price
+              </h3>
+              <p className="mt-1 text-3xl font-bold text-green-600">
+                ${auction.currentPrice.toFixed(2)}
+              </p>
+              <p className="mt-1 text-sm text-gray-600">
+                {auction.numberOfBids}{' '}
+                {auction.numberOfBids === 1 ? 'bid' : 'bids'}
+              </p>
+              {auction.currentBidderDisplayName && (
+                <p className="mt-1 text-sm text-gray-600">
+                  High bidder: {auction.currentBidderDisplayName}
+                </p>
+              )}
+            </div>
+
+            {auction.isOpen && (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <h3 className="text-sm font-medium tracking-wide text-gray-500 uppercase">
+                  Time Remaining
+                </h3>
+                <p className="mt-1 text-3xl font-bold text-gray-900">
+                  {formatTimeRemaining(auction.endDate)}
+                </p>
+                <p className="mt-1 text-sm text-gray-600">
+                  Ends: {new Date(auction.endDate).toLocaleDateString()} at{' '}
+                  {new Date(auction.endDate).toLocaleTimeString()}
+                </p>
+              </div>
+            )}
+
+            {!auction.isOpen && (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <h3 className="text-sm font-medium tracking-wide text-gray-500 uppercase">
+                  {auction.isCancelled ? 'Cancelled' : 'Ended'}
+                </h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  {auction.isCancelled && auction.cancelledDate
+                    ? `Cancelled: ${new Date(auction.cancelledDate).toLocaleDateString()} at ${new Date(auction.cancelledDate).toLocaleTimeString()}`
+                    : `Ended: ${new Date(auction.endDate).toLocaleDateString()} at ${new Date(auction.endDate).toLocaleTimeString()}`}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Seller Information */}
+          <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <h3 className="text-sm font-medium tracking-wide text-gray-500 uppercase">
+              Seller Information
+            </h3>
+            <div className="mt-2 flex items-center">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600">
+                <span className="text-sm font-medium text-white">
+                  {auction.sellerDisplayName.charAt(0)}
+                </span>
+              </div>
+              <p className="ml-3 text-lg font-medium text-gray-900">
+                {auction.sellerDisplayName}
+              </p>
+            </div>
+          </div>
+
+          {/* Starting Price and Minimum Bid */}
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h3 className="text-sm font-medium tracking-wide text-gray-500 uppercase">
+                Starting Price
+              </h3>
+              <p className="mt-1 text-xl font-semibold text-gray-900">
+                ${auction.initialPrice.toFixed(2)}
+              </p>
+            </div>
+
+            {auction.isOpen && (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <h3 className="text-sm font-medium tracking-wide text-gray-500 uppercase">
+                  Minimum Bid
+                </h3>
+                <p className="mt-1 text-xl font-semibold text-gray-900">
+                  ${auction.minimumBid.toFixed(2)}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Bid History */}
+          {auction.bids && (
+            <div className="mb-6">
+              <BidList bids={auction.bids} />
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3 sm:flex-row">
+            {auction.isOpen && !auction.isUserSeller && (
+              <button className="flex-1 rounded-md bg-indigo-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none">
+                Place Bid
+              </button>
+            )}
+
+            {auction.isOpen && auction.isUserSeller && (
+              <button
+                onClick={() => {
+                  void (async () => {
+                    await handleCancelAuction()
+                  })()
+                }}
+                disabled={isCancelling}
+                className="flex-1 rounded-md bg-red-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isCancelling ? 'Cancelling...' : 'Cancel Auction'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

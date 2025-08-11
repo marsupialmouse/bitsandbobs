@@ -41,11 +41,13 @@ public class AuctionTestBase : TestBase
     protected static Task AddBidToAuction(Auction auction, UserId bidderId, decimal amount) =>
         AddBidsToAuction(auction, (bidderId, amount));
 
-    protected static async Task AddBidsToAuction(Auction auction, params (UserId bidderId, decimal amount)[] bids)
+    protected static async Task<IReadOnlyList<Bid>> AddBidsToAuction(Auction auction, params (UserId bidderId, decimal amount)[] bids)
     {
         var addedBids = bids.Select(bid => auction.AddBid(bid.bidderId, bid.amount)).ToList();
 
         await DynamoContext.SaveItem(auction);
         await Task.WhenAll(addedBids.Select(bid => DynamoContext.SaveItem(bid)));
+
+        return addedBids;
     }
 }

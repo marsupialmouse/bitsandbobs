@@ -3,22 +3,7 @@ import { useGetAuctionsQuery } from '../auctionsApiSlice'
 import Loading from '../../../components/Loading'
 import ErrorMessage from '../../../components/ErrorMessage'
 import { SummaryAuctionResponse } from '../../../api/ApiGenerated.ts'
-
-function formatTimeRemaining(endDate: Date): string {
-  const now = new Date()
-  const end = new Date(endDate)
-  const diff = end.getTime() - now.getTime()
-
-  if (diff <= 0) return 'Ended'
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-
-  if (days > 0) return `${days.toString()}d ${hours.toString()}h`
-  if (hours > 0) return `${hours.toString()}h ${minutes.toString()}m`
-  return `${minutes.toString()}m`
-}
+import formatTimeRemaining from '../formatTimeRemaining.ts'
 
 function truncateDescription(description: string, maxLength = 120): string {
   if (description.length <= maxLength) return description
@@ -32,7 +17,7 @@ interface AuctionCardProps {
 function AuctionCard({ auction }: AuctionCardProps) {
   return (
     <Link
-      to={`/auctions/${auction.id}`}
+      to={`/auction/${auction.id}`}
       className="group block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="aspect-w-16 aspect-h-9 overflow-hidden bg-gray-100">

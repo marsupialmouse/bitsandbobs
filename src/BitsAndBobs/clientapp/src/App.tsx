@@ -15,6 +15,7 @@ import ChangeEmail from './features/identity/ChangeEmail/ChangeEmail.tsx'
 import Profile from './features/identity/Profile/Profile.tsx'
 import CreateAuction from './features/auctions/CreateAuction/CreateAuction.tsx'
 import CurrentAuctions from './features/auctions/CurrentAuctions/CurrentAuctions.tsx'
+import Auction from './features/auctions/Auction/Auction.tsx'
 
 function App() {
   const { isLoading, isError } = useGetUserContextQuery()
@@ -55,6 +56,7 @@ function App() {
             path="/email/recent/a/:emailAddress"
             element={<RecentEmailsByAddress />}
           />
+          <Route path="/auction/:id" element={<Auction />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<Profile />} />
             <Route path="/changeemail" element={<ChangeEmail />} />
@@ -62,14 +64,6 @@ function App() {
             <Route path="/auctions/create" element={<CreateAuction />} />
             <Route path="/email/recent/u" element={<RecentEmailsByUser />} />
           </Route>
-          {/*
-        <Route path="/add-lot" element={<AddLot />} />
-
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/l/:id" element={<LotDetails />} />
-        <Route path="*" element={<NotFound />} />
-        */}
         </Routes>
       </main>
     </BrowserRouter>
