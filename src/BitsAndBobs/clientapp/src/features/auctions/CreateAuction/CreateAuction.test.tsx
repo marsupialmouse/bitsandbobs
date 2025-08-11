@@ -174,8 +174,7 @@ describe('CreateAuction Component', () => {
     await userEvent.click(submitButton)
 
     await waitFor(() => {
-      //expect(mockNavigate).toHaveBeenCalledWith('/auctions/auction-123')
-      expect(mockNavigate).toHaveBeenCalledWith('/')
+      expect(mockNavigate).toHaveBeenCalledWith('/auction/auction-123')
     })
   })
 

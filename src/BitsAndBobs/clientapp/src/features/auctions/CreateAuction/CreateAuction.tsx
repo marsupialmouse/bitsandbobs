@@ -73,7 +73,7 @@ export default function CreateAuction() {
     }
 
     try {
-      await createAuction({
+      const result = await createAuction({
         name: data.name,
         description: data.description,
         imageId: uploadedImageId,
@@ -82,8 +82,7 @@ export default function CreateAuction() {
         period: formatTimeSpan(data.days, data.hours, data.minutes),
       }).unwrap()
 
-      //await navigate(`/auctions/${result.id}`)
-      await navigate('/')
+      await navigate(`/auction/${result.id}`)
     } catch (error) {
       const validationErrors = error as HttpValidationProblemDetails
       if (validationErrors.errors) {

@@ -178,13 +178,13 @@ describe('CurrentAuctions Component', () => {
 
     await waitFor(() => {
       const cameraLink = screen.getByRole('link', { name: /Vintage Camera/ })
-      expect(cameraLink).toHaveAttribute('href', '/auctions/auction-1')
+      expect(cameraLink).toHaveAttribute('href', '/auction/auction-1')
 
       const vaseLink = screen.getByRole('link', { name: /Antique Vase/ })
-      expect(vaseLink).toHaveAttribute('href', '/auctions/auction-2')
+      expect(vaseLink).toHaveAttribute('href', '/auction/auction-2')
 
       const bookLink = screen.getByRole('link', { name: /Old Book/ })
-      expect(bookLink).toHaveAttribute('href', '/auctions/auction-3')
+      expect(bookLink).toHaveAttribute('href', '/auction/auction-3')
     })
   })
 

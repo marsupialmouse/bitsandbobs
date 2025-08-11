@@ -6,16 +6,17 @@ import Loading from '../../../components/Loading.tsx'
 import ErrorMessage from '../../../components/ErrorMessage.tsx'
 import formatTimeRemaining from '../formatTimeRemaining.ts'
 import BidList from './BidList.tsx'
-import { useParams } from 'react-router'
-//import { useSelector } from 'react-redux'
-//import { selectIsAuthenticated } from '../../usercontext/userContextSlice.ts'
+import AddBid from './AddBid.tsx'
+import { Link, useParams } from 'react-router'
+import { useSelector } from 'react-redux'
+import { selectIsAuthenticated } from '../../usercontext/userContextSlice.ts'
 
 export default function Auction() {
   const { id } = useParams() as { id: string }
-  const { data: auction, isLoading, error } = useGetAuctionQuery(id)
+  const { data: auction, isLoading, error, isFetching } = useGetAuctionQuery(id)
   const [cancelAuction, { isLoading: isCancelling }] =
     useCancelAuctionMutation()
-  //const isAuthenticated = useSelector(selectIsAuthenticated)
+  const isAuthenticated = useSelector(selectIsAuthenticated)
 
   const handleCancelAuction = async () => {
     if (
@@ -140,61 +141,81 @@ export default function Auction() {
             )}
           </div>
 
-          {/* Seller Information */}
-          <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <h3 className="text-sm font-medium tracking-wide text-gray-500 uppercase">
-              Seller Information
-            </h3>
-            <div className="mt-2 flex items-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600">
-                <span className="text-sm font-medium text-white">
-                  {auction.sellerDisplayName.charAt(0)}
-                </span>
-              </div>
-              <p className="ml-3 text-lg font-medium text-gray-900">
-                {auction.sellerDisplayName}
-              </p>
-            </div>
-          </div>
-
-          {/* Starting Price and Minimum Bid */}
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Bidding Section */}
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <h3 className="text-sm font-medium tracking-wide text-gray-500 uppercase">
-                Starting Price
+                Ready to bid?
               </h3>
-              <p className="mt-1 text-xl font-semibold text-gray-900">
-                ${auction.initialPrice.toFixed(2)}
-              </p>
+              <div className="mt-1">
+                {!auction.isOpen && (
+                  <p className="mb-3 text-sm text-gray-600">
+                    too late - it&apos;s over!
+                  </p>
+                )}
+                {auction.isOpen && isAuthenticated && auction.isUserSeller && (
+                  <p className="mb-3 text-sm text-gray-600">
+                    You can&apos;t bid on your own auction, you duffer
+                  </p>
+                )}
+                {auction.isOpen && isAuthenticated && !auction.isUserSeller && (
+                  <AddBid
+                    auctionId={auction.id}
+                    minimumBid={auction.minimumBid}
+                    isUserCurrentBidder={auction.isUserCurrentBidder}
+                    isFetching={isFetching}
+                  />
+                )}
+                {auction.isOpen && !isAuthenticated && (
+                  <div>
+                    <p className="mt-2 mb-3 text-sm text-gray-600">
+                      Sign in or create an account to place a bid
+                    </p>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Link
+                        to="/login"
+                        className="flex-1 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-lime-300 hover:text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        to="/register"
+                        className="flex-1 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-lime-300 hover:text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+                      >
+                        Sign Up
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {auction.isOpen && (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <h3 className="text-sm font-medium tracking-wide text-gray-500 uppercase">
-                  Minimum Bid
-                </h3>
-                <p className="mt-1 text-xl font-semibold text-gray-900">
-                  ${auction.minimumBid.toFixed(2)}
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h3 className="text-sm font-medium tracking-wide text-gray-500 uppercase">
+                Seller Information
+              </h3>
+              <div className="mt-2 flex items-center">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600">
+                  <span className="text-sm font-medium text-white">
+                    {auction.sellerDisplayName.charAt(0)}
+                  </span>
+                </div>
+                <p className="ml-3 text-lg font-medium text-gray-900">
+                  {auction.sellerDisplayName}
                 </p>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Bid History */}
           {auction.bids && (
             <div className="mb-6">
-              <BidList bids={auction.bids} />
+              <BidList bids={[...auction.bids].reverse()} />
             </div>
           )}
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 sm:flex-row">
-            {auction.isOpen && !auction.isUserSeller && (
-              <button className="flex-1 rounded-md bg-indigo-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none">
-                Place Bid
-              </button>
-            )}
-
             {auction.isOpen && auction.isUserSeller && (
               <button
                 onClick={() => {
