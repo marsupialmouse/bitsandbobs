@@ -66,6 +66,7 @@ public static class GetAuctionEndpoint
     /// <param name="IsUserBid">Whether the bid belongs to the current user</param>
     /// <param name="IsCurrentBid">Whether this is the current bid</param>
     public sealed record BidDetails(
+        [property: Required] string Id,
         [property: Required] decimal Amount,
         [property: Required] string BidderDisplayName,
         [property: Required] DateTimeOffset BidDate,
@@ -153,6 +154,7 @@ public static class GetAuctionEndpoint
         var isUserBid = bid.BidderId == userId;
 
         return new BidDetails(
+            Id: bid.BidId[4..],
             Amount: bid.Amount > auction.CurrentPrice && !isUserBid ? auction.CurrentPrice : bid.Amount,
             BidderDisplayName: names.Get(bid.BidderId),
             BidDate: bid.BidDate,

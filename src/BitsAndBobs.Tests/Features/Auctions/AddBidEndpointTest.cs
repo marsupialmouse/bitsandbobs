@@ -64,7 +64,7 @@ public class AddBidEndpointTest : AuctionTestBase
         var response = await httpResponse.Content.ReadFromJsonAsync<AddBidEndpoint.AddBidResponse>();
 
         response.ShouldNotBeNull();
-        var bid = await GetBidFromDb(auction.Id, response.Id);
+        var bid = await GetBidFromDb(auction.Id, $"bid#{response.Id}");
         bid.ShouldNotBeNull();
         bid.BidderId.ShouldBe(bidder);
         bid.BidDate.ShouldBe(DateTimeOffset.Now, TimeSpan.FromSeconds(1));
@@ -86,7 +86,7 @@ public class AddBidEndpointTest : AuctionTestBase
         var updatedAuction = await GetAuctionFromDb(auction.Id);
         updatedAuction.ShouldNotBeNull();
         updatedAuction.NumberOfBids.ShouldBe(2);
-        updatedAuction.CurrentBidId.ShouldBe(response!.Id);
+        updatedAuction.CurrentBidId.ShouldBe($"bid#{response!.Id}");
         updatedAuction.CurrentBidderId.ShouldBe(bidder);
         updatedAuction.CurrentPrice.ShouldBe(135m);
     }

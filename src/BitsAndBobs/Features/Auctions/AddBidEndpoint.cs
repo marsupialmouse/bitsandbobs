@@ -46,7 +46,7 @@ public static class AddBidEndpoint
 
             diagnostics.Accepted();
 
-            return TypedResults.Ok(new AddBidResponse(bid.BidId));
+            return TypedResults.Ok(new AddBidResponse(bid.BidId[4..]));
         }
         catch (InvalidAuctionStateException)
         {

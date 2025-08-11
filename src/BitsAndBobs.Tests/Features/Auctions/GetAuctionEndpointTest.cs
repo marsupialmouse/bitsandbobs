@@ -154,7 +154,7 @@ public class GetAuctionEndpointTest : AuctionTestBase
         var bidder2 = await CreateUser(u => u.DisplayName = "Lucky");
         var bidder3 = await CreateUser(u => u.DisplayName = "Lift");
         var auction = await CreateAuction(initialPrice: 100m, bidIncrement: 5m);
-        await AddBidsToAuction(auction, (bidder1.Id, 100m), (bidder2.Id, 105m), (bidder3.Id, 110m), (bidder2.Id, 115m));
+        var addedBids = await AddBidsToAuction(auction, (bidder1.Id, 100m), (bidder2.Id, 105m), (bidder3.Id, 110m), (bidder2.Id, 115m));
 
         var response =
             await HttpClient.GetFromJsonAsync<GetAuctionEndpoint.GetAuctionResponse>(
@@ -166,20 +166,24 @@ public class GetAuctionEndpointTest : AuctionTestBase
         response.Bids.ShouldNotBeNull();
         response.Bids.Count.ShouldBe(4);
         var bids = response.Bids.OrderBy(x => x.Amount).ToList();
-        bids[0].BidderDisplayName.ShouldBe("Let Down");
+        bids[0].Id.ShouldBe(addedBids[0].BidId[4..]);
         bids[0].Amount.ShouldBe(100m);
+        bids[0].BidderDisplayName.ShouldBe("Let Down");
         bids[0].IsCurrentBid.ShouldBeFalse();
         bids[0].IsUserBid.ShouldBeFalse();
-        bids[1].BidderDisplayName.ShouldBe("Lucky");
+        bids[1].Id.ShouldBe(addedBids[1].BidId[4..]);
         bids[1].Amount.ShouldBe(105m);
+        bids[1].BidderDisplayName.ShouldBe("Lucky");
         bids[1].IsCurrentBid.ShouldBeFalse();
         bids[1].IsUserBid.ShouldBeFalse();
-        bids[2].BidderDisplayName.ShouldBe("Lift");
+        bids[2].Id.ShouldBe(addedBids[2].BidId[4..]);
         bids[2].Amount.ShouldBe(110m);
+        bids[2].BidderDisplayName.ShouldBe("Lift");
         bids[2].IsCurrentBid.ShouldBeFalse();
         bids[2].IsUserBid.ShouldBeFalse();
-        bids[3].BidderDisplayName.ShouldBe("Lucky");
+        bids[3].Id.ShouldBe(addedBids[3].BidId[4..]);
         bids[3].Amount.ShouldBe(115m);
+        bids[3].BidderDisplayName.ShouldBe("Lucky");
         bids[3].IsCurrentBid.ShouldBeTrue();
         bids[3].IsUserBid.ShouldBeFalse();
     }

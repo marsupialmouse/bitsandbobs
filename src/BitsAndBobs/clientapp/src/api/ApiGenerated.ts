@@ -166,6 +166,7 @@ export interface GetAuctionResponse {
 }
 
 export interface BidDetails {
+    readonly id: string;
     readonly amount: number;
     readonly bidderDisplayName: string;
     readonly bidDate: Date;
