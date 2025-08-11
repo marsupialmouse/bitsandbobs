@@ -1,5 +1,3 @@
-
-
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -119,6 +117,7 @@ public class AuctionService
             {
                 new() { Put = _dynamoContext.CreateUpdatePut(auction) },
                 new() { Put = _dynamoContext.CreateInsertPut(bid) },
+                new() { Put = _dynamoContext.CreateUpsertPut(new UserAuctionBid(bid)) },
             };
 
             await _dynamo.TransactWriteItemsAsync(new TransactWriteItemsRequest { TransactItems = items });

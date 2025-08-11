@@ -72,6 +72,23 @@ public class AddBidEndpointTest : AuctionTestBase
     }
 
     [Test]
+    public async Task ShouldSaveUserBidToDatabase()
+    {
+        var bidder = SetAuthenticatedClaimsPrincipal();
+        var auction = await CreateAuction(initialPrice: 100m, bidIncrement: 10m);
+        var request = new AddBidEndpoint.AddBidRequest(auction.Id.FriendlyValue, 150m);
+
+        var httpResponse = await HttpClient.PostAsJsonAsync($"/api/auctions/{auction.Id.FriendlyValue}/bids", request);
+        var response = await httpResponse.Content.ReadFromJsonAsync<AddBidEndpoint.AddBidResponse>();
+
+        response.ShouldNotBeNull();
+        var userBid = await GetUserAuctionBid(bidder, auction.Id);
+        userBid.ShouldNotBeNull();
+        userBid.LastBidDate.ShouldBe(DateTimeOffset.Now, TimeSpan.FromSeconds(1));
+        userBid.Amount.ShouldBe(150m);
+    }
+
+    [Test]
     public async Task ShouldSaveUpdatedAuctionToDatabase()
     {
         var bidder = SetAuthenticatedClaimsPrincipal();
@@ -93,4 +110,7 @@ public class AddBidEndpointTest : AuctionTestBase
 
     private static Task<Bid?> GetBidFromDb(AuctionId auctionId, string bidId) =>
         DynamoContext.LoadAsync<Bid>(auctionId.Value, bidId)!;
+
+    private static Task<UserAuctionBid> GetUserAuctionBid(UserId userId, AuctionId auctionId) =>
+        DynamoContext.LoadAsync<UserAuctionBid>(userId.Value, auctionId.Value)!;
 }

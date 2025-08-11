@@ -91,10 +91,20 @@ public static class BitsAndBobsTable
         },
     };
 
+    /// <summary>
+    /// Creates a <see cref="Put"/> object to insert or update a new entity.
+    /// </summary>
+    public static Put CreateUpsertPut<T>(this IDynamoDBContext context, T entity) where T : Item => new()
+    {
+        TableName = FullName,
+        Item = context.ToDocument<Item>(entity).ToAttributeMap(),
+    };
+
     [DynamoDBPolymorphicType("A", typeof(Auction))]
     [DynamoDBPolymorphicType("B", typeof(Bid))]
     [DynamoDBPolymorphicType("E", typeof(EmailMessage))]
     [DynamoDBPolymorphicType("I", typeof(AuctionImage))]
+    [DynamoDBPolymorphicType("L", typeof(UserAuctionBid))]
     [DynamoDBPolymorphicType("U", typeof(User))]
     [DynamoDBTable(Name)]
     public class Item
