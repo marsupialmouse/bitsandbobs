@@ -34,6 +34,10 @@ const auctionsApi = api
         query: () => '/auctions/seller',
         keepUnusedDataFor: 1,
       }),
+      getParticipantAuctions: builder.query<GetUserAuctionsResponse, void>({
+        query: () => '/auctions/participant',
+        keepUnusedDataFor: 1,
+      }),
       uploadImage: builder.mutation<AuctionImageResponse, UploadImageRequest>({
         query: (request) => {
           const formData = new FormData()
@@ -95,6 +99,7 @@ const auctionsApi = api
 export const {
   useGetAuctionQuery,
   useGetAuctionsQuery,
+  useGetParticipantAuctionsQuery,
   useGetSellerAuctionsQuery,
   useUploadImageMutation,
   useCreateAuctionMutation,

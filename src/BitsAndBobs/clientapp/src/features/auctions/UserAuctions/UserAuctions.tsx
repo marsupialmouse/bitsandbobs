@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import { useGetSellerAuctionsQuery } from '../auctionsApiSlice.ts'
+import {
+  useGetParticipantAuctionsQuery,
+  useGetSellerAuctionsQuery,
+} from '../auctionsApiSlice.ts'
 import AuctionList from './AuctionList.tsx'
 
 type TabType = 'seller' | 'won' | 'participating'
@@ -42,9 +45,7 @@ export default function UserAuctions() {
       <div className="mt-4">
         {activeTab === 'seller' && <SellerAuctions />}
         {activeTab === 'won' && <ComingSoon text="Won auctions" />}
-        {activeTab === 'participating' && (
-          <ComingSoon text="Auctions you're participating in" />
-        )}
+        {activeTab === 'participating' && <ParticipantAuctions />}
       </div>
     </div>
   )
@@ -80,6 +81,21 @@ function ComingSoon({ text }: { text: string }) {
       <h3 className="mb-2 text-lg font-medium text-gray-900">Coming Soon</h3>
       <p className="text-gray-500">{text} will be available soon!</p>
     </div>
+  )
+}
+
+function ParticipantAuctions() {
+  const { data, isLoading, isError } = useGetParticipantAuctionsQuery()
+
+  return (
+    <AuctionList
+      auctions={data?.auctions}
+      isLoading={isLoading}
+      isError={isError}
+      emptyMessage="You haven't bid on any auctions yet."
+      errorMessage="Unable to load your auctions. Please try again later."
+      showCreateButton={false}
+    />
   )
 }
 
