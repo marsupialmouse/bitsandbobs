@@ -174,11 +174,6 @@ export interface BidDetails {
     readonly isCurrentBid: boolean;
 }
 
-export interface AuctionId {
-    readonly friendlyValue?: string;
-    readonly value?: string;
-}
-
 export interface AddBidResponse {
     readonly id: string;
 }

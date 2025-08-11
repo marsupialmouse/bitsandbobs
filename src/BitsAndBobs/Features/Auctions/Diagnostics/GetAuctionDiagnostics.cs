@@ -26,7 +26,7 @@ internal readonly struct GetAuctionDiagnostics : IDisposable
     );
 
     private readonly Activity? _activity;
-    private readonly BitsAndBobsDiagnostics.ValueStopwatch _stopwatch;
+    private readonly BitsAndBobsDiagnostics.ValueStopwatch? _stopwatch;
 
     public GetAuctionDiagnostics(AuctionId auctionId)
     {
@@ -37,6 +37,24 @@ internal readonly struct GetAuctionDiagnostics : IDisposable
 
         if (_activity is { IsAllDataRequested: true })
             _activity.SetTag("auction.id", auctionId.Value);
+    }
+
+    private GetAuctionDiagnostics(string auctionId)
+    {
+        _activity = BitsAndBobsDiagnostics.ActivitySource.StartActivity();
+
+        TotalRequestCount.Add(1);
+
+        if (_activity is { IsAllDataRequested: true })
+            _activity.SetTag("auction.id", auctionId);
+    }
+
+    public static void InvalidId(string id)
+    {
+        using var diagnostics = new GetAuctionDiagnostics(id);
+
+        diagnostics._activity?.AddEvent(new ActivityEvent("auction.invalid_id"));
+        diagnostics.Failed();
     }
 
     public void Succeeded()
@@ -62,7 +80,9 @@ internal readonly struct GetAuctionDiagnostics : IDisposable
 
     public void Dispose()
     {
-        TotalDuration.Record(_stopwatch.Elapsed.TotalSeconds);
+        if (_stopwatch.HasValue)
+            TotalDuration.Record(_stopwatch.Value.Elapsed.TotalSeconds);
+
         _activity?.Dispose();
     }
 }

@@ -1,6 +1,6 @@
     [global::System.ComponentModel.TypeConverter(typeof(PLACEHOLDERIDTypeConverter))]
     [global::System.Text.Json.Serialization.JsonConverter(typeof(PLACEHOLDERIDSystemTextJsonConverter))]
-    [global::Newtonsoft.Json.JsonConverter(typeof(PLACEHOLDERIDNewtonsoftJsonConverter))]   
+    [global::Newtonsoft.Json.JsonConverter(typeof(PLACEHOLDERIDNewtonsoftJsonConverter))]
     partial struct PLACEHOLDERID :
         global::System.ISpanFormattable,
         global::System.IParsable<PLACEHOLDERID>, global::System.ISpanParsable<PLACEHOLDERID>,
@@ -133,14 +133,8 @@
             return new PLACEHOLDERID($"{Prefix}{input}");
         }
 
-        /// <inheritdoc cref="global::System.IParsable{TSelf}"/>
-        public static PLACEHOLDERID Parse(string input, global::System.IFormatProvider? provider)
-            => Parse(input);
-
-        /// <inheritdoc cref="global::System.IParsable{TSelf}"/>
         public static bool TryParse(
             [global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)] string? input,
-            global::System.IFormatProvider? provider,
             out PLACEHOLDERID result)
         {
             if (string.IsNullOrEmpty(input))
@@ -170,6 +164,17 @@
             result = new PLACEHOLDERID($"{Prefix}{input}");
             return true;
         }
+
+        /// <inheritdoc cref="global::System.IParsable{TSelf}"/>
+        public static PLACEHOLDERID Parse(string input, global::System.IFormatProvider? provider)
+            => Parse(input);
+
+        /// <inheritdoc cref="global::System.IParsable{TSelf}"/>
+        public static bool TryParse(
+            [global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)] string? input,
+            global::System.IFormatProvider? provider,
+            out PLACEHOLDERID result) => TryParse(input, out result);
+
 
         /// <inheritdoc cref="global::System.IFormattable"/>
         public string ToString(string? format, global::System.IFormatProvider? formatProvider)

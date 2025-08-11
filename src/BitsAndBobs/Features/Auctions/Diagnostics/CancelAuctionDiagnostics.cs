@@ -41,6 +41,24 @@ internal readonly struct CancelAuctionDiagnostics : IDisposable
         }
     }
 
+    private CancelAuctionDiagnostics(string auctionId)
+    {
+        _activity = BitsAndBobsDiagnostics.ActivitySource.StartActivity();
+
+        TotalRequestCount.Add(1);
+
+        if (_activity is { IsAllDataRequested: true })
+            _activity.SetTag("auction.id", auctionId);
+    }
+
+    public static void InvalidId(string id)
+    {
+        using var diagnostics = new CancelAuctionDiagnostics(id);
+
+        diagnostics._activity?.AddEvent(new ActivityEvent("auction.invalid_id"));
+        diagnostics.Failed();
+    }
+
     public void Cancelled()
     {
         TotalCancelledCount.Add(1);

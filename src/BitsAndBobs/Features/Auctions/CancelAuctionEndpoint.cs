@@ -16,18 +16,24 @@ public class CancelAuctionEndpoint
     );
 
     public static async Task<Results<Ok, ProblemHttpResult, NotFound>> CancelAuction(
-        AuctionId auctionId,
+        string auctionId,
         ClaimsPrincipal claimsPrincipal,
         [FromServices] AuctionService auctionService
     )
     {
+        if (!AuctionId.TryParse(auctionId, out var id))
+        {
+            CancelAuctionDiagnostics.InvalidId(auctionId);
+            return TypedResults.NotFound();
+        }
+
         var userId = claimsPrincipal.GetUserId();
 
-        using var diagnostics = new CancelAuctionDiagnostics(auctionId, userId);
+        using var diagnostics = new CancelAuctionDiagnostics(id, userId);
 
         try
         {
-            var auction = await auctionService.GetAuction(auctionId);
+            var auction = await auctionService.GetAuction(id);
 
             if (auction is null)
             {

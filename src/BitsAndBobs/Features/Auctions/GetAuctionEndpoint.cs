@@ -75,18 +75,24 @@ public static class GetAuctionEndpoint
     );
 
     public static async Task<Results<Ok<GetAuctionResponse>, NotFound>> GetAuction(
-        AuctionId id,
+        string id,
         ClaimsPrincipal claimsPrincipal,
         [FromServices] AuctionService auctionService,
         [FromServices] UserStore userStore,
         [FromServices] IOptions<AwsResourceOptions> options
     )
     {
-        using var diagnostics = new GetAuctionDiagnostics(id);
+        if (!AuctionId.TryParse(id, out var auctionId))
+        {
+            GetAuctionDiagnostics.InvalidId(id);
+            return TypedResults.NotFound();
+        }
+
+        using var diagnostics = new GetAuctionDiagnostics(auctionId);
 
         try
         {
-            var auction = await auctionService.GetAuctionWithBids(id);
+            var auction = await auctionService.GetAuctionWithBids(auctionId);
 
             if (auction is null)
             {
