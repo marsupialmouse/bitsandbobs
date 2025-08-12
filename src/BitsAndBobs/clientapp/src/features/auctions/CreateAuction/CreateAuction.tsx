@@ -64,10 +64,10 @@ export default function CreateAuction() {
     }
 
     const totalMinutes = data.days * 24 * 60 + data.hours * 60 + data.minutes
-    if (totalMinutes < 10 || totalMinutes > 2 * 24 * 60) {
+    if (totalMinutes < 10 || totalMinutes > 5 * 24 * 60) {
       setError('root.period', {
         message:
-          'Auction period must be at least 10 minutes and no more than 2 days',
+          'Auction period must be at least 10 minutes and no more than 5 days',
       })
       return
     }
@@ -235,7 +235,7 @@ export default function CreateAuction() {
                 {...registerField('days', {
                   valueAsNumber: true,
                   min: { value: 0, message: 'Days cannot be negative' },
-                  max: { value: 2, message: 'Maximum 2 days' },
+                  max: { value: 5, message: 'Maximum 5 days' },
                 })}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
               />
@@ -278,7 +278,7 @@ export default function CreateAuction() {
             </div>
           </div>
           <p className="mt-1 text-xs text-gray-500">
-            Minimum 10 minutes, maximum 2 days
+            Minimum 10 minutes, maximum 5 days
           </p>
           {errors.root?.period && (
             <p className="mt-1 text-sm text-red-600">

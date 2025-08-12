@@ -100,7 +100,7 @@ public class CreateAuctionEndpointTest : AuctionTestBase
     public async Task ShouldReturnValidationProblemForEndDateTooFuturistic()
     {
         await CreateAuthenticatedUser();
-        var request = CreateValidRequest() with { Period = TimeSpan.FromDays(2) };
+        var request = CreateValidRequest() with { Period = TimeSpan.FromDays(5).Add(TimeSpan.FromSeconds(1)) };
 
         var response = await HttpClient.PostAsJsonAsync("/api/auctions", request);
 
@@ -143,6 +143,19 @@ public class CreateAuctionEndpointTest : AuctionTestBase
         httpResponse.IsSuccessStatusCode.ShouldBeTrue();
         response.ShouldNotBeNull();
         response.Id.ShouldNotBeNullOrEmpty();
+    }
+
+    [TestCase(10)]
+    [TestCase(60 * 24 * 5)]
+    public async Task ShouldCreateAuctionsWithinTimeLimits(int minutes)
+    {
+        var user = await CreateAuthenticatedUser();
+        var image = await CreateTestImage(user.Id);
+        var request = CreateValidRequest(image) with { Period = TimeSpan.FromMinutes(minutes) };
+
+        var httpResponse = await HttpClient.PostAsJsonAsync("/api/auctions", request);
+
+        httpResponse.IsSuccessStatusCode.ShouldBeTrue();
     }
 
     [Test]

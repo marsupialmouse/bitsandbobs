@@ -138,7 +138,7 @@ describe('CreateAuction Component', () => {
 
     expect(
       screen.getByText(
-        'Auction period must be at least 10 minutes and no more than 2 days'
+        'Auction period must be at least 10 minutes and no more than 5 days'
       )
     ).toBeInTheDocument()
   })
@@ -148,14 +148,14 @@ describe('CreateAuction Component', () => {
     await fillFormWithValidData()
 
     await userEvent.clear(screen.getByLabelText('Days'))
-    await userEvent.type(screen.getByLabelText('Days'), '2')
+    await userEvent.type(screen.getByLabelText('Days'), '5')
 
     const submitButton = screen.getByRole('button', { name: 'Create Auction' })
     await userEvent.click(submitButton)
 
     expect(
       screen.getByText(
-        'Auction period must be at least 10 minutes and no more than 2 days'
+        'Auction period must be at least 10 minutes and no more than 5 days'
       )
     ).toBeInTheDocument()
   })

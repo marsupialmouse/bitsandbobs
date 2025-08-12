@@ -121,8 +121,8 @@ public static class CreateAuctionEndpoint
 
             RuleFor(x => x.Period)
                 .GreaterThanOrEqualTo(TimeSpan.FromMinutes(10))
-                .LessThanOrEqualTo(TimeSpan.FromDays(2))
-                .WithMessage("Auction period must be at least 10 minutes and no more than 2 days");
+                .LessThanOrEqualTo(TimeSpan.FromDays(5))
+                .WithMessage("Auction period must be at least 10 minutes and no more than 5 days");
         }
     }
 }
