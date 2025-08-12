@@ -47,6 +47,7 @@
     <File Path="..\.github\workflows\cleanup.yml" />
   </Folder>
   <Project Path="BitsAndBobs.AppHost/BitsAndBobs.AppHost.csproj" />
+  <Project Path="BitsAndBobs.Contracts\BitsAndBobs.Contracts.csproj" Type="Classic C#" />
   <Project Path="BitsAndBobs.ServiceDefaults/BitsAndBobs.ServiceDefaults.csproj" />
   <Project Path="BitsAndBobs.Tests/BitsAndBobs.Tests.csproj" />
   <Project Path="BitsAndBobs/BitsAndBobs.csproj" />
