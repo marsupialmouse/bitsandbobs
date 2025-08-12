@@ -5,6 +5,7 @@ using Amazon.DynamoDBv2.Model;
 using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
+using BitsAndBobs.Infrastructure.DynamoDb;
 
 namespace BitsAndBobs.Features;
 
@@ -168,5 +169,13 @@ public static class BitsAndBobsTable
             InitialVersion = Version;
             Version = Guid.NewGuid().ToString("n");
         }
+    }
+
+
+    public class LockClient(IAmazonDynamoDB dynamo, ILogger<DynamoDbLockClient> logger) : DynamoDbLockClient(dynamo, logger)
+    {
+        protected override string HashKeyName => "PK";
+        protected override string RangeKeyName => "SK";
+        protected override string TableName => FullName;
     }
 }

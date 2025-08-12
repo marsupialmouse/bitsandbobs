@@ -110,6 +110,7 @@ public class Program
         builder.Services.AddTransient<IEmailSender<User>, EmailStore>();
         builder.Services.AddTransient<IEmailStore, EmailStore>();
         builder.Services.AddTransient<AuctionService>();
+        builder.Services.AddTransient<IDistributedLockClient, BitsAndBobsTable.LockClient>();
 
         builder.Services.AddMvc();
         builder.Services.AddOpenApi();
