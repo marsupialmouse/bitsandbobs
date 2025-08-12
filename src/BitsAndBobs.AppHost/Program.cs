@@ -21,9 +21,15 @@ var api = builder
           .WithReference(s3Stack)
           .WithExternalHttpEndpoints();
 
-builder
+var ui = builder
     .AddViteApp("ui", "../BitsAndBobs/clientapp", packageManager: "yarn")
     .WithReference(api)
     .WaitFor(api);
+
+// Do silly stuff to keep the UI port consistent
+var uiEndpointAnnotation = ui.Resource.Annotations.OfType<EndpointAnnotation>().FirstOrDefault();
+
+if (uiEndpointAnnotation != null)
+    uiEndpointAnnotation.Port = 61163;
 
 builder.Build().Run();
