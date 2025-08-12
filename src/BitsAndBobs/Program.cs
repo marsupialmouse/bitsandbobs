@@ -36,6 +36,11 @@ public class Program
 
         builder.AddServiceDefaults();
 
+        builder
+            .Services.AddOpenTelemetry()
+            .WithMetrics(metrics => metrics.AddMeter(BitsAndBobsDiagnostics.Meter.Name))
+            .WithTracing(tracing => tracing.AddSource(BitsAndBobsDiagnostics.ActivitySource.Name));
+
         if (builder.Environment.EnvironmentName != "Test")
         {
             builder
