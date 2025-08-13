@@ -5,6 +5,8 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.S3;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
+using MassTransit;
+using MassTransit.Testing;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -16,6 +18,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
@@ -32,7 +35,7 @@ public abstract class TestBase
     protected sealed class ApplicationFactory : WebApplicationFactory<Program>
     {
         /// <summary>
-        /// Allows tests to hook into service configuration process. This is typically used to register mock implementations in tests.
+        /// Allows tests to hook into the service configuration process. This is typically used to register mock implementations in tests.
         /// </summary>
         public event Action<IServiceCollection>? ConfiguringServices;
 
@@ -40,6 +43,11 @@ public abstract class TestBase
         /// Allows tests to hook into the application configuration process. This is typically used to register middleware or configure the app.
         /// </summary>
         public event Action<WebApplication>? ConfiguringApp;
+
+        /// <summary>
+        /// Allows tests to alter the configuration of the message bus (e.g. add consumers)
+        /// </summary>
+        public Action<IBusRegistrationConfigurator>? ConfigureMessaging;
 
         /// <summary>
         /// Environment variables to set for the application. This is useful for overriding settings.
@@ -55,7 +63,7 @@ public abstract class TestBase
         public IAmazonS3 S3Client { get;  } = Substitute.For<IAmazonS3>();
 
         /// <summary>
-        /// Allows tests to require anti forgery tokens for requests using non-safe HTTP methods. To simplify testing, the default is <c>false</c>.
+        /// Allows tests to require anti-forgery tokens for requests using non-safe HTTP methods. To simplify testing, the default is <c>false</c>.
         /// </summary>
         public bool ValidateAntiForgeryTokens { get; set; }
 
@@ -78,6 +86,8 @@ public abstract class TestBase
             builder.ConfigureTestServices(services =>
             {
                 services.AddDataProtection().UseEphemeralDataProtectionProvider();
+
+                services.AddMassTransitTestHarness(ConfigureMessaging);
 
                 services
                     .AddAuthentication("Test")
@@ -113,6 +123,7 @@ public abstract class TestBase
     }
 
     private Lazy<HttpClient> _httpClient = null!;
+    private Lazy<ITestHarness> _messagingHarness = null!;
 
     /// <summary>
     /// Settings for <see cref="HttpClient"/>. This property allows tests to control how the HttpClient works. For example, you may wish to
@@ -125,6 +136,7 @@ public abstract class TestBase
 
     protected ApplicationFactory AppFactory { get; private set; } = null!;
     protected HttpClient HttpClient => _httpClient.Value;
+    protected ITestHarness Messaging => _messagingHarness.Value;
 
     protected static IAmazonDynamoDB DynamoClient => Testing.Dynamo.Client;
     protected static IDynamoDBContext DynamoContext => Testing.Dynamo.Context;
@@ -136,6 +148,7 @@ public abstract class TestBase
     {
         AppFactory = new ApplicationFactory();
         _httpClient = new Lazy<HttpClient>(() => AppFactory.CreateClient(HttpClientOptions));
+        _messagingHarness = new Lazy<ITestHarness>(() => AppFactory.Services.GetRequiredService<ITestHarness>());
     }
 
     [TearDown]
@@ -147,7 +160,13 @@ public abstract class TestBase
     }
 
     /// <summary>
-    /// Creates a valid user and saves it to the DB .
+    /// Alter the configuration of the message bus (e.g. add consumers)
+    /// </summary>
+    protected void ConfigureMessaging(Action<IBusRegistrationConfigurator> configure) =>
+        AppFactory.ConfigureMessaging = configure;
+
+    /// <summary>
+    /// Creates a valid user and saves it to the DB.
     /// </summary>
     /// <param name="configure">An optional delegate for updating the user before saving</param>
     /// <returns></returns>

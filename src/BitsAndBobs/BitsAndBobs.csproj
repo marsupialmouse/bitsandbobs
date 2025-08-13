@@ -49,6 +49,8 @@
         <PackageReference Include="AWSSDK.S3" Version="4.0.6.4" />
         <PackageReference Include="FluentValidation" Version="12.0.0" />
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
+        <PackageReference Include="MassTransit" Version="8.5.2" />
+        <PackageReference Include="MassTransit.AmazonSQS" Version="8.5.2" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
         <PackageReference Include="NSwag.AspNetCore" Version="14.5.0" />
         <PackageReference Include="NSwag.CodeGeneration.TypeScript" Version="14.5.0" />
@@ -64,14 +66,14 @@
     <ItemGroup>
       <ProjectReference Include="..\BitsAndBobs.ServiceDefaults\BitsAndBobs.ServiceDefaults.csproj" />
     </ItemGroup>
+  
+    <ItemGroup>
+      <AdditionalFiles Include="Infrastructure/DynamoDb/dynamodb-itemid.typedid" />
+    </ItemGroup>
 
     <PropertyGroup>
       <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     </PropertyGroup>
-
-    <ItemGroup>
-      <AdditionalFiles Include="Infrastructure/DynamoDb/dynamodb-itemid.typedid" />
-    </ItemGroup>
   
     <ItemGroup>
       <ApiFiles Include="**/*.cs" Exclude="clientapp/**;obj/**;bin**" />

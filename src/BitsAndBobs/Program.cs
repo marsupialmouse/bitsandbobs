@@ -12,6 +12,8 @@ using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.AntiForgery;
 using BitsAndBobs.Infrastructure.DynamoDb;
 using FluentValidation;
+using MassTransit;
+using MassTransit.AmazonSqsTransport.Configuration;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
@@ -77,6 +79,19 @@ public class Program
                               .Build();
                 context.RegisterTableDefinition(services.GetRequiredKeyedService<Table>(BitsAndBobsTable.Name));
                 return context;
+            }
+        );
+
+        builder.Services.AddMassTransit(x =>
+            {
+                x.AddInMemoryInboxOutbox();
+                x.DisableUsageTelemetry();
+                x.UsingAmazonSqs((context, config) =>
+                    {
+                        config.Host("", c => c.Scope(builder.Environment.EnvironmentName));
+                        config.ConfigureEndpoints(context);
+                    }
+                );
             }
         );
 
