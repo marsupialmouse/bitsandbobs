@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using BitsAndBobs.Contracts;
 using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Identity;
 using Shouldly;
@@ -106,6 +107,39 @@ public class AddBidEndpointTest : AuctionTestBase
         updatedAuction.CurrentBidId.ShouldBe($"bid#{response!.Id}");
         updatedAuction.CurrentBidderId.ShouldBe(bidder);
         updatedAuction.CurrentPrice.ShouldBe(135m);
+    }
+
+    [Test]
+    public async Task ShouldPublishEventWhenBidAccepted()
+    {
+        var userId = SetAuthenticatedClaimsPrincipal();
+        var auction = await CreateAuction(initialPrice: 100m);
+        var request = new AddBidEndpoint.AddBidRequest(auction.Id.FriendlyValue, 150m);
+
+        var httpResponse = await HttpClient.PostAsJsonAsync($"/api/auctions/{auction.Id.FriendlyValue}/bids", request);
+        var response = await httpResponse.Content.ReadFromJsonAsync<AddBidEndpoint.AddBidResponse>();
+
+        response.ShouldNotBeNull();
+        (await Messaging.Published.Any<BidAccepted>(x =>
+             {
+                 var message = x.Context.Message;
+                 return message.BidId == $"bid#{response.Id}"
+                        && message.AuctionId == auction.Id.Value
+                        && message.UserId == userId.Value;
+             }
+         )).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ShouldNotPublishEventWhenBidNotAccepted()
+    {
+        SetAuthenticatedClaimsPrincipal();
+        var auction = await CreateAuction(initialPrice: 100m);
+        var request = new AddBidEndpoint.AddBidRequest(auction.Id.FriendlyValue, 50m);
+
+        await HttpClient.PostAsJsonAsync($"/api/auctions/{request.AuctionId}/bids", request);
+
+        (await Messaging.Published.Any<BidAccepted>()).ShouldBeFalse();
     }
 
     private static Task<Bid?> GetBidFromDb(AuctionId auctionId, string bidId) =>

@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using BitsAndBobs.Contracts;
 using BitsAndBobs.Features;
 using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Identity;
@@ -237,6 +238,23 @@ public class CreateAuctionEndpointTest : AuctionTestBase
 
         var auction = await GetAuctionFromDb(response!.Id);
         auction!.SellerDisplayName.ShouldBe(user.DisplayName);
+    }
+
+    [Test]
+    public async Task ShouldPublishEventWhenAuctionCreated()
+    {
+        var user = await CreateAuthenticatedUser();
+        var image = await CreateTestImage(user.Id);
+        var request = CreateValidRequest(image);
+
+        var httpResponse = await HttpClient.PostAsJsonAsync("/api/auctions", request);
+        var response = await httpResponse.Content.ReadFromJsonAsync<CreateAuctionEndpoint.CreateAuctionResponse>();
+
+        httpResponse.IsSuccessStatusCode.ShouldBeTrue();
+        response.ShouldNotBeNull();
+        response.Id.ShouldNotBeNullOrEmpty();
+        var id = AuctionId.Parse(response.Id).Value;
+        (await Messaging.Published.Any<AuctionCreated>(x => x.Context.Message.AuctionId == id)).ShouldBeTrue();
     }
 
     private static CreateAuctionEndpoint.CreateAuctionRequest CreateValidRequest(AuctionImage? image = null) =>

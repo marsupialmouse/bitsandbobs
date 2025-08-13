@@ -1,3 +1,4 @@
+using BitsAndBobs.Contracts;
 using BitsAndBobs.Features.Auctions;
 using Shouldly;
 
@@ -106,5 +107,27 @@ public class CancelAuctionEndpointTest : AuctionTestBase
         updatedAuction.CancelledDate.ShouldNotBeNull();
         updatedAuction.CancelledDate.Value.ShouldBe(DateTimeOffset.Now, TimeSpan.FromSeconds(1));
         updatedAuction.IsOpen.ShouldBe(false);
+    }
+
+    [Test]
+    public async Task ShouldPublishEventWhenAuctionCancelled()
+    {
+        var seller = await CreateAuthenticatedUser();
+        var auction = await CreateAuction(seller: seller);
+
+        await HttpClient.PostAsync($"/api/auctions/{auction.Id.FriendlyValue}/cancel", null);
+
+        (await Messaging.Published.Any<AuctionCancelled>(x => x.Context.Message.AuctionId == auction.Id.Value)).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ShouldNotPublishEventWhenAuctionNotCancelled()
+    {
+        var seller = await CreateAuthenticatedUser();
+        var auction = await CreateAuction(seller: seller, endDate: DateTimeOffset.Now.AddHours(-2));
+
+        await HttpClient.PostAsync($"/api/auctions/{auction.Id.FriendlyValue}/cancel", null);
+
+        (await Messaging.Published.Any<AuctionCancelled>()).ShouldBeFalse();
     }
 }

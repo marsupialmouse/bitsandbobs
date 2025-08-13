@@ -2,8 +2,11 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
+using BitsAndBobs.Contracts;
 using BitsAndBobs.Features.Identity;
+using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.DynamoDb;
+using MassTransit;
 
 namespace BitsAndBobs.Features.Auctions;
 
@@ -12,11 +15,13 @@ public class AuctionService
 {
     private readonly IAmazonDynamoDB _dynamo;
     private readonly IDynamoDBContext _dynamoContext;
+    private readonly RecklessPublishEndpoint _publishEndpoint;
 
-    public AuctionService(IAmazonDynamoDB dynamo, IDynamoDBContext dynamoContext)
+    public AuctionService(IAmazonDynamoDB dynamo, IDynamoDBContext dynamoContext, RecklessPublishEndpoint publishEndpoint)
     {
         _dynamo = dynamo;
         _dynamoContext = dynamoContext;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Auction> CreateAuction(
@@ -45,6 +50,7 @@ public class AuctionService
             };
 
             await _dynamo.TransactWriteItemsAsync(new TransactWriteItemsRequest { TransactItems = items });
+            await _publishEndpoint.PublishRecklessly(new AuctionCreated(auction.Id.Value));
 
             return auction;
         }
@@ -121,6 +127,9 @@ public class AuctionService
             };
 
             await _dynamo.TransactWriteItemsAsync(new TransactWriteItemsRequest { TransactItems = items });
+            await _publishEndpoint.PublishRecklessly(
+                new BidAccepted(BidId: bid.BidId, AuctionId: auction.Id.Value, UserId: userId.Value)
+            );
 
             return bid;
         }
@@ -146,6 +155,7 @@ public class AuctionService
 
             // Use TransactWriteItems so we can add the Put conditions (see above)
             await _dynamo.TransactWriteItemsAsync(new TransactWriteItemsRequest { TransactItems = items });
+            await _publishEndpoint.PublishRecklessly(new AuctionCancelled(auction.Id.Value));
         }
         catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
         {

@@ -1,3 +1,3 @@
 namespace BitsAndBobs.Contracts;
 
-public sealed record BidAccepted(string AuctionId, string BidId);
+public sealed record BidAccepted(string BidId, string AuctionId, string UserId);

@@ -64,6 +64,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\BitsAndBobs.Contracts\BitsAndBobs.Contracts.csproj" />
       <ProjectReference Include="..\BitsAndBobs.ServiceDefaults\BitsAndBobs.ServiceDefaults.csproj" />
     </ItemGroup>
   
