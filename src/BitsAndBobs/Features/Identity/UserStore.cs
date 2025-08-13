@@ -47,6 +47,10 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
         {
             return IdentityResult.Failed(new IdentityError { Code = "DuplicateUser", Description = "User already exists" });
         }
+        catch (ConditionalCheckFailedException)
+        {
+            return IdentityResult.Failed(new IdentityError { Code = "DuplicateUser", Description = "User already exists" });
+        }
     }
 
     public async Task<IdentityResult> UpdateAsync(User user, CancellationToken cancellationToken)
@@ -92,6 +96,16 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
                 }
             );
         }
+        catch (ConditionalCheckFailedException)
+        {
+            return IdentityResult.Failed(
+                new IdentityError
+                {
+                    Code = "ConcurrencyFailure",
+                    Description = "Optimistic concurrency failure, object has been modified.",
+                }
+            );
+        }
     }
 
     public async Task<IdentityResult> DeleteAsync(User user, CancellationToken cancellationToken)
@@ -126,6 +140,16 @@ public class UserStore : IUserEmailStore<User>, IUserPasswordStore<User>, IUserS
             return IdentityResult.Success;
         }
         catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        {
+            return IdentityResult.Failed(
+                new IdentityError
+                {
+                    Code = "ConcurrencyFailure",
+                    Description = "Optimistic concurrency failure, object has been modified.",
+                }
+            );
+        }
+        catch (ConditionalCheckFailedException)
         {
             return IdentityResult.Failed(
                 new IdentityError

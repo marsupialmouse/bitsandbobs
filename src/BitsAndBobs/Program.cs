@@ -13,7 +13,6 @@ using BitsAndBobs.Infrastructure.AntiForgery;
 using BitsAndBobs.Infrastructure.DynamoDb;
 using FluentValidation;
 using MassTransit;
-using MassTransit.AmazonSqsTransport.Configuration;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
@@ -49,6 +48,8 @@ public class Program
                 .Services.AddDataProtection()
                 .SetApplicationName("BitsAndBobs")
                 .PersistKeysToAWSSystemsManager($"/BitsAndBobs/{builder.Environment.EnvironmentName}/DataProtection");
+
+            builder.Services.AddHostedService<CompleteAuctionsService>();
         }
 
         builder

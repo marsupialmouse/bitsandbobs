@@ -41,6 +41,10 @@ public abstract partial class DynamoDbLockClient(IAmazonDynamoDB dynamo, ILogger
         {
             return null;
         }
+        catch (ConditionalCheckFailedException)
+        {
+            return null;
+        }
         catch (Exception e)
         {
             Log.ErrorAcquiringLock(logger, name, e);
@@ -55,6 +59,10 @@ public abstract partial class DynamoDbLockClient(IAmazonDynamoDB dynamo, ILogger
             await dynamo.DeleteItemAsync(CreateLockDeleteRequest(name));
         }
         catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        {
+            // The lock has already expired and been gobbled up by some other wretched creature
+        }
+        catch (ConditionalCheckFailedException)
         {
             // The lock has already expired and been gobbled up by some other wretched creature
         }

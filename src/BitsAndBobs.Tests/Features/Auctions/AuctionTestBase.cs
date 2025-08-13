@@ -1,3 +1,4 @@
+using Amazon.DynamoDBv2.Model;
 using BitsAndBobs.Features;
 using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Identity;
@@ -8,6 +9,9 @@ public class AuctionTestBase : TestBase
 {
     protected static Task<Auction?> GetAuctionFromDb(string id) =>
         GetAuctionFromDb(AuctionId.Parse(id));
+
+    protected static Task<Auction?> GetAuctionFromDb(Auction auction) =>
+        GetAuctionFromDb(auction.Id);
 
     protected static Task<Auction?> GetAuctionFromDb(AuctionId id) =>
         DynamoContext.LoadAsync<Auction>(id.Value, Auction.SortKey)!;
@@ -49,5 +53,37 @@ public class AuctionTestBase : TestBase
         await Task.WhenAll(addedBids.Select(bid => DynamoContext.SaveItem(bid)));
 
         return addedBids;
+    }
+
+    protected Task UpdateStatus(Auction auction, AuctionStatus status, DateTimeOffset endDate) =>
+        UpdateStatus((auction, status, endDate));
+
+    protected Task UpdateStatus(params (Auction auction, AuctionStatus status, DateTimeOffset endDate)[] auctions)
+    {
+        return Testing.DynamoClient.TransactWriteItemsAsync(
+            new TransactWriteItemsRequest
+            {
+                TransactItems = auctions.Select(x => UpdateItem(x.auction, x.status, x.endDate)).ToList()
+            }
+        );
+
+        static TransactWriteItem UpdateItem(Auction a, AuctionStatus s, DateTimeOffset d) => new()
+        {
+            Update = new Update
+            {
+                TableName = BitsAndBobsTable.FullName,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "PK", new AttributeValue(a.Id.Value) },
+                    { "SK", new AttributeValue(Auction.SortKey) },
+                },
+                UpdateExpression = "SET AuctionStatus = :status, EndDate = :endDate",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":status", new AttributeValue { N = ((int)s).ToString() } },
+                    { ":endDate", new AttributeValue(d.ToString("O")) },
+                },
+            }
+        };
     }
 }

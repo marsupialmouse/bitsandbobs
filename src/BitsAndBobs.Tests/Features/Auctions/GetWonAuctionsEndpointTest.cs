@@ -135,36 +135,4 @@ public class GetWonAuctionsEndpointTest : AuctionTestBase
         auctionResponse.IsCancelled.ShouldBeFalse();
         auctionResponse.IsUserCurrentBidder.ShouldBeTrue();
     }
-
-    private static Task UpdateStatus(Auction auction, AuctionStatus status, DateTimeOffset endDate) =>
-        UpdateStatus((auction, status, endDate));
-
-    private static Task UpdateStatus(params (Auction auction, AuctionStatus status, DateTimeOffset endDate)[] auctions)
-    {
-        return Testing.DynamoClient.TransactWriteItemsAsync(
-            new TransactWriteItemsRequest
-            {
-                TransactItems = auctions.Select(x => UpdateItem(x.auction, x.status, x.endDate)).ToList()
-            }
-        );
-
-        static TransactWriteItem UpdateItem(Auction a, AuctionStatus s, DateTimeOffset d) => new()
-        {
-            Update = new Update
-            {
-                TableName = BitsAndBobsTable.FullName,
-                Key = new Dictionary<string, AttributeValue>
-                {
-                    { "PK", new AttributeValue(a.Id.Value) },
-                    { "SK", new AttributeValue(Auction.SortKey) },
-                },
-                UpdateExpression = "SET AuctionStatus = :status, EndDate = :endDate",
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    { ":status", new AttributeValue { N = ((int)s).ToString() } },
-                    { ":endDate", new AttributeValue(d.ToString("O")) },
-                },
-            }
-        };
-    }
 }

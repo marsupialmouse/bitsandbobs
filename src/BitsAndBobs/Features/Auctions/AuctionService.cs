@@ -6,7 +6,6 @@ using BitsAndBobs.Contracts;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Infrastructure;
 using BitsAndBobs.Infrastructure.DynamoDb;
-using MassTransit;
 
 namespace BitsAndBobs.Features.Auctions;
 
@@ -55,6 +54,10 @@ public class AuctionService
             return auction;
         }
         catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        {
+            throw new DynamoDbConcurrencyException();
+        }
+        catch (ConditionalCheckFailedException)
         {
             throw new DynamoDbConcurrencyException();
         }
@@ -111,6 +114,22 @@ public class AuctionService
     }
 
     /// <summary>
+    /// Gets all active auctions
+    /// </summary>
+    /// <returns></returns>
+    public async Task<IEnumerable<Auction>> GetAuctionsForCompletion()
+    {
+        var search = _dynamoContext.QueryAsync<Auction>(
+            AuctionStatus.Open,
+            QueryOperator.LessThan,
+            [DateTimeOffset.Now.UtcTicks],
+            new QueryConfig { IndexName = "AuctionsByStatus" }
+        );
+
+        return await search.GetRemainingAsync();
+    }
+
+    /// <summary>
     /// Adds a bid to an auction and saves the updated values.
     /// </summary>
     public async Task<Bid> AddBid(Auction auction, UserId userId, decimal amount)
@@ -137,6 +156,10 @@ public class AuctionService
         {
             throw new DynamoDbConcurrencyException();
         }
+        catch (ConditionalCheckFailedException)
+        {
+            throw new DynamoDbConcurrencyException();
+        }
     }
 
     public async Task CancelAuction(Auction auction, UserId userId)
@@ -158,6 +181,35 @@ public class AuctionService
             await _publishEndpoint.PublishRecklessly(new AuctionCancelled(auction.Id.Value));
         }
         catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        {
+            throw new DynamoDbConcurrencyException();
+        }
+        catch (ConditionalCheckFailedException)
+        {
+            throw new DynamoDbConcurrencyException();
+        }
+    }
+
+    public async Task CompleteAuction(Auction auction)
+    {
+        auction.Complete();
+
+        try
+        {
+            var items = new List<TransactWriteItem>
+            {
+                new() { Put = _dynamoContext.CreateUpdatePut(auction) },
+            };
+
+            // Use TransactWriteItems so we can add the Put conditions (see above)
+            await _dynamo.TransactWriteItemsAsync(new TransactWriteItemsRequest { TransactItems = items });
+            await _publishEndpoint.PublishRecklessly(new AuctionCompleted(auction.Id.Value));
+        }
+        catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        {
+            throw new DynamoDbConcurrencyException();
+        }
+        catch (ConditionalCheckFailedException)
         {
             throw new DynamoDbConcurrencyException();
         }
