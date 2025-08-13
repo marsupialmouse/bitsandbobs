@@ -31,13 +31,19 @@ public class CompleteAuctionsServiceTest : AuctionTestBase
     {
         var endedAuction1 = await CreateAuction(endDate: DateTimeOffset.Now.AddHours(-1));
         var endedAuction2 = await CreateAuction(endDate: DateTimeOffset.Now.AddMinutes(-1));
-        await CreateAuction(endDate: DateTimeOffset.Now.AddMinutes(10));  // Open
-        await CreateAuction(endDate: DateTimeOffset.Now.AddMinutes(-25), configure: a => a.Complete()); // Complete
-        await UpdateStatus(await CreateAuction(), AuctionStatus.Cancelled, DateTimeOffset.Now.AddMinutes(-20));  // Cancelled
+        var openAuction = await CreateAuction(endDate: DateTimeOffset.Now.AddMinutes(10));
+        var completeAuction = await CreateAuction(endDate: DateTimeOffset.Now.AddMinutes(-25), configure: a => a.Complete());
+        var cancelledAuction = await CreateAuction();
+        await UpdateStatus(cancelledAuction, AuctionStatus.Cancelled, DateTimeOffset.Now.AddMinutes(-20));
+        var validIds = new HashSet<string>(
+            new[] { endedAuction1, endedAuction2, openAuction, completeAuction, cancelledAuction }
+                .Select(x => x.Id.Value)
+        );
 
         await RunServiceForOneIteration();
 
-        var events = Messaging.Published.Select<AuctionCompleted>().Select(x => x.Context.Message.AuctionId).ToList();
+        // We filter to the IDs created in this test to ignore auctions created in other tests
+        var events = Messaging.Published.Select<AuctionCompleted>().Select(x => x.Context.Message.AuctionId).Where(validIds.Contains).ToList();
         events.ShouldBe([endedAuction1.Id.Value, endedAuction2.Id.Value], ignoreOrder: true);
     }
 

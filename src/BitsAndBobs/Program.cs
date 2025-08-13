@@ -85,12 +85,16 @@ public class Program
 
         builder.Services.AddMassTransit(x =>
             {
+                var env = builder.Environment.EnvironmentName;
+
                 x.AddInMemoryInboxOutbox();
                 x.DisableUsageTelemetry();
+                x.AddConsumersFromNamespaceContaining<Program>();
+
                 x.UsingAmazonSqs((context, config) =>
                     {
-                        config.Host("", c => c.Scope(builder.Environment.EnvironmentName));
-                        config.ConfigureEndpoints(context);
+                        config.Host("", c => c.Scope(env, true));
+                        config.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter($"{env.ToLowerInvariant()}-", false));
                     }
                 );
             }
@@ -124,7 +128,7 @@ public class Program
             }
         );
         builder.Services.AddTransient<IEmailSender<User>, EmailStore>();
-        builder.Services.AddTransient<IEmailStore, EmailStore>();
+        builder.Services.AddTransient<EmailStore>();
         builder.Services.AddTransient<AuctionService>();
         builder.Services.AddTransient<IDistributedLockClient, BitsAndBobsTable.LockClient>();
         builder.Services.AddTransient<RecklessPublishEndpoint>();

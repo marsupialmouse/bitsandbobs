@@ -22,7 +22,7 @@ public static class EmailEndpoints
     {
         endpoints.MapGet(
             "/emails/recent/",
-            async Task<Results<Ok<IEnumerable<EmailResponse>>, NotFound>> (ClaimsPrincipal claimsPrincipal, UserManager<User> userManager, IEmailStore emailStore) =>
+            async Task<Results<Ok<IEnumerable<EmailResponse>>, NotFound>> (ClaimsPrincipal claimsPrincipal, UserManager<User> userManager, EmailStore emailStore) =>
             {
                 if (await userManager.GetUserAsync(claimsPrincipal) is not { } user)
                 {
@@ -36,7 +36,7 @@ public static class EmailEndpoints
 
         endpoints.MapGet(
             "/emails/recent/{emailAddress}",
-            async (string emailAddress, IEmailStore emailStore) =>
+            async (string emailAddress, EmailStore emailStore) =>
             {
                 var emails = await emailStore.GetRecentEmails(emailAddress);
                 return emails.ToEmailResponses();

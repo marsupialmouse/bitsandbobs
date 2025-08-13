@@ -125,6 +125,7 @@ public static class BitsAndBobsTable
     [DynamoDBPolymorphicType("E", typeof(EmailMessage))]
     [DynamoDBPolymorphicType("I", typeof(AuctionImage))]
     [DynamoDBPolymorphicType("L", typeof(UserAuctionBid))]
+    [DynamoDBPolymorphicType("S", typeof(EmailStore.EmailSent))]
     [DynamoDBPolymorphicType("U", typeof(User))]
     [DynamoDBTable(Name)]
     public class Item

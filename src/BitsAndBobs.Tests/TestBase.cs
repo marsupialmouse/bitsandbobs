@@ -3,7 +3,6 @@ using System.Text.Encodings.Web;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.S3;
-using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
 using MassTransit;
 using MassTransit.Testing;
@@ -12,17 +11,16 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.Extensions;
+using Shouldly;
 
 namespace BitsAndBobs.Tests;
 
@@ -96,8 +94,6 @@ public abstract class TestBase
                 services.Replace(ServiceDescriptor.Singleton(S3Client));
                 services.Replace(ServiceDescriptor.Singleton(Testing.Dynamo.Client));
                 services.Replace(ServiceDescriptor.Singleton(Testing.Dynamo.Context));
-                services.Replace(ServiceDescriptor.Singleton(Substitute.For<IEmailSender<User>>()));
-                services.Replace(ServiceDescriptor.Singleton(Substitute.For<IEmailStore>()));
 
                 if (!ValidateAntiForgeryTokens)
                 {
@@ -227,6 +223,25 @@ public abstract class TestBase
     /// </summary>
     protected void UpdateSetting(string key, string value) =>
         AppFactory.Settings[key] = value;
+
+    protected async Task WaitForMessageToBeConsumed<TConsumer, TMessage>() where TConsumer : class, IConsumer where TMessage : class
+    {
+        var consumer = Messaging.GetConsumerHarness<TConsumer>();
+        await consumer.Consumed.Any<TMessage>();
+    }
+
+    protected async Task WaitForMessagesToBeConsumed<TConsumer, TMessage>(int numberOfMessages) where TConsumer : class, IConsumer where TMessage : class
+    {
+        var consumer = Messaging.GetConsumerHarness<TConsumer>();
+        var count = 0;
+
+        await foreach (var x in consumer.Consumed.SelectAsync<TMessage>())
+        {
+            count++;
+            if (count == numberOfMessages)
+                break;
+        }
+    }
 
     public class TestAuthHandler(
         IServiceProvider services,

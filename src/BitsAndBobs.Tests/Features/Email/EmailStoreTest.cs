@@ -14,7 +14,7 @@ public class EmailStoreTest
     {
         const string emailAddress = "email-confirm@fufme.com";
         var user = new User { EmailAddress = "user-confirm@fufme.com" };
-        var emailStore = new EmailStore(Testing.DynamoContext);
+        var emailStore = new EmailStore(Testing.DynamoClient, Testing.DynamoContext);
 
         await emailStore.SendConfirmationLinkAsync(user, emailAddress, "https://example.com/confirm/path?token=123");
 
@@ -31,7 +31,7 @@ public class EmailStoreTest
     {
         const string emailAddress = "email-confirm-link@fufme.com";
         var user = new User();
-        var emailStore = new EmailStore(Testing.DynamoContext);
+        var emailStore = new EmailStore(Testing.DynamoClient, Testing.DynamoContext);
 
         await emailStore.SendConfirmationLinkAsync(user, emailAddress, "https://example.com/confirm/path?token=123&amp;a=b");
 
@@ -45,7 +45,7 @@ public class EmailStoreTest
     {
         const string emailAddress = "email-resetlink@fufme.com";
         var user = new User { EmailAddress = "user-resetlink@fufme.com" };
-        var emailStore = new EmailStore(Testing.DynamoContext);
+        var emailStore = new EmailStore(Testing.DynamoClient, Testing.DynamoContext);
 
         await emailStore.SendPasswordResetLinkAsync(user, emailAddress, "https://example.com/reset/path?token=321");
 
@@ -62,7 +62,7 @@ public class EmailStoreTest
     {
         const string emailAddress = "password-resetlink-link@fufme.com";
         var user = new User();
-        var emailStore = new EmailStore(Testing.DynamoContext);
+        var emailStore = new EmailStore(Testing.DynamoClient, Testing.DynamoContext);
 
         await emailStore.SendPasswordResetLinkAsync(user, emailAddress, "https://example.com/reset/path?token=321&amp;v=a");
 
@@ -76,7 +76,7 @@ public class EmailStoreTest
     {
         const string emailAddress = "email-resetcode@fufme.com";
         var user = new User { EmailAddress = "user-resetcode@fufme.com" };
-        var emailStore = new EmailStore(Testing.DynamoContext);
+        var emailStore = new EmailStore(Testing.DynamoClient, Testing.DynamoContext);
 
         await emailStore.SendPasswordResetCodeAsync(user, emailAddress, "parsnip");
 
@@ -107,7 +107,7 @@ public class EmailStoreTest
             CreateEmail(users[1], users[0].EmailAddress, 200),
         };
         await SaveEmails(emails);
-        var emailStore = new EmailStore(Testing.DynamoContext);
+        var emailStore = new EmailStore(Testing.DynamoClient, Testing.DynamoContext);
 
         var recentEmails = (await emailStore.GetRecentEmails(users[0].EmailAddress))
             .OrderByDescending(email => email.SentAt)
@@ -138,7 +138,7 @@ public class EmailStoreTest
             CreateEmail(users[1], users[0].EmailAddress, 130),
         };
         await SaveEmails(emails);
-        var emailStore = new EmailStore(Testing.DynamoContext);
+        var emailStore = new EmailStore(Testing.DynamoClient, Testing.DynamoContext);
 
         var recentEmails = (await emailStore.GetRecentEmails(users[1]))
                            .OrderByDescending(email => email.SentAt)

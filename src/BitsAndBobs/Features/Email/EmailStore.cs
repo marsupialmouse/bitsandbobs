@@ -1,18 +1,22 @@
 using System.Net;
-using System.Text.Encodings.Web;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
+using BitsAndBobs.Features.Auctions;
 using BitsAndBobs.Features.Identity;
 using Microsoft.AspNetCore.Identity;
 
 namespace BitsAndBobs.Features.Email;
 
-public class EmailStore : IEmailStore, IEmailSender<User>
+public class EmailStore : IEmailSender<User>
 {
+    private readonly IAmazonDynamoDB _dynamo;
     private readonly IDynamoDBContext _context;
 
-    public EmailStore(IDynamoDBContext context)
+    public EmailStore(IAmazonDynamoDB dynamo, IDynamoDBContext context)
     {
+        _dynamo = dynamo;
         _context = context;
     }
 
@@ -54,6 +58,9 @@ public class EmailStore : IEmailStore, IEmailSender<User>
         return _context.SaveItem(message);
     }
 
+    /// <summary>
+    /// Gets emails recently sent to a specific email address.
+    /// </summary>
     public async Task<IEnumerable<EmailMessage>> GetRecentEmails(string emailAddress)
     {
         var query = _context.QueryAsync<EmailMessage>(
@@ -66,6 +73,9 @@ public class EmailStore : IEmailStore, IEmailSender<User>
         return await query.GetRemainingAsync();
     }
 
+    /// <summary>
+    /// Gets emails recently sent to a specific user.
+    /// </summary>
     public async Task<IEnumerable<EmailMessage>> GetRecentEmails(User user)
     {
         var query = _context.QueryAsync<EmailMessage>(
@@ -76,5 +86,88 @@ public class EmailStore : IEmailStore, IEmailSender<User>
         );
 
         return await query.GetRemainingAsync();
+    }
+
+    public Task<bool> SendAuctionCompletedToSeller(User seller, Auction auction, string winnerName)
+    {
+        var message = new EmailMessage(
+            seller,
+            seller.EmailAddress,
+            $"Auction for '{auction.Name}' ended",
+            $"Your auction for [{auction.Name}](/auction/{auction.Id.FriendlyValue}) ended and was won by {winnerName} with a price of ${auction.CurrentPrice:C}. If this were real you'd probably contact them about paying."
+        );
+
+        return SendOneTimeEmail(message, new EmailSent(message, "auctioncomplete", auction.Id, seller.Id));
+    }
+
+    public Task<bool> SendAuctionCompletedWithoutBidToSeller(User seller, Auction auction)
+    {
+        var message = new EmailMessage(
+            seller,
+            seller.EmailAddress,
+            $"Auction for '{auction.Name}' ended",
+            $"Your auction for [{auction.Name}](/auction/{auction.Id.FriendlyValue}) ended without any bids. Try a more realistic price next time."
+        );
+
+        return SendOneTimeEmail(message, new EmailSent(message, "auctioncomplete", auction.Id, seller.Id));
+    }
+
+    public Task<bool> SendAuctionCompletedToWinner(User winner, Auction auction)
+    {
+        var message = new EmailMessage(
+            winner,
+            winner.EmailAddress,
+            $"You won '{auction.Name}'",
+            $"Congratulations, you just won [{auction.Name}](/auction/{auction.Id.FriendlyValue}) for only ${auction.CurrentPrice:C}. If this were real you'd probably hear from {auction.SellerDisplayName} about paying."
+        );
+
+        return SendOneTimeEmail(message, new EmailSent(message, "auctioncomplete", auction.Id, winner.Id));
+    }
+
+    private async Task<bool> SendOneTimeEmail(EmailMessage email, EmailSent sent)
+    {
+        try
+        {
+            var items = new List<TransactWriteItem>
+            {
+                new() { Put = _context.CreateInsertPut(email) },
+                new() { Put = _context.CreateInsertPut(sent) },
+            };
+
+            await _dynamo.TransactWriteItemsAsync(new TransactWriteItemsRequest { TransactItems = items });
+
+            return true;
+        }
+        catch (TransactionCanceledException e) when (e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        {
+            return false;
+        }
+        catch (ConditionalCheckFailedException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// This is used to insert records to ensure we only "send" certain emails once.
+    /// </summary>
+    public class EmailSent : BitsAndBobsTable.Item
+    {
+        [Obsolete("This constructor is for DynamoDB only and is none of your business.")]
+        public EmailSent()
+        {
+        }
+
+        public EmailSent(EmailMessage message, string type, params object[] ids)
+        {
+            // ReSharper disable VirtualMemberCallInConstructor
+            PK = message.RecipientUserId.Value;
+            SK = $"email:{type}:{string.Join(':', ids)}";
+            // ReSharper restore VirtualMemberCallInConstructor
+            EmailId = message.Id;
+        }
+
+        [DynamoDBProperty(typeof(EmailId.DynamoConverter))]
+        public EmailId EmailId { get; set; }
     }
 }
