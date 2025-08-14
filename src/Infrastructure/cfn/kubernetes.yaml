@@ -140,6 +140,37 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !Sub '${AppBucketArn}/auctions/*'
+              - Sid: SqsAccess
+                Effect: Allow
+                Action:
+                  - sqs:SetQueueAttributes
+                  - sqs:ReceiveMessage
+                  - sqs:CreateQueue
+                  - sqs:DeleteMessage
+                  - sqs:SendMessage
+                  - sqs:GetQueueUrl
+                  - sqs:GetQueueAttributes
+                  - sqs:ChangeMessageVisibility
+                  - sqs:PurgeQueue
+                  - sqs:DeleteQueue
+                  - sqs:TagQueue
+                Resource: !Sub 'arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:*'
+              - Sid: SnsAccess
+                Effect: Allow
+                Action:
+                  - sns:GetTopicAttributes
+                  - sns:ListSubscriptionsByTopic
+                  - sns:GetSubscriptionAttributes
+                  - sns:SetSubscriptionAttributes
+                  - sns:CreateTopic
+                  - sns:Publish
+                  - sns:Subscribe
+                Resource: !Sub 'arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:*'
+              - Sid: SnsListAccess
+                Effect: Allow
+                Action:
+                  - sns:ListTopics
+                Resource: '*'
 
   EksPodIdentityAssociation:
     Type: AWS::EKS::PodIdentityAssociation
