@@ -110,7 +110,7 @@ export interface GetUserDetailsResponse {
 }
 
 export interface UpdateUserDetailsRequest {
-    readonly displayName?: string | undefined;
+    readonly displayName: string;
     readonly firstName?: string | undefined;
     readonly lastName?: string | undefined;
 }

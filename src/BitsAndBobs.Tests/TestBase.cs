@@ -164,26 +164,26 @@ public abstract class TestBase
     /// <summary>
     /// Creates a valid user and saves it to the DB.
     /// </summary>
-    /// <param name="configure">An optional delegate for updating the user before saving</param>
-    /// <returns></returns>
-    protected async Task<User> CreateUser(Action<User>? configure = null)
+    protected async Task<User> CreateUser(
+        string? emailAddress = null,
+        string? displayName = null,
+        string? firstName = null,
+        string? lastName = null
+    )
     {
-        var uniqueness = Guid.NewGuid().ToString("n");
+        emailAddress ??= $"test-{Guid.NewGuid()}@example.com";
 
         var user = new User
         {
-            EmailAddress = $"upper@case.{uniqueness}.com",
-            NormalizedEmailAddress = $"UPPER@CASE.{uniqueness.ToUpperInvariant()}.COM",
+            EmailAddress = emailAddress,
+            NormalizedEmailAddress = emailAddress.ToUpperInvariant(),
+            Username = emailAddress,
+            NormalizedUsername = emailAddress.ToUpperInvariant(),
             EmailAddressConfirmed = true,
-            Username = $"upper@case.{uniqueness}.com",
-            NormalizedUsername = $"UPPER@CASE.{uniqueness.ToUpperInvariant()}.COM",
-            DisplayName = "UPPER_CASE",
-            FirstName = "Upper",
-            LastName = "Case",
+            FirstName = firstName,
+            LastName = lastName,
+            DisplayName = displayName ?? emailAddress.Split('@')[0],
         };
-
-        configure?.Invoke(user);
-
         user.UpdateConcurrency();
 
         await new UserStore(Testing.DynamoClient, Testing.Dynamo.Context).CreateAsync(user, CancellationToken.None);
@@ -194,11 +194,14 @@ public abstract class TestBase
     /// <summary>
     /// Creates a valid user, saves it to the DB and sets the current user in the claims principal.
     /// </summary>
-    /// <param name="configure">An optional delegate for updating the user before saving</param>
-    /// <returns></returns>
-    protected async Task<User> CreateAuthenticatedUser(Action<User>? configure = null)
+    protected async Task<User> CreateAuthenticatedUser(
+        string? emailAddress = null,
+        string? displayName = null,
+        string? firstName = null,
+        string? lastName = null
+    )
     {
-        var user = await CreateUser(configure);
+        var user = await CreateUser(emailAddress, displayName, firstName, lastName);
         SetClaimsPrincipal(user);
         return user;
     }

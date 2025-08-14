@@ -230,7 +230,7 @@ public class CreateAuctionEndpointTest : AuctionTestBase
     [Test]
     public async Task ShouldSetSellerDisplayName()
     {
-        var user = await CreateAuthenticatedUser(u => u.DisplayName = "Shonk Supreme");
+        var user = await CreateAuthenticatedUser(displayName: "Shonk Supreme");
         var image = await CreateTestImage(user.Id);
         var request = CreateValidRequest(image);
 

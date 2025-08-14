@@ -17,7 +17,7 @@ public class UserDisplayNameChangedConsumerTest : AuctionTestBase
     public async Task ShouldFailWhenCurrentUserDisplayNameDoesNotMatchNewDisplayName()
     {
         ConfigureMessaging(m => m.AddConsumer<UserDisplayNameChangedConsumer>());
-        var user = await CreateUser(u => u.DisplayName = "Diving Bell");
+        var user = await CreateUser(displayName: "Diving Bell");
         user.DisplayName = "Fred";  // This is just to set SellerDisplayName on the auction
         var auction = await CreateAuction(user);
 
@@ -39,7 +39,7 @@ public class UserDisplayNameChangedConsumerTest : AuctionTestBase
     public async Task ShouldUpdateSellerAuctionsWithNewDisplayNameAndVersion()
     {
         ConfigureMessaging(m => m.AddConsumer<UserDisplayNameChangedConsumer>());
-        var seller = await CreateUser(u => u.DisplayName = "The Bottom");
+        var seller = await CreateUser(displayName: "The Bottom");
         seller.DisplayName = "The Top";  // This is just to set SellerDisplayName on the auction
         var sellerAuction1 = await CreateAuction(seller);
         var sellerAuction2 = await CreateAuction(seller, endDate: DateTimeOffset.Now.AddMinutes(-10), configure: x => x.Complete());
@@ -70,7 +70,7 @@ public class UserDisplayNameChangedConsumerTest : AuctionTestBase
     public async Task ShouldNotUpdateNonSellerAuctions()
     {
         ConfigureMessaging(m => m.AddConsumer<UserDisplayNameChangedConsumer>());
-        var seller = await CreateUser(u => u.DisplayName = "Cold");
+        var seller = await CreateUser(displayName: "Cold");
         seller.DisplayName = "Hot";  // This is just to set SellerDisplayName on the auction
         await CreateAuction(seller);
         var bidderAuction = await CreateAuction();
@@ -94,7 +94,7 @@ public class UserDisplayNameChangedConsumerTest : AuctionTestBase
     public async Task ShouldNotUpdateAuctionsIfUserUpdatedAfterRetrieval()
     {
         ConfigureMessaging(m => m.AddConsumer<UserDisplayNameChangedConsumer>());
-        var seller = await CreateUser(u => u.DisplayName = "Lord");
+        var seller = await CreateUser(displayName: "Lord");
         seller.DisplayName = "Edge";  // This is just to set SellerDisplayName on the auction
         var auction = await CreateAuction(seller);
         AppFactory.ConfiguringServices += s =>

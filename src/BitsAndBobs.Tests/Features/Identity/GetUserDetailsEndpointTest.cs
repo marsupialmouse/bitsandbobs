@@ -10,7 +10,7 @@ public class GetUserDetailsEndpointTest : IdentityTestBase
     [Test]
     public async Task ShouldGet401ResponseWhenRequestingDetailsWithoutAuthentication()
     {
-        await CreateUser("Keith", "Conch", "Big Keith");
+        await CreateUser(displayName: "Big Keith", firstName: "Keith", lastName: "Conch");
 
         var response = await HttpClient.GetAsync("/api/identity/details");
 
@@ -30,7 +30,7 @@ public class GetUserDetailsEndpointTest : IdentityTestBase
     [Test]
     public async Task ShouldGetUserDetails()
     {
-        var user = await CreateUser("Keith", "Conch", "Big Keith");
+        var user = await CreateUser(displayName: "Big Keith", firstName: "Keith", lastName: "Conch");
         SetClaimsPrincipal(user);
 
         var response = await HttpClient.GetFromJsonAsync<GetUserDetailsEndpoint.GetUserDetailsResponse>("/api/identity/details");

@@ -151,9 +151,9 @@ public class GetAuctionEndpointTest : AuctionTestBase
     public async Task ShouldReturnBidsListForAuthenticatedUser()
     {
         SetAuthenticatedClaimsPrincipal();
-        var bidder1 = await CreateUser(u => u.DisplayName = "Let Down");
-        var bidder2 = await CreateUser(u => u.DisplayName = "Lucky");
-        var bidder3 = await CreateUser(u => u.DisplayName = "Lift");
+        var bidder1 = await CreateUser(displayName: "Let Down");
+        var bidder2 = await CreateUser(displayName: "Lucky");
+        var bidder3 = await CreateUser(displayName: "Lift");
         var auction = await CreateAuction(initialPrice: 100m, bidIncrement: 5m);
         var addedBids = await AddBidsToAuction(auction, (bidder1.Id, 100m), (bidder2.Id, 105m), (bidder3.Id, 110m), (bidder2.Id, 115m));
 
@@ -192,7 +192,7 @@ public class GetAuctionEndpointTest : AuctionTestBase
     [Test]
     public async Task ShouldIndicateWhenUserIsTheSeller()
     {
-        var seller = await CreateAuthenticatedUser(u => u.DisplayName = "(fadeout)");
+        var seller = await CreateAuthenticatedUser(displayName: "(fadeout)");
         var auction = await CreateAuction(seller: seller);
 
         var response =

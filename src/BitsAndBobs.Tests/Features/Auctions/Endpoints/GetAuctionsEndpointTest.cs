@@ -66,7 +66,7 @@ public class GetAuctionsEndpointTest : AuctionTestBase
     [Test]
     public async Task ShouldReturnCorrectAuctionData()
     {
-        var seller = await CreateUser(u => u.DisplayName = "David Jones");
+        var seller = await CreateUser(displayName: "David Jones");
         var uniqueName = $"Test Item {Guid.NewGuid():N}";
         var auction = await CreateAuction(
             seller: seller,

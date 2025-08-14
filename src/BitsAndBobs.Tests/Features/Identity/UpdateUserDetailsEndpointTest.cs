@@ -10,11 +10,11 @@ public class UpdateUserDetailsEndpointTest : IdentityTestBase
     [Test]
     public async Task ShouldGet401ResponseWhenPostingDetailsWithoutAuthentication()
     {
-        await CreateUser(firstName: "Keith", lastName: "Conch", displayName: "Big Keith");
+        await CreateUser(displayName: "Big Keith", firstName: "Keith", lastName: "Conch");
 
-        var response = await HttpClient.PostAsync(
+        var response = await HttpClient.PostAsJsonAsync(
                            "/api/identity/details",
-                           JsonContent.Create(new UpdateUserDetailsEndpoint.UpdateUserDetailsRequest())
+                           new UpdateUserDetailsEndpoint.UpdateUserDetailsRequest("Dave")
                        );
 
         response.StatusCode.ShouldBe(System.Net.HttpStatusCode.Unauthorized);
@@ -25,26 +25,36 @@ public class UpdateUserDetailsEndpointTest : IdentityTestBase
     {
         SetClaimsPrincipal(new User { Username = "thatsdeliciousalady@cannedsoup.com"});
 
-        var response = await HttpClient.PostAsync(
+        var response = await HttpClient.PostAsJsonAsync(
                            "/api/identity/details",
-                           JsonContent.Create(new UpdateUserDetailsEndpoint.UpdateUserDetailsRequest())
+                           new UpdateUserDetailsEndpoint.UpdateUserDetailsRequest("Woodrow")
                        );
 
         response.StatusCode.ShouldBe(System.Net.HttpStatusCode.NotFound);
     }
 
     [Test]
+    public async Task ShouldReturnValidationProblemForEmptyDisplayName()
+    {
+        await CreateAuthenticatedUser(displayName: "Bjarne");
+        var request = new UpdateUserDetailsEndpoint.UpdateUserDetailsRequest(DisplayName: "");
+
+        var response = await HttpClient.PostAsJsonAsync("/api/identity/details", request);
+
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.BadRequest);
+    }
+
+    [Test]
     public async Task ShouldUpdateUser()
     {
-        var user = await CreateUser(firstName: "Keith", lastName: "Conch", displayName: "Big Keith");
+        var user = await CreateAuthenticatedUser(displayName: "Big Keith", firstName: "Keith", lastName: "Conch");
         var request = new UpdateUserDetailsEndpoint.UpdateUserDetailsRequest(
             DisplayName: "Big Karen",
             FirstName: "Karen",
             LastName: "Cowrie"
         );
-        SetClaimsPrincipal(user);
 
-        await HttpClient.PostAsync("/api/identity/details", JsonContent.Create(request));
+        await HttpClient.PostAsJsonAsync("/api/identity/details", request);
         var updatedUser = await GetUser(user.Id);
 
         updatedUser.ShouldNotBeNull();
@@ -57,15 +67,14 @@ public class UpdateUserDetailsEndpointTest : IdentityTestBase
     [Test]
     public async Task ShouldPublishEventWhenDisplayNameChanges()
     {
-        var user = await CreateUser(firstName: "Barry", lastName: "Football", displayName: "Video Evidence");
+        var user = await CreateAuthenticatedUser(displayName: "Video Evidence", firstName: "Barry", lastName: "Football");
         var request = new UpdateUserDetailsEndpoint.UpdateUserDetailsRequest(
             DisplayName: "Apologist",
             FirstName: "Barry",
             LastName: "Football"
         );
-        SetClaimsPrincipal(user);
 
-        await HttpClient.PostAsync("/api/identity/details", JsonContent.Create(request));
+        await HttpClient.PostAsJsonAsync("/api/identity/details", request);
 
         var message = await GetPublishedMessage<UserDisplayNameChanged>();
         message.ShouldNotBeNull();
@@ -77,15 +86,14 @@ public class UpdateUserDetailsEndpointTest : IdentityTestBase
     [Test]
     public async Task ShouldNotPublishNamedChangedEventWhenNameDoesNotChange()
     {
-        var user = await CreateUser(firstName: "Puffy", lastName: "Dog", displayName: "FNTSP");
+        var user = await CreateAuthenticatedUser(displayName: "FNTSP", firstName: "Puffy", lastName: "Dog");
         var request = new UpdateUserDetailsEndpoint.UpdateUserDetailsRequest(
             DisplayName: "FNTSP",
             FirstName: "Puff",
             LastName: "Doggy"
         );
-        SetClaimsPrincipal(user);
 
-        await HttpClient.PostAsync("/api/identity/details", JsonContent.Create(request));
+        await HttpClient.PostAsJsonAsync("/api/identity/details", request);
 
         (await Messaging.Published.Any<UserDisplayNameChanged>()).ShouldBeFalse();
     }

@@ -34,7 +34,7 @@ public class SendAuctionEmailsConsumerTest : AuctionTestBase
     {
         ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
         var seller = await CreateUser();
-        var winner = await CreateUser(u => u.DisplayName = "Harold Bishop");
+        var winner = await CreateUser(displayName: "Harold Bishop");
         var auction = await CreateAuction(seller, initialPrice: 483.21m);
         await AddBidToAuction(auction, winner.Id, 789m);
         await UpdateStatus(auction, AuctionStatus.Complete, DateTimeOffset.Now.AddDays(-1));
@@ -70,7 +70,7 @@ public class SendAuctionEmailsConsumerTest : AuctionTestBase
     public async Task ShouldSendAuctionCompletedToWinner()
     {
         ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
-        var seller = await CreateUser(u => u.DisplayName = "Maude");
+        var seller = await CreateUser(displayName: "Maude");
         var winner = await CreateUser();
         var auction = await CreateAuction(seller, initialPrice: 107.21m);
         await AddBidToAuction(auction, winner.Id, 789m);
@@ -110,7 +110,7 @@ public class SendAuctionEmailsConsumerTest : AuctionTestBase
     public async Task ShouldSendAuctionCancelledToCurrentBidder()
     {
         ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
-        var seller = await CreateUser(u => u.DisplayName = "Mildred");
+        var seller = await CreateUser(displayName: "Mildred");
         var currentBidder = await CreateUser();
         var auction = await CreateAuction(seller, initialPrice: 107.21m);
         await AddBidToAuction(auction, currentBidder.Id, 789m);
@@ -149,9 +149,9 @@ public class SendAuctionEmailsConsumerTest : AuctionTestBase
     public async Task ShouldSendOutbidEmailWithNameOfOutbidderAndCurrentPrice()
     {
         ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
-        var bidder = await CreateUser(u => u.DisplayName = "Sport");
-        var outBidder = await CreateUser(u => u.DisplayName = "Tiger");
-        var currentBidder = await CreateUser(u => u.DisplayName = "Boss");
+        var bidder = await CreateUser(displayName: "Sport");
+        var outBidder = await CreateUser(displayName: "Tiger");
+        var currentBidder = await CreateUser(displayName: "Boss");
         var auction = await CreateAuction(initialPrice: 107.21m);
         await AddBidToAuction(auction, bidder.Id, 110m);
         var bid = await AddBidToAuction(auction, outBidder.Id, 150m);
@@ -173,8 +173,8 @@ public class SendAuctionEmailsConsumerTest : AuctionTestBase
     public async Task ShouldNotSendOutbidEmailWhenBidNotFound()
     {
         ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
-        var bidder = await CreateUser(u => u.DisplayName = "Sport");
-        var outBidder = await CreateUser(u => u.DisplayName = "Tiger");
+        var bidder = await CreateUser(displayName: "Sport");
+        var outBidder = await CreateUser(displayName: "Tiger");
         var auction = await CreateAuction(initialPrice: 107.21m);
         await AddBidToAuction(auction, bidder.Id, 110m);
 
@@ -189,8 +189,8 @@ public class SendAuctionEmailsConsumerTest : AuctionTestBase
     public async Task ShouldNotResentOutbidEmail()
     {
         ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
-        var bidder = await CreateUser(u => u.DisplayName = "Sport");
-        var outBidder = await CreateUser(u => u.DisplayName = "Tiger");
+        var bidder = await CreateUser(displayName: "Sport");
+        var outBidder = await CreateUser(displayName: "Tiger");
         var auction = await CreateAuction(initialPrice: 107.21m);
         await AddBidToAuction(auction, bidder.Id, 110m);
         var bid = await AddBidToAuction(auction, outBidder.Id, 150m);
@@ -206,8 +206,8 @@ public class SendAuctionEmailsConsumerTest : AuctionTestBase
     public async Task ShouldSendSeparateOutbidEmailsToOneUserForDifferentBidsOnSameAuction()
     {
         ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
-        var bidder = await CreateUser(u => u.DisplayName = "Sport");
-        var outBidder = await CreateUser(u => u.DisplayName = "Tiger");
+        var bidder = await CreateUser(displayName: "Sport");
+        var outBidder = await CreateUser(displayName: "Tiger");
         var auction = await CreateAuction(initialPrice: 107.21m);
         await AddBidToAuction(auction, bidder.Id, 110m);
         var bid1 = await AddBidToAuction(auction, outBidder.Id, 150m);
