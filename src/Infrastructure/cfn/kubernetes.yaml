@@ -184,6 +184,7 @@ Resources:
   AdminAccessEntry:
     Type: AWS::EKS::AccessEntry
     Condition: CreateAdminAccessEntry
+    DependsOn: EksCluster
     Properties:
       ClusterName: !Ref ClusterName
       PrincipalArn: !Ref AdminPrincipalArn
