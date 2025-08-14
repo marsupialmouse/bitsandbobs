@@ -11,6 +11,7 @@ interface AuctionListProps {
   emptyMessage: string
   errorMessage: string
   showCreateButton?: boolean
+  tabType?: 'seller' | 'won' | 'participating'
 }
 
 export default function AuctionList({
@@ -20,6 +21,7 @@ export default function AuctionList({
   emptyMessage,
   errorMessage,
   showCreateButton = false,
+  tabType,
 }: AuctionListProps) {
   if (isLoading) {
     return <Loading />
@@ -54,7 +56,7 @@ export default function AuctionList({
       {auctions.map((auction) => (
         <div
           key={auction.id}
-          className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow"
+          className={`overflow-hidden rounded-lg border border-gray-200 bg-white shadow ${(auction.isClosed || auction.isCancelled) && tabType !== 'won' ? 'opacity-80 grayscale' : ''}`}
         >
           <div className="flex p-3">
             <div className="mr-4 flex-shrink-0">

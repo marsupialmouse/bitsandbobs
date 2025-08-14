@@ -87,6 +87,7 @@ function ParticipantAuctions() {
       emptyMessage="You haven't bid on any auctions yet."
       errorMessage="Unable to load your auctions. Please try again later."
       showCreateButton={false}
+      tabType="participating"
     />
   )
 }
@@ -102,6 +103,7 @@ function SellerAuctions() {
       emptyMessage="You haven't created any auctions yet."
       errorMessage="Unable to load your auctions. Please try again later."
       showCreateButton={true}
+      tabType="seller"
     />
   )
 }
@@ -117,6 +119,7 @@ function WonAuctions() {
       emptyMessage="You haven't won any auctions yet."
       errorMessage="Unable to load your auctions. Please try again later."
       showCreateButton={false}
+      tabType="won"
     />
   )
 }
