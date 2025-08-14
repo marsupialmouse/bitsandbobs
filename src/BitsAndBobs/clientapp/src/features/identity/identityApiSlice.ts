@@ -1,13 +1,13 @@
 import { api } from '../../api/apiSlice'
 import {
-  DetailsRequest,
-  DetailsResponse,
   ForgotPasswordRequest,
+  GetUserDetailsResponse,
   HttpValidationProblemDetails,
   LoginRequest,
   ProblemDetails,
   RegisterRequest,
   ResetPasswordRequest,
+  UpdateUserDetailsRequest,
 } from '../../api/ApiGenerated.ts'
 
 export interface ChangeEmailRequest {
@@ -123,11 +123,11 @@ export const identityApi = api
         }),
         invalidatesTags: ['Identity', 'UserContext'],
       }),
-      getDetails: builder.query<DetailsResponse, void>({
+      getDetails: builder.query<GetUserDetailsResponse, void>({
         query: () => '/identity/details',
         providesTags: ['Identity'],
       }),
-      updateDetails: builder.mutation<void, DetailsRequest>({
+      updateDetails: builder.mutation<void, UpdateUserDetailsRequest>({
         query: (detailsRequest) => ({
           url: '/identity/details',
           method: 'POST',

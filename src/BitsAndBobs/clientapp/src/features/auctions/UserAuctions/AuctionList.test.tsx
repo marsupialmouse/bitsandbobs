@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { renderWithProvidersAndRouter } from '../../../testing/test-utils'
 import AuctionList from './AuctionList'
-import { addHours } from 'date-fns'
+import { addDays, addHours } from 'date-fns'
 import formatTimeRemaining from '../formatTimeRemaining.ts'
 
 // Mock sample auctions data
@@ -13,7 +13,7 @@ const createMockAuction = (overrides = {}) => ({
   imageHref: 'http://example.com/camera.jpg',
   currentPrice: 120.5,
   initialPrice: 100,
-  endDate: new Date(Date.now() + 172800000), // 2 days from now
+  endDate: addDays(new Date(), 2),
   numberOfBids: 5,
   isOpen: true,
   isClosed: false,

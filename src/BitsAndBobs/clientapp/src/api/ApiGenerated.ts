@@ -102,14 +102,14 @@ export interface InfoRequest {
     readonly oldPassword?: string | undefined;
 }
 
-export interface DetailsResponse {
+export interface GetUserDetailsResponse {
     readonly emailAddress: string;
     readonly displayName: string;
     readonly firstName?: string | undefined;
     readonly lastName?: string | undefined;
 }
 
-export interface DetailsRequest {
+export interface UpdateUserDetailsRequest {
     readonly displayName?: string | undefined;
     readonly firstName?: string | undefined;
     readonly lastName?: string | undefined;
