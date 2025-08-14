@@ -224,10 +224,19 @@ public abstract class TestBase
     protected void UpdateSetting(string key, string value) =>
         AppFactory.Settings[key] = value;
 
-    protected async Task WaitForMessageToBeConsumed<TConsumer, TMessage>() where TConsumer : class, IConsumer where TMessage : class
+    protected async Task<T?> GetPublishedMessage<T>() where T : class =>
+        (await Messaging.Published.SelectAsync<T>().FirstOrDefault())?.Context.Message;
+
+    protected Task<bool> WaitForMessageToBeConsumed<TConsumer, TMessage>() where TConsumer : class, IConsumer where TMessage : class
     {
         var consumer = Messaging.GetConsumerHarness<TConsumer>();
-        await consumer.Consumed.Any<TMessage>();
+        return consumer.Consumed.Any<TMessage>();
+    }
+
+    protected Task<bool> WaitForMessageToBeConsumed<TConsumer, TMessage>(FilterDelegate<IReceivedMessage<TMessage>> filter) where TConsumer : class, IConsumer where TMessage : class
+    {
+        var consumer = Messaging.GetConsumerHarness<TConsumer>();
+        return consumer.Consumed.Any(filter);
     }
 
     protected async Task WaitForMessagesToBeConsumed<TConsumer, TMessage>(int numberOfMessages) where TConsumer : class, IConsumer where TMessage : class
@@ -235,7 +244,7 @@ public abstract class TestBase
         var consumer = Messaging.GetConsumerHarness<TConsumer>();
         var count = 0;
 
-        await foreach (var x in consumer.Consumed.SelectAsync<TMessage>())
+        await foreach (var _ in consumer.Consumed.SelectAsync<TMessage>())
         {
             count++;
             if (count == numberOfMessages)

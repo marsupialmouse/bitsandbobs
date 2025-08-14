@@ -134,6 +134,7 @@ public class AuctionService
     /// </summary>
     public async Task<Bid> AddBid(Auction auction, UserId userId, decimal amount)
     {
+        var previousCurrentBidderId = auction.CurrentBidderId;
         var bid = auction.AddBid(userId, amount);
 
         try
@@ -147,7 +148,13 @@ public class AuctionService
 
             await _dynamo.TransactWriteItemsAsync(new TransactWriteItemsRequest { TransactItems = items });
             await _publishEndpoint.PublishRecklessly(
-                new BidAccepted(BidId: bid.BidId, AuctionId: auction.Id.Value, UserId: userId.Value)
+                new BidAccepted(
+                    BidId: bid.BidId,
+                    AuctionId: auction.Id.Value,
+                    UserId: userId.Value,
+                    PreviousCurrentBidderUserId: previousCurrentBidderId?.Value,
+                    CurrentBidderUserId: auction.CurrentBidderId!.Value.Value
+                )
             );
 
             return bid;

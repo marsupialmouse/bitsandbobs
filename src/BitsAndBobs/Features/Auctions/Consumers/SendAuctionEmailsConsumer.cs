@@ -7,7 +7,7 @@ namespace BitsAndBobs.Features.Auctions.Consumers;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public class SendAuctionEmailsConsumer(AuctionService auctionService, UserStore userStore, EmailStore emails)
-    : IConsumer<SendAuctionCompletedEmailToSeller>, IConsumer<SendAuctionCompletedEmailToWinner>, IConsumer<SendAuctionCancelledEmailToCurrentBidder>
+    : IConsumer<SendAuctionCompletedEmailToSeller>, IConsumer<SendAuctionCompletedEmailToWinner>, IConsumer<SendAuctionCancelledEmailToCurrentBidder>, IConsumer<SendOutbidEmail>
 {
     public async Task Consume(ConsumeContext<SendAuctionCompletedEmailToSeller> context)
     {
@@ -40,6 +40,19 @@ public class SendAuctionEmailsConsumer(AuctionService auctionService, UserStore 
         var currentBidder = await GetUser(auction.CurrentBidderId!.Value, context.CancellationToken);
 
         await emails.SendAuctionCancelledToCurrentBidder(currentBidder, auction);
+    }
+
+    public async Task Consume(ConsumeContext<SendOutbidEmail> context)
+    {
+        var message = context.Message;
+        var auction = (await auctionService.GetAuctionWithBids(AuctionId.Parse(message.AuctionId)))
+                      ?? throw new ArgumentException("Auction not found");
+        var bid = auction.Bids.FirstOrDefault(x => x.BidId == message.BidId)
+                  ?? throw new ArgumentException("Bid not found");
+        var hasBeen = await GetUser(UserId.Parse(message.UserId), context.CancellationToken);
+        var outBidder = await GetUser(UserId.Parse(message.OutbidderUserId), context.CancellationToken);
+
+        await emails.SendOutbidEmailToHasBeenBidder(hasBeen, outBidder, auction, bid);
     }
 
     private async Task<Auction> GetAuction(string auctionId) =>

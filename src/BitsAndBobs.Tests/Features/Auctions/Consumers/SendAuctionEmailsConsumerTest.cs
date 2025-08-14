@@ -145,6 +145,83 @@ public class SendAuctionEmailsConsumerTest : AuctionTestBase
         emails.Count.ShouldBe(1);
     }
 
+    [Test]
+    public async Task ShouldSendOutbidEmailWithNameOfOutbidderAndCurrentPrice()
+    {
+        ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
+        var bidder = await CreateUser(u => u.DisplayName = "Sport");
+        var outBidder = await CreateUser(u => u.DisplayName = "Tiger");
+        var currentBidder = await CreateUser(u => u.DisplayName = "Boss");
+        var auction = await CreateAuction(initialPrice: 107.21m);
+        await AddBidToAuction(auction, bidder.Id, 110m);
+        var bid = await AddBidToAuction(auction, outBidder.Id, 150m);
+        await AddBidToAuction(auction, currentBidder.Id, 200m);
+
+        await Messaging.Bus.Publish(new SendOutbidEmail(auction.Id.Value, bid.BidId, bidder.Id.Value, outBidder.Id.Value));
+        await WaitForMessageToBeConsumed<SendAuctionEmailsConsumer, SendOutbidEmail>();
+
+        var emails = await GetEmails(bidder);
+        emails.Count.ShouldBe(1);
+        emails[0].RecipientEmail.ShouldBe(bidder.EmailAddress);
+        emails[0].Type.ShouldBe($"You were outbid on '{auction.Name}'");
+        emails[0].Body.ShouldContain($"[{auction.Name}](/auction/{auction.Id.FriendlyValue})");
+        emails[0].Body.ShouldContain($"That rascal {outBidder.DisplayName}");
+        emails[0].Body.ShouldContain($"${auction.CurrentPrice:C}");
+    }
+
+    [Test]
+    public async Task ShouldNotSendOutbidEmailWhenBidNotFound()
+    {
+        ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
+        var bidder = await CreateUser(u => u.DisplayName = "Sport");
+        var outBidder = await CreateUser(u => u.DisplayName = "Tiger");
+        var auction = await CreateAuction(initialPrice: 107.21m);
+        await AddBidToAuction(auction, bidder.Id, 110m);
+
+        await Messaging.Bus.Publish(new SendOutbidEmail(auction.Id.Value, "bid#not-found", bidder.Id.Value, outBidder.Id.Value));
+
+        (await WaitForMessageToBeConsumed<SendAuctionEmailsConsumer, SendOutbidEmail>(x => x.Exception != null)).ShouldBeTrue();
+        var emails = await GetEmails(bidder);
+        emails.Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ShouldNotResentOutbidEmail()
+    {
+        ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
+        var bidder = await CreateUser(u => u.DisplayName = "Sport");
+        var outBidder = await CreateUser(u => u.DisplayName = "Tiger");
+        var auction = await CreateAuction(initialPrice: 107.21m);
+        await AddBidToAuction(auction, bidder.Id, 110m);
+        var bid = await AddBidToAuction(auction, outBidder.Id, 150m);
+
+        await Messaging.Bus.Publish(new SendOutbidEmail(auction.Id.Value, bid.BidId, bidder.Id.Value, outBidder.Id.Value));
+        await WaitForMessagesToBeConsumed<SendAuctionEmailsConsumer, SendOutbidEmail>(2);
+
+        var emails = await GetEmails(bidder);
+        emails.Count.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task ShouldSendSeparateOutbidEmailsToOneUserForDifferentBidsOnSameAuction()
+    {
+        ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
+        var bidder = await CreateUser(u => u.DisplayName = "Sport");
+        var outBidder = await CreateUser(u => u.DisplayName = "Tiger");
+        var auction = await CreateAuction(initialPrice: 107.21m);
+        await AddBidToAuction(auction, bidder.Id, 110m);
+        var bid1 = await AddBidToAuction(auction, outBidder.Id, 150m);
+        await AddBidToAuction(auction, bidder.Id, 200m);
+        var bid2 = await AddBidToAuction(auction, outBidder.Id, 250m);
+
+        await Messaging.Bus.Publish(new SendOutbidEmail(auction.Id.Value, bid1.BidId, bidder.Id.Value, outBidder.Id.Value));
+        await Messaging.Bus.Publish(new SendOutbidEmail(auction.Id.Value, bid2.BidId, bidder.Id.Value, outBidder.Id.Value));
+        await WaitForMessagesToBeConsumed<SendAuctionEmailsConsumer, SendOutbidEmail>(2);
+
+        var emails = await GetEmails(bidder);
+        emails.Count.ShouldBe(2);
+    }
+
     private async Task<List<EmailMessage>> GetEmails(User user) =>
         (await AppFactory.Services.GetRequiredService<EmailStore>().GetRecentEmails(user)).ToList();
 }

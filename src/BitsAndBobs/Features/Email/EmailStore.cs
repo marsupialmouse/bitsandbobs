@@ -136,6 +136,18 @@ public class EmailStore : IEmailSender<User>
         return SendOneTimeEmail(message, new EmailSent(message, "auctioncancelled", auction.Id, currentBidder.Id));
     }
 
+    public Task<bool> SendOutbidEmailToHasBeenBidder(User hasBeen, User outbidder, Auction auction, Bid bid)
+    {
+        var message = new EmailMessage(
+            hasBeen,
+            hasBeen.EmailAddress,
+            $"You were outbid on '{auction.Name}'",
+            $"That rascal {outbidder.DisplayName} outbid you on [{auction.Name}](/auction/{auction.Id.FriendlyValue}). The price is now ${auction.CurrentPrice:C}, can you beat that?"
+        );
+
+        return SendOneTimeEmail(message, new EmailSent(message, "auctioncancelled", auction.Id, bid.BidId, hasBeen.Id));
+    }
+
     private async Task<bool> SendOneTimeEmail(EmailMessage email, EmailSent sent)
     {
         try

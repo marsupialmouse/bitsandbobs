@@ -42,8 +42,8 @@ public class AuctionTestBase : TestBase
         return auction;
     }
 
-    protected static Task AddBidToAuction(Auction auction, UserId bidderId, decimal amount) =>
-        AddBidsToAuction(auction, (bidderId, amount));
+    protected static async Task<Bid> AddBidToAuction(Auction auction, UserId bidderId, decimal amount) =>
+        (await AddBidsToAuction(auction, (bidderId, amount)))[0];
 
     protected static async Task<IReadOnlyList<Bid>> AddBidsToAuction(Auction auction, params (UserId bidderId, decimal amount)[] bids)
     {
