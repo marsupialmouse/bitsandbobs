@@ -68,7 +68,14 @@ function AuctionCard({ auction }: AuctionCardProps) {
 }
 
 export default function CurrentAuctions() {
-  const { data: response, isLoading, error } = useGetAuctionsQuery()
+  const {
+    data: response,
+    isLoading,
+    error,
+  } = useGetAuctionsQuery(undefined, {
+    pollingInterval: 60000,
+    skipPollingIfUnfocused: true,
+  })
 
   if (isLoading) {
     return <Loading />

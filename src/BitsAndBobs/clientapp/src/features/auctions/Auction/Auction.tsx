@@ -13,7 +13,15 @@ import { selectIsAuthenticated } from '../../usercontext/userContextSlice.ts'
 
 export default function Auction() {
   const { id } = useParams() as { id: string }
-  const { data: auction, isLoading, error, isFetching } = useGetAuctionQuery(id)
+  const {
+    data: auction,
+    isLoading,
+    error,
+    isFetching,
+  } = useGetAuctionQuery(id, {
+    pollingInterval: 30000,
+    skipPollingIfUnfocused: true,
+  })
   const [cancelAuction, { isLoading: isCancelling }] =
     useCancelAuctionMutation()
   const isAuthenticated = useSelector(selectIsAuthenticated)
