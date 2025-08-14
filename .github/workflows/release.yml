@@ -294,10 +294,10 @@ jobs:
         if: ${{ inputs.enableEksCluster }}
         run: |
           helm upgrade bitsandbobs bitsandbobs.tgz --install --wait
-            --set "environment=${{ inputs.environment }}"
-            --set "image.tag=${{ env.version }}"
-            --set "appBucketName=${{ env.appBucketName }}"
-            --set "appBucketDomainName=${{ env.appBucketDomainName }}"
+          --set "environment=${{ inputs.environment }}"
+          --set "image.tag=${{ env.version }}"
+          --set "appBucketName=${{ env.appBucketName }}"
+          --set "appBucketDomainName=${{ env.appBucketDomainName }}"
       - name: Get load balancer details
         if: ${{ inputs.enableEksCluster }}
         id: get_lb_details
