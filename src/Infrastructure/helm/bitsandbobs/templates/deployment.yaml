@@ -38,6 +38,10 @@ spec:
           env:
             - name: DOTNET_ENVIRONMENT
               value: {{ .Values.environment | quote }}
+            - name: Aws__Resources_AppBucketName
+              value: {{ .Values.appBucketName | quote }}
+            - name: Aws__Resources_AppBucketDomainName
+              value: {{ .Values.appBucketDomainName | quote }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

@@ -14,6 +14,10 @@ image:
 # This sets the name of the runtime environment for the API
 environment: Development
 
+# Auction image S3 bucket details
+appBucketName: ""
+appBucketDomainName: ""
+
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
