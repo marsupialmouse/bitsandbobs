@@ -16,7 +16,7 @@ environment: Development
 
 # Auction image S3 bucket details
 appBucketName: ""
-appBucketDomainName: ""
+appBucketDomainName: ""   # should be empty when deployed with CloudFront
 
 # This is to override the chart name.
 nameOverride: ""
