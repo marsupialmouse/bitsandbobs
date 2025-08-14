@@ -38,9 +38,9 @@ spec:
           env:
             - name: DOTNET_ENVIRONMENT
               value: {{ .Values.environment | quote }}
-            - name: Aws__Resources_AppBucketName
+            - name: Aws__Resources__AppBucketName
               value: {{ .Values.appBucketName | quote }}
-            - name: Aws__Resources_AppBucketDomainName
+            - name: Aws__Resources__AppBucketDomainName
               value: {{ .Values.appBucketDomainName | quote }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
