@@ -196,6 +196,7 @@ export interface UserAuction {
     readonly name: string;
     readonly imageHref: string;
     readonly currentPrice: number;
+    readonly numberOfBids: number;
     readonly endDate: Date;
     readonly isOpen: boolean;
     readonly isClosed: boolean;

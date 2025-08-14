@@ -294,6 +294,51 @@ describe('AuctionList Component', () => {
     expect(screen.queryByText('Leading Bid')).not.toBeInTheDocument()
   })
 
+  it('displays no winner badge when no bids on closed auction', () => {
+    const auction = createMockAuction({
+      isUserCurrentBidder: true,
+      isClosed: true,
+      isOpen: false,
+      numberOfBids: 0,
+    })
+
+    renderWithProvidersAndRouter(
+      <AuctionList
+        isLoading={false}
+        isError={false}
+        auctions={[auction]}
+        emptyMessage="No auctions found"
+        errorMessage="Error loading auctions"
+      />
+    )
+
+    expect(screen.getByText('No Winner')).toBeInTheDocument()
+    expect(screen.getByText('0 bids')).toBeInTheDocument()
+  })
+
+  it('does not display no winner badge when auction not closed', () => {
+    const auction = createMockAuction({
+      isUserCurrentBidder: true,
+      isClosed: false,
+      isCancelled: true,
+      isOpen: false,
+      numberOfBids: 0,
+    })
+
+    renderWithProvidersAndRouter(
+      <AuctionList
+        isLoading={false}
+        isError={false}
+        auctions={[auction]}
+        emptyMessage="No auctions found"
+        errorMessage="Error loading auctions"
+      />
+    )
+
+    expect(screen.getByText('0 bids')).toBeInTheDocument()
+    expect(screen.queryByText('No Winner')).not.toBeInTheDocument()
+  })
+
   it('does not display leading or winner bid badges when user is not winning', () => {
     const auction = createMockAuction({
       name: 'User Not Leading Auction',

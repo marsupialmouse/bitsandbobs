@@ -56,7 +56,7 @@ export default function AuctionList({
       {auctions.map((auction) => (
         <div
           key={auction.id}
-          className={`overflow-hidden rounded-lg border border-gray-200 bg-white shadow ${(auction.isClosed || auction.isCancelled) && tabType !== 'won' ? 'opacity-80 grayscale' : ''}`}
+          className={`overflow-hidden rounded-lg border border-gray-200 bg-white shadow ${(auction.isClosed || auction.isCancelled) && tabType !== 'won' ? 'opacity-50' : ''}`}
         >
           <div className="flex p-3">
             <div className="mr-4 flex-shrink-0">
@@ -107,12 +107,22 @@ export default function AuctionList({
                         Winner!
                       </span>
                     )}
+                    {auction.isClosed && auction.numberOfBids === 0 && (
+                      <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                        No Winner
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 <div className="text-right">
                   <p className="text-lg font-bold text-green-600">
                     ${auction.currentPrice.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {auction.numberOfBids === 1
+                      ? '1 bid'
+                      : `${auction.numberOfBids.toString()} bids`}
                   </p>
                   {auction.userMaximumBid && (
                     <p className="text-xs text-gray-500">
