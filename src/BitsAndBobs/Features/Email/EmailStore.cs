@@ -124,6 +124,18 @@ public class EmailStore : IEmailSender<User>
         return SendOneTimeEmail(message, new EmailSent(message, "auctioncomplete", auction.Id, winner.Id));
     }
 
+    public Task<bool> SendAuctionCancelledToCurrentBidder(User currentBidder, Auction auction)
+    {
+        var message = new EmailMessage(
+            currentBidder,
+            currentBidder.EmailAddress,
+            $"Auction of '{auction.Name}' cancelled",
+            $"{auction.SellerDisplayName} has cancelled the auction of [{auction.Name}](/auction/{auction.Id.FriendlyValue}). Your bidding was a total waste of time."
+        );
+
+        return SendOneTimeEmail(message, new EmailSent(message, "auctioncancelled", auction.Id, currentBidder.Id));
+    }
+
     private async Task<bool> SendOneTimeEmail(EmailMessage email, EmailSent sent)
     {
         try

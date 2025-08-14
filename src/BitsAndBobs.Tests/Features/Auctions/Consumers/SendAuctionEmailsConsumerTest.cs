@@ -1,11 +1,12 @@
 using BitsAndBobs.Features.Auctions;
+using BitsAndBobs.Features.Auctions.Consumers;
 using BitsAndBobs.Features.Auctions.Contracts;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
 using Microsoft.Testing.Platform.Services;
 using Shouldly;
 
-namespace BitsAndBobs.Tests.Features.Auctions;
+namespace BitsAndBobs.Tests.Features.Auctions.Consumers;
 
 [TestFixture]
 public class SendAuctionEmailsConsumerTest : AuctionTestBase
@@ -102,6 +103,45 @@ public class SendAuctionEmailsConsumerTest : AuctionTestBase
         await WaitForMessagesToBeConsumed<SendAuctionEmailsConsumer, SendAuctionCompletedEmailToWinner>(2);
 
         var emails = await GetEmails(winner);
+        emails.Count.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task ShouldSendAuctionCancelledToCurrentBidder()
+    {
+        ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
+        var seller = await CreateUser(u => u.DisplayName = "Mildred");
+        var currentBidder = await CreateUser();
+        var auction = await CreateAuction(seller, initialPrice: 107.21m);
+        await AddBidToAuction(auction, currentBidder.Id, 789m);
+        await UpdateStatus(auction, AuctionStatus.Cancelled, auction.EndDate);
+
+        await Messaging.Bus.Publish(new SendAuctionCancelledEmailToCurrentBidder(auction.Id.Value));
+        await WaitForMessageToBeConsumed<SendAuctionEmailsConsumer, SendAuctionCancelledEmailToCurrentBidder>();
+
+        var emails = await GetEmails(currentBidder);
+        emails.Count.ShouldBe(1);
+        emails[0].RecipientEmail.ShouldBe(currentBidder.EmailAddress);
+        emails[0].Type.ShouldBe($"Auction of '{auction.Name}' cancelled");
+        emails[0].Body.ShouldContain($"[{auction.Name}](/auction/{auction.Id.FriendlyValue})");
+        emails[0].Body.ShouldContain($"{auction.SellerDisplayName} has cancelled");
+    }
+
+    [Test]
+    public async Task ShouldNotResendAuctionCancelledEmail()
+    {
+        ConfigureMessaging(c => c.AddConsumer<SendAuctionEmailsConsumer>());
+        var seller = await CreateUser();
+        var currentBidder = await CreateUser();
+        var auction = await CreateAuction(seller, initialPrice: 107.21m);
+        await AddBidToAuction(auction, currentBidder.Id, 789m);
+        await UpdateStatus(auction, AuctionStatus.Cancelled, auction.EndDate);
+
+        await Messaging.Bus.Publish(new SendAuctionCancelledEmailToCurrentBidder(auction.Id.Value));
+        await Messaging.Bus.Publish(new SendAuctionCancelledEmailToCurrentBidder(auction.Id.Value));
+        await WaitForMessagesToBeConsumed<SendAuctionEmailsConsumer, SendAuctionCancelledEmailToCurrentBidder>(2);
+
+        var emails = await GetEmails(currentBidder);
         emails.Count.ShouldBe(1);
     }
 

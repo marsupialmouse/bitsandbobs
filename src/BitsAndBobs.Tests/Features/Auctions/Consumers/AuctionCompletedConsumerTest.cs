@@ -1,10 +1,11 @@
 using BitsAndBobs.Contracts;
 using BitsAndBobs.Features.Auctions;
+using BitsAndBobs.Features.Auctions.Consumers;
 using BitsAndBobs.Features.Auctions.Contracts;
 using BitsAndBobs.Features.Identity;
 using Shouldly;
 
-namespace BitsAndBobs.Tests.Features.Auctions;
+namespace BitsAndBobs.Tests.Features.Auctions.Consumers;
 
 [TestFixture]
 public class AuctionCompletedConsumerTest : AuctionTestBase

@@ -2,8 +2,9 @@ using BitsAndBobs.Contracts;
 using BitsAndBobs.Features.Auctions.Contracts;
 using MassTransit;
 
-namespace BitsAndBobs.Features.Auctions;
+namespace BitsAndBobs.Features.Auctions.Consumers;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public class AuctionCompletedConsumer(AuctionService auctionService) : IConsumer<AuctionCompleted>
 {
     public async Task Consume(ConsumeContext<AuctionCompleted> context)
