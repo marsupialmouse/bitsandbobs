@@ -50,7 +50,7 @@ public class Program
                 .SetApplicationName("BitsAndBobs")
                 .PersistKeysToAWSSystemsManager($"/BitsAndBobs/{builder.Environment.EnvironmentName}/DataProtection");
 
-            builder.Services.AddHostedService<CompleteAuctionsService>();
+            builder.Services.AddHostedService<CompleteAuctionsHostedService>();
         }
 
         builder

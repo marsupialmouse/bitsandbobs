@@ -12,9 +12,9 @@ namespace BitsAndBobs.Features.Auctions;
 /// minute, regardless of the number of instances. This naive lock assumes the periodic task will always finish within
 /// the period.
 /// </remarks>
-public partial class CompleteAuctionsService(
+public partial class CompleteAuctionsHostedService(
     IDistributedLockClient lockClient,
-    ILogger<CompleteAuctionsService> logger,
+    ILogger<CompleteAuctionsHostedService> logger,
     IServiceScopeFactory scopeFactory
 ) : BackgroundService
 {

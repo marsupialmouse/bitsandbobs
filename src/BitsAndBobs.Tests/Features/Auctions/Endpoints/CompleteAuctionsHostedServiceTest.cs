@@ -7,7 +7,7 @@ using Shouldly;
 namespace BitsAndBobs.Tests.Features.Auctions.Endpoints;
 
 [TestFixture]
-public class CompleteAuctionsServiceTest : AuctionTestBase
+public class CompleteAuctionsHostedServiceTest : AuctionTestBase
 {
     [Test]
     public async Task ShouldCompleteOpenAuctionsThatHaveEnded()
@@ -49,9 +49,9 @@ public class CompleteAuctionsServiceTest : AuctionTestBase
 
     private async Task RunServiceForOneIteration()
     {
-        AppFactory.ConfiguringServices += s => s.TryAddTransient<CompleteAuctionsService>();
+        AppFactory.ConfiguringServices += s => s.TryAddTransient<CompleteAuctionsHostedService>();
 
-        var service = AppFactory.Services.GetRequiredService<CompleteAuctionsService>();
+        var service = AppFactory.Services.GetRequiredService<CompleteAuctionsHostedService>();
         await service.StartAsync(CancellationToken.None);
 
         var waitTime = 0;
