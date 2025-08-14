@@ -7,6 +7,9 @@
     <File Path="..\.config\hooks\post-checkout" />
     <File Path="..\.config\hooks\pre-commit" />
   </Folder>
+  <Folder Name="/Docs/">
+    <File Path="..\README.md" />
+  </Folder>
   <Folder Name="/Infrastructure/">
     <File Path="Infrastructure\index.html" />
     <File Path="Infrastructure\bitsandbobs-deploy.ps1" />
