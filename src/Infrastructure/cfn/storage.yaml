@@ -68,7 +68,7 @@ Resources:
             - IsDevelopment
             - Sid: PublicAuctionImagesPolicy
               Effect: Allow
-              Resource: !Sub ${S3BucketApp.Arn}/auctions/*
+              Resource: !Sub ${S3BucketApp.Arn}/auctionimages/*
               Action: 's3:GetObject'
               Principal: '*'
             - !Ref AWS::NoValue

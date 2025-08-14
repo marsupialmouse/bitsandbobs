@@ -23,7 +23,7 @@ public class AwsResourceOptions
     /// </summary>
     public string GetAuctionImageHref(string fileName) =>
         string.IsNullOrEmpty(AppBucketDomainName)
-            ? $"/auctions/{fileName}"
-            : $"https://{AppBucketDomainName}/auctions/{fileName}";
+            ? $"/auctionimages/{fileName}"
+            : $"https://{AppBucketDomainName}/auctionimages/{fileName}";
 
 }

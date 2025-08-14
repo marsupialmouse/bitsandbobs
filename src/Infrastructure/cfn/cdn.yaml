@@ -131,7 +131,7 @@ Resources:
             FunctionAssociations:
               - EventType: viewer-request
                 FunctionARN: !GetAtt SpaPathFunction.FunctionARN
-          - PathPattern: /auctions/*
+          - PathPattern: /auctionimagess/*
             AllowedMethods:
               - GET
               - HEAD

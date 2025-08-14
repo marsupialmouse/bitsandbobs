@@ -101,7 +101,7 @@ public class GetAuctionsEndpointTest : AuctionTestBase
         response.ShouldNotBeNull();
         var auctionResponse = response.Auctions.FirstOrDefault(a => a.Id == auction.Id.FriendlyValue);
         auctionResponse.ShouldNotBeNull();
-        auctionResponse.ImageHref.ShouldBe($"https://test.bucket.com/auctions/{auction.Image}");
+        auctionResponse.ImageHref.ShouldBe($"https://test.bucket.com/auctionimages/{auction.Image}");
     }
 
     [Test]
@@ -115,6 +115,6 @@ public class GetAuctionsEndpointTest : AuctionTestBase
         response.ShouldNotBeNull();
         var auctionResponse = response.Auctions.FirstOrDefault(a => a.Id == auction.Id.FriendlyValue);
         auctionResponse.ShouldNotBeNull();
-        auctionResponse.ImageHref.ShouldBe($"/auctions/{auction.Image}");
+        auctionResponse.ImageHref.ShouldBe($"/auctionimages/{auction.Image}");
     }
 }

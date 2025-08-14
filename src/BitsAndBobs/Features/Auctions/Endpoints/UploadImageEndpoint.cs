@@ -46,7 +46,7 @@ public static class UploadImageEndpoint
             new PutObjectRequest
             {
                 BucketName = options.Value.AppBucketName,
-                Key = $"auctions/{image.FileName}",
+                Key = $"auctionimages/{image.FileName}",
                 InputStream = stream,
             }
         );

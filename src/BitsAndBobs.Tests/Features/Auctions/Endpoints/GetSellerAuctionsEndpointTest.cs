@@ -96,7 +96,7 @@ public class GetSellerAuctionsEndpointTest : AuctionTestBase
         var auctionResponse = response.Auctions.First(a => a.Id == auction.Id.FriendlyValue);
         auctionResponse.Name.ShouldBe("Test Auction");
         auctionResponse.CurrentPrice.ShouldBe(50.00m);
-        auctionResponse.ImageHref.ShouldBe($"https://test.bucket.com/auctions/{auction.Image}");
+        auctionResponse.ImageHref.ShouldBe($"https://test.bucket.com/auctionimages/{auction.Image}");
         auctionResponse.EndDate.ShouldBe(auction.EndDate);
         auctionResponse.IsOpen.ShouldBeTrue();
         auctionResponse.IsClosed.ShouldBeFalse();

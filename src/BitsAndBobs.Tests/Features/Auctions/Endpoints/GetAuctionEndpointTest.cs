@@ -112,7 +112,7 @@ public class GetAuctionEndpointTest : AuctionTestBase
             );
 
         response.ShouldNotBeNull();
-        response.ImageHref.ShouldBe($"https://test.bucket.com/auctions/{auction.Image}");
+        response.ImageHref.ShouldBe($"https://test.bucket.com/auctionimages/{auction.Image}");
     }
 
     [Test]
@@ -127,7 +127,7 @@ public class GetAuctionEndpointTest : AuctionTestBase
             );
 
         response.ShouldNotBeNull();
-        response.ImageHref.ShouldBe($"/auctions/{auction.Image}");
+        response.ImageHref.ShouldBe($"/auctionimages/{auction.Image}");
     }
 
     [Test]

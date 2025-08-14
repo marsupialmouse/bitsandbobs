@@ -58,7 +58,7 @@ public class UploadImageEndpointTest : TestBase
         var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
 
         response.ShouldNotBeNull();
-        response.Href.ShouldStartWith("https://charlie.bucket/auctions/");
+        response.Href.ShouldStartWith("https://charlie.bucket/auctionimages/");
         response.Href.ShouldEndWith(".jpg");
     }
 
@@ -72,7 +72,7 @@ public class UploadImageEndpointTest : TestBase
         var response = await httpResponse.Content.ReadFromJsonAsync<UploadImageEndpoint.AuctionImageResponse>();
 
         response.ShouldNotBeNull();
-        response.Href.ShouldStartWith("/auctions/");
+        response.Href.ShouldStartWith("/auctionimages/");
         response.Href.ShouldEndWith(".png");
     }
 
@@ -131,7 +131,7 @@ public class UploadImageEndpointTest : TestBase
               .Received(1)
               .PutObjectAsync(
                   Arg.Is<PutObjectRequest>(req => req.BucketName == "grandma-georgina"
-                                                  && req.Key == $"auctions/{image!.FileName}"
+                                                  && req.Key == $"auctionimages/{image!.FileName}"
                                                   && req.InputStream != null
                   )
               );
