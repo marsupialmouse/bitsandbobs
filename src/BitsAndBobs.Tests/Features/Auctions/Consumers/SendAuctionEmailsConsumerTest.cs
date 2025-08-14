@@ -166,7 +166,7 @@ public class SendAuctionEmailsConsumerTest : AuctionTestBase
         emails[0].Type.ShouldBe($"You were outbid on '{auction.Name}'");
         emails[0].Body.ShouldContain($"[{auction.Name}](/auction/{auction.Id.FriendlyValue})");
         emails[0].Body.ShouldContain($"That rascal {outBidder.DisplayName}");
-        emails[0].Body.ShouldContain($"${auction.CurrentPrice:C}");
+        emails[0].Body.ShouldContain($"{auction.CurrentPrice:C}");
     }
 
     [Test]

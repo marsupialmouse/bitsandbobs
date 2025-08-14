@@ -1,19 +1,18 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using BitsAndBobs.Features.Identity;
 
 namespace BitsAndBobs.Features.Auctions.Diagnostics;
 
 internal readonly struct CompleteAuctionsDiagnostics : IDisposable
 {
-    private static readonly Counter<int> TotalCreatedCount = BitsAndBobsDiagnostics.Meter.CreateCounter<int>(
+    private static readonly Counter<int> TotalCompletedCount = BitsAndBobsDiagnostics.Meter.CreateCounter<int>(
         "bitsandbobs.api.auctions.complete.succeeded.total",
-        description: "Number of created auctions"
+        description: "Number of completed auctions"
     );
 
     private static readonly Counter<int> TotalFailedCount = BitsAndBobsDiagnostics.Meter.CreateCounter<int>(
         "bitsandbobs.api.auctions.complete.failed.total",
-        description: "Number of failed create auction requests"
+        description: "Number of failed failed auction completions"
     );
 
     private readonly Activity? _activity;
@@ -29,7 +28,7 @@ internal readonly struct CompleteAuctionsDiagnostics : IDisposable
         if (_activity is { IsAllDataRequested: true })
             _activity.SetTag("auction.id", auction.Id.Value);
 
-        TotalCreatedCount.Add(1);
+        TotalCompletedCount.Add(1);
         _activity?.AddEvent(new ActivityEvent("auction.completed"));
     }
 

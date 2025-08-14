@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
@@ -35,6 +36,8 @@ public class Program
     public static WebApplication CreateApp(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        var isTest = builder.Environment.EnvironmentName == "Test";
+        var isNSwag = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NSWAG"));
 
         builder.AddServiceDefaults();
 
@@ -43,7 +46,7 @@ public class Program
             .WithMetrics(metrics => metrics.AddMeter(BitsAndBobsDiagnostics.Meter.Name))
             .WithTracing(tracing => tracing.AddSource(BitsAndBobsDiagnostics.ActivitySource.Name));
 
-        if (builder.Environment.EnvironmentName != "Test")
+        if (!isTest)
         {
             builder
                 .Services.AddDataProtection()
@@ -84,22 +87,55 @@ public class Program
             }
         );
 
-        builder.Services.AddMassTransit(x =>
-            {
-                var env = builder.Environment.EnvironmentName;
+        if (!isTest)
+        {
+            builder.Services.AddMassTransit(x =>
+                {
+                    var env = builder.Environment.EnvironmentName;
 
-                x.AddInMemoryInboxOutbox();
-                x.DisableUsageTelemetry();
-                x.AddConsumersFromNamespaceContaining<Program>();
+                    x.AddInMemoryInboxOutbox();
+                    x.DisableUsageTelemetry();
+                    x.AddConsumersFromNamespaceContaining<Program>();
 
-                x.UsingAmazonSqs((context, config) =>
+                    x.AddConfigureEndpointsCallback((_, _, config) =>
+                        {
+                            config.UseMessageRetry(r => r.Exponential(
+                                                       int.MaxValue,
+                                                       TimeSpan.FromSeconds(1),
+                                                       TimeSpan.FromHours(2),
+                                                       TimeSpan.FromSeconds(1)
+                                                   )
+                            );
+                        }
+                    );
+
+                    x.AddConfigureEndpointsCallback((_, cfg) =>
+                        {
+                            // Enable long polling on all receive endpoints (maximum 20 seconds)
+                            if (cfg is IAmazonSqsReceiveEndpointConfigurator sqs)
+                                sqs.WaitTimeSeconds = 20;
+                        }
+                    );
+
+                    if (!isNSwag)
                     {
-                        config.Host("", c => c.Scope(env, true));
-                        config.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter($"{env.ToLowerInvariant()}-", false));
+                        x.UsingAmazonSqs((context, config) =>
+                            {
+                                config.Host(
+                                    Environment.GetEnvironmentVariable("AWS_REGION")
+                                    ?? RegionEndpoint.APSoutheast2.SystemName,
+                                    c => c.Scope(env, true)
+                                );
+                                config.ConfigureEndpoints(
+                                    context,
+                                    new KebabCaseEndpointNameFormatter($"{env.ToLowerInvariant()}-", false)
+                                );
+                            }
+                        );
                     }
-                );
-            }
-        );
+                }
+            );
+        }
 
         // Identity
         builder.Services.AddScoped<UserStore>();

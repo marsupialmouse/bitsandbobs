@@ -94,7 +94,7 @@ public class EmailStore : IEmailSender<User>
             seller,
             seller.EmailAddress,
             $"Auction for '{auction.Name}' ended",
-            $"Your auction for [{auction.Name}](/auction/{auction.Id.FriendlyValue}) ended and was won by {winnerName} with a price of ${auction.CurrentPrice:C}. If this were real you'd probably contact them about paying."
+            $"Your auction for [{auction.Name}](/auction/{auction.Id.FriendlyValue}) ended and was won by {winnerName} with a price of {auction.CurrentPrice:C}. If this were real you'd probably contact them about paying."
         );
 
         return SendOneTimeEmail(message, new EmailSent(message, "auctioncomplete", auction.Id, seller.Id));
@@ -118,7 +118,7 @@ public class EmailStore : IEmailSender<User>
             winner,
             winner.EmailAddress,
             $"You won '{auction.Name}'",
-            $"Congratulations, you just won [{auction.Name}](/auction/{auction.Id.FriendlyValue}) for only ${auction.CurrentPrice:C}. If this were real you'd probably hear from {auction.SellerDisplayName} about paying."
+            $"Congratulations, you just won [{auction.Name}](/auction/{auction.Id.FriendlyValue}) for only {auction.CurrentPrice:C}. If this were real you'd probably hear from {auction.SellerDisplayName} about paying."
         );
 
         return SendOneTimeEmail(message, new EmailSent(message, "auctioncomplete", auction.Id, winner.Id));
@@ -142,7 +142,7 @@ public class EmailStore : IEmailSender<User>
             hasBeen,
             hasBeen.EmailAddress,
             $"You were outbid on '{auction.Name}'",
-            $"That rascal {outbidder.DisplayName} outbid you on [{auction.Name}](/auction/{auction.Id.FriendlyValue}). The price is now ${auction.CurrentPrice:C}, can you beat that?"
+            $"That rascal {outbidder.DisplayName} outbid you on [{auction.Name}](/auction/{auction.Id.FriendlyValue}). The price is now {auction.CurrentPrice:C}, can you beat that?"
         );
 
         return SendOneTimeEmail(message, new EmailSent(message, "auctioncancelled", auction.Id, bid.BidId, hasBeen.Id));

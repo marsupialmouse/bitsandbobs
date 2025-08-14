@@ -1,5 +1,6 @@
 using BitsAndBobs.Contracts;
 using BitsAndBobs.Features.Auctions;
+using BitsAndBobs.Features.Auctions.Consumers;
 using BitsAndBobs.Features.Auctions.Contracts;
 using BitsAndBobs.Features.Identity;
 using Shouldly;
@@ -11,6 +12,7 @@ public class BidAcceptedConsumerTest : AuctionTestBase
     [Test]
     public async Task ShouldPublishOutbidEmailCommandForPreviousCurrentBidderWhenAcceptedBidIsNewCurrentBid()
     {
+        ConfigureMessaging(c => c.AddConsumer<BidAcceptedConsumer>());
         var auctionId = AuctionId.Create().Value;
         var bidderId = UserId.Create().Value;
         var previousBidderId = UserId.Create().Value;
@@ -24,6 +26,7 @@ public class BidAcceptedConsumerTest : AuctionTestBase
                 CurrentBidderUserId: bidderId
             )
         );
+        await WaitForMessageToBeConsumed<BidAcceptedConsumer, BidAccepted>();
 
         var message = await GetPublishedMessage<SendOutbidEmail>();
         message.ShouldNotBeNull();
@@ -36,6 +39,7 @@ public class BidAcceptedConsumerTest : AuctionTestBase
     [Test]
     public async Task ShouldPublishOutbidEmailCommandForBidderWhenAcceptedBidNotHighestBid()
     {
+        ConfigureMessaging(c => c.AddConsumer<BidAcceptedConsumer>());
         var auctionId = AuctionId.Create().Value;
         var bidderId = UserId.Create().Value;
         var previousBidderId = UserId.Create().Value;
@@ -49,6 +53,7 @@ public class BidAcceptedConsumerTest : AuctionTestBase
                 CurrentBidderUserId: previousBidderId
             )
         );
+        await WaitForMessageToBeConsumed<BidAcceptedConsumer, BidAccepted>();
 
         var message = await GetPublishedMessage<SendOutbidEmail>();
         message.ShouldNotBeNull();
@@ -61,6 +66,7 @@ public class BidAcceptedConsumerTest : AuctionTestBase
     [Test]
     public async Task ShouldNotPublishOutbidEmailCommandWhenThereWasNoPreviousBid()
     {
+        ConfigureMessaging(c => c.AddConsumer<BidAcceptedConsumer>());
         var auctionId = AuctionId.Create().Value;
         var bidderId = UserId.Create().Value;
 
@@ -73,6 +79,7 @@ public class BidAcceptedConsumerTest : AuctionTestBase
                 CurrentBidderUserId: bidderId
             )
         );
+        await WaitForMessageToBeConsumed<BidAcceptedConsumer, BidAccepted>();
 
         (await Messaging.Published.Any<SendOutbidEmail>()).ShouldBeFalse();
     }
@@ -80,6 +87,7 @@ public class BidAcceptedConsumerTest : AuctionTestBase
     [Test]
     public async Task ShouldNotPublishOutbidEmailCommandWhenCurrentBidderIncreasesBid()
     {
+        ConfigureMessaging(c => c.AddConsumer<BidAcceptedConsumer>());
         var auctionId = AuctionId.Create().Value;
         var bidderId = UserId.Create().Value;
 
@@ -92,6 +100,7 @@ public class BidAcceptedConsumerTest : AuctionTestBase
                 CurrentBidderUserId: bidderId
             )
         );
+        await WaitForMessageToBeConsumed<BidAcceptedConsumer, BidAccepted>();
 
         (await Messaging.Published.Any<SendOutbidEmail>()).ShouldBeFalse();
     }
