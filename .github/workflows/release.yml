@@ -292,12 +292,7 @@ jobs:
         run: aws s3 cp s3://${{ env.CfnBucket }}/${{ env.version }}/helm/bitsandbobs.tgz bitsandbobs.tgz
       - name: Deploy Helm chart
         if: ${{ inputs.enableEksCluster }}
-        run: |
-          helm upgrade bitsandbobs bitsandbobs.tgz --install --wait
-          --set "environment=${{ inputs.environment }}"
-          --set "image.tag=${{ env.version }}"
-          --set "appBucketName=${{ env.appBucketName }}"
-          --set "appBucketDomainName=${{ env.appBucketDomainName }}"
+        run: helm upgrade bitsandbobs bitsandbobs.tgz --install --wait --set "environment=${{ inputs.environment }}" --set "image.tag=${{ env.version }}" --set "appBucketName=${{ env.appBucketName }}" --set "appBucketDomainName=${{ env.appBucketDomainName }}"
       - name: Get load balancer details
         if: ${{ inputs.enableEksCluster }}
         id: get_lb_details
