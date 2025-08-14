@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Testing.Platform.Services;
 using Shouldly;
 
-namespace BitsAndBobs.Tests.Features.Auctions;
+namespace BitsAndBobs.Tests.Features.Auctions.Endpoints;
 
 [TestFixture]
 public class CompleteAuctionsServiceTest : AuctionTestBase

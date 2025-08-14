@@ -1,9 +1,10 @@
 using System.Net.Http.Json;
 using BitsAndBobs.Features.Auctions;
+using BitsAndBobs.Features.Auctions.Endpoints;
 using BitsAndBobs.Features.Identity;
 using Shouldly;
 
-namespace BitsAndBobs.Tests.Features.Auctions;
+namespace BitsAndBobs.Tests.Features.Auctions.Endpoints;
 
 [TestFixture]
 public class GetAuctionEndpointTest : AuctionTestBase

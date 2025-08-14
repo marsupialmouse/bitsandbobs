@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace BitsAndBobs.Features.Auctions;
+namespace BitsAndBobs.Features.Auctions.Endpoints;
 
 public static class GetAuctionsEndpoint
 {

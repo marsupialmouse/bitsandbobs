@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Security.Claims;
 using BitsAndBobs.Features.Auctions.Diagnostics;
@@ -6,34 +7,32 @@ using BitsAndBobs.Infrastructure.DynamoDb;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BitsAndBobs.Features.Auctions;
+namespace BitsAndBobs.Features.Auctions.Endpoints;
 
-public class CancelAuctionEndpoint
+public static class AddBidEndpoint
 {
+    public sealed record AddBidRequest([property: Required] string AuctionId, [property: Required] decimal Amount);
+
+    public sealed record AddBidResponse([property: Required] string Id);
+
     private static readonly ProblemHttpResult InvalidState = TypedResults.Problem(
         statusCode: (int)HttpStatusCode.BadRequest,
         title: "InvalidState"
     );
 
-    public static async Task<Results<Ok, ProblemHttpResult, NotFound>> CancelAuction(
-        string auctionId,
+    public static async Task<Results<Ok<AddBidResponse>, ProblemHttpResult, NotFound>> AddBid(
+        AddBidRequest request,
         ClaimsPrincipal claimsPrincipal,
-        [FromServices] AuctionService auctionService
-    )
+        [FromServices] AuctionService auctionService)
     {
-        if (!AuctionId.TryParse(auctionId, out var id))
-        {
-            CancelAuctionDiagnostics.InvalidId(auctionId);
-            return TypedResults.NotFound();
-        }
-
+        var auctionId = AuctionId.Parse(request.AuctionId);
         var userId = claimsPrincipal.GetUserId();
 
-        using var diagnostics = new CancelAuctionDiagnostics(id, userId);
+        using var diagnostics = new BidDiagnostics(auctionId, userId, request.Amount);
 
         try
         {
-            var auction = await auctionService.GetAuction(id);
+            var auction = await auctionService.GetAuctionWithBids(auctionId);
 
             if (auction is null)
             {
@@ -41,11 +40,13 @@ public class CancelAuctionEndpoint
                 return TypedResults.NotFound();
             }
 
-            await auctionService.CancelAuction(auction, userId);
+            diagnostics.AddAuctionDetails(auction);
 
-            diagnostics.Cancelled();
+            var bid = await auctionService.AddBid(auction, userId, request.Amount);
 
-            return TypedResults.Ok();
+            diagnostics.Accepted();
+
+            return TypedResults.Ok(new AddBidResponse(bid.BidId[4..]));
         }
         catch (InvalidAuctionStateException)
         {
@@ -56,11 +57,6 @@ public class CancelAuctionEndpoint
         {
             diagnostics.Invalid();
             return InvalidState;
-        }
-        catch (InvalidOperationException e)
-        {
-            diagnostics.Failed(e);
-            return TypedResults.Problem(statusCode: (int)HttpStatusCode.BadRequest);
         }
         catch (Exception e)
         {

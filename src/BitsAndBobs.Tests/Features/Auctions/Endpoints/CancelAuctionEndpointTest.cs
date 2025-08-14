@@ -2,7 +2,7 @@ using BitsAndBobs.Contracts;
 using BitsAndBobs.Features.Auctions;
 using Shouldly;
 
-namespace BitsAndBobs.Tests.Features.Auctions;
+namespace BitsAndBobs.Tests.Features.Auctions.Endpoints;
 
 [TestFixture]
 public class CancelAuctionEndpointTest : AuctionTestBase

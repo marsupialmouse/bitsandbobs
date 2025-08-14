@@ -1,10 +1,11 @@
+using System.Net.Http.Json;
 using Amazon.S3.Model;
 using BitsAndBobs.Features.Auctions;
+using BitsAndBobs.Features.Auctions.Endpoints;
 using NSubstitute;
 using Shouldly;
-using System.Net.Http.Json;
 
-namespace BitsAndBobs.Tests.Features.Auctions;
+namespace BitsAndBobs.Tests.Features.Auctions.Endpoints;
 
 [TestFixture]
 public class UploadImageEndpointTest : TestBase

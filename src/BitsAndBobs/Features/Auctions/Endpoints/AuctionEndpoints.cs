@@ -1,4 +1,4 @@
-namespace BitsAndBobs.Features.Auctions;
+namespace BitsAndBobs.Features.Auctions.Endpoints;
 
 public static class AuctionEndpoints
 {

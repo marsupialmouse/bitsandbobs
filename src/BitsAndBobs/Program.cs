@@ -5,6 +5,7 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.S3;
 using BitsAndBobs.Features;
 using BitsAndBobs.Features.Auctions;
+using BitsAndBobs.Features.Auctions.Endpoints;
 using BitsAndBobs.Features.Email;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Features.UserContext;
