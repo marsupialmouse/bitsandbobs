@@ -121,16 +121,13 @@ public class AddBidEndpointTest : AuctionTestBase
         var response = await httpResponse.Content.ReadFromJsonAsync<AddBidEndpoint.AddBidResponse>();
 
         response.ShouldNotBeNull();
-        (await Messaging.Published.Any<BidAccepted>(x =>
-             {
-                 var message = x.Context.Message;
-                 return message.BidId == $"bid#{response.Id}"
-                        && message.AuctionId == auction.Id.Value
-                        && message.UserId == userId.Value
-                        && message.PreviousCurrentBidderUserId == null
-                        && message.CurrentBidderUserId == userId.Value;
-             }
-         )).ShouldBeTrue();
+        var message = await GetPublishedMessage<BidAccepted>();
+        message.ShouldNotBeNull();
+        message.BidId.ShouldBe($"bid#{response.Id}");
+        message.AuctionId.ShouldBe(auction.Id.Value);
+        message.UserId.ShouldBe(userId.Value);
+        message.PreviousCurrentBidderUserId.ShouldBeNull();
+        message.CurrentBidderUserId.ShouldBe(userId.Value);
     }
 
     [Test]
@@ -146,14 +143,11 @@ public class AddBidEndpointTest : AuctionTestBase
         var response = await httpResponse.Content.ReadFromJsonAsync<AddBidEndpoint.AddBidResponse>();
 
         response.ShouldNotBeNull();
-        (await Messaging.Published.Any<BidAccepted>(x =>
-             {
-                 var message = x.Context.Message;
-                 return  message.UserId == userId.Value
-                        && message.PreviousCurrentBidderUserId == previousBidderId.Value
-                        && message.CurrentBidderUserId == userId.Value;
-             }
-         )).ShouldBeTrue();
+        var message = await GetPublishedMessage<BidAccepted>();
+        message.ShouldNotBeNull();
+        message.UserId.ShouldBe(userId.Value);
+        message.PreviousCurrentBidderUserId.ShouldBe(previousBidderId.Value);
+        message.CurrentBidderUserId.ShouldBe(userId.Value);
     }
 
     [Test]
@@ -169,14 +163,11 @@ public class AddBidEndpointTest : AuctionTestBase
         var response = await httpResponse.Content.ReadFromJsonAsync<AddBidEndpoint.AddBidResponse>();
 
         response.ShouldNotBeNull();
-        (await Messaging.Published.Any<BidAccepted>(x =>
-             {
-                 var message = x.Context.Message;
-                 return  message.UserId == userId.Value
-                         && message.PreviousCurrentBidderUserId == previousBidderId.Value
-                         && message.CurrentBidderUserId == previousBidderId.Value;
-             }
-         )).ShouldBeTrue();
+        var message = await GetPublishedMessage<BidAccepted>();
+        message.ShouldNotBeNull();
+        message.UserId.ShouldBe(userId.Value);
+        message.PreviousCurrentBidderUserId.ShouldBe(previousBidderId.Value);
+        message.CurrentBidderUserId.ShouldBe(previousBidderId.Value);
     }
 
     [Test]
