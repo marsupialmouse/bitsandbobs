@@ -168,8 +168,13 @@ public static class BitsAndBobsTable
         protected void UpdateVersion()
         {
             InitialVersion = Version;
-            Version = Guid.NewGuid().ToString("n");
+            Version = NewVersion();
         }
+
+        /// <summary>
+        /// Creates a new version string
+        /// </summary>
+        public static string NewVersion() => Guid.NewGuid().ToString("n");
     }
 
 
