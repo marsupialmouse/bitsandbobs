@@ -14,6 +14,7 @@ const mockInitialState = {
   userContext: {
     emailAddress: 'current@example.com',
     isAuthenticated: true,
+    localTimeOffset: 0,
   },
 }
 

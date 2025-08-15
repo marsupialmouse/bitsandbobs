@@ -177,7 +177,9 @@ describe('Login Component', () => {
 
   it('navigates home when already signed in', async () => {
     const { getCurrentLocation } = renderWithProvidersAndRouter(<Login />, {
-      preloadedState: { userContext: { isAuthenticated: true } },
+      preloadedState: {
+        userContext: { isAuthenticated: true, localTimeOffset: 0 },
+      },
       initialEntries: [{ pathname: '/login' }],
     })
 

@@ -36,6 +36,7 @@ const renderRecentEmailsByUser = (isAuthenticated = false) => {
       userContext: {
         isAuthenticated,
         emailAddress: undefined,
+        localTimeOffset: 0,
       },
     },
   })

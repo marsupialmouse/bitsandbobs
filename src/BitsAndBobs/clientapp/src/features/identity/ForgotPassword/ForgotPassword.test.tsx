@@ -106,7 +106,9 @@ describe('Forgot Password Component', () => {
     const { getCurrentLocation } = renderWithProvidersAndRouter(
       <ForgotPassword />,
       {
-        preloadedState: { userContext: { isAuthenticated: true } },
+        preloadedState: {
+          userContext: { isAuthenticated: true, localTimeOffset: 0 },
+        },
         initialEntries: [{ pathname: '/forgotPassword' }],
       }
     )

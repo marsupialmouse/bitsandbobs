@@ -14,6 +14,7 @@ const signedInState = {
     userContext: {
       isAuthenticated: true,
       emailAddress: 'jam@man.com',
+      localTimeOffset: 0,
     },
   },
 }

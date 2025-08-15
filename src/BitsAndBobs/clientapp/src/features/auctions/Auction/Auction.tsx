@@ -9,7 +9,7 @@ import AddBid from './AddBid.tsx'
 import { Link, useParams } from 'react-router'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated } from '../../usercontext/userContextSlice.ts'
-import AuctionTimeRemaining from '../AuctionTImeRemaining/AuctionTimeRemaining.tsx'
+import AuctionTimeRemaining from '../AuctionTimeRemaining/AuctionTimeRemaining.tsx'
 import useLocalDate from '../../useLocalDate.ts'
 
 export default function Auction() {

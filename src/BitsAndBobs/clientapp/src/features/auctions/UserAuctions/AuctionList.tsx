@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 import Loading from '../../../components/Loading.tsx'
 import ErrorMessage from '../../../components/ErrorMessage.tsx'
 import { UserAuction } from '../../../api/ApiGenerated.ts'
-import AuctionTimeRemaining from '../AuctionTImeRemaining/AuctionTimeRemaining.tsx'
+import AuctionTimeRemaining from '../AuctionTimeRemaining/AuctionTimeRemaining.tsx'
 import useLocalDate from '../../useLocalDate.ts'
 
 interface AuctionListProps {
