@@ -1,8 +1,9 @@
 import { Link } from 'react-router'
 import Loading from '../../../components/Loading.tsx'
 import ErrorMessage from '../../../components/ErrorMessage.tsx'
-import formatTimeRemaining from '../formatTimeRemaining.ts'
 import { UserAuction } from '../../../api/ApiGenerated.ts'
+import AuctionTimeRemaining from '../AuctionTImeRemaining/AuctionTimeRemaining.tsx'
+import useLocalDate from '../../useLocalDate.ts'
 
 interface AuctionListProps {
   auctions?: UserAuction[]
@@ -23,6 +24,8 @@ export default function AuctionList({
   showCreateButton = false,
   tabType,
 }: AuctionListProps) {
+  const { formatDate } = useLocalDate()
+
   if (isLoading) {
     return <Loading />
   }
@@ -137,21 +140,21 @@ export default function AuctionList({
                   {auction.isOpen ? (
                     <div className="text-sm">
                       <span className="font-medium text-gray-700">
-                        {formatTimeRemaining(auction.endDate)}
+                        <AuctionTimeRemaining endDate={auction.endDate} />
                       </span>
                       <span className="ml-1 text-xs text-gray-500">
-                        (ends {new Date(auction.endDate).toLocaleDateString()})
+                        (ends {formatDate(auction.endDate)})
                       </span>
                     </div>
                   ) : auction.isCancelled ? (
                     <div className="text-sm text-gray-500">
                       Cancelled{' '}
                       {auction.cancelledDate &&
-                        new Date(auction.cancelledDate).toLocaleDateString()}
+                        formatDate(auction.cancelledDate)}
                     </div>
                   ) : (
                     <div className="text-sm text-gray-500">
-                      Ended {new Date(auction.endDate).toLocaleDateString()}
+                      Ended {formatDate(auction.endDate)}
                     </div>
                   )}
                 </div>

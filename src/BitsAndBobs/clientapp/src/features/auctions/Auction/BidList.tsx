@@ -1,10 +1,13 @@
 import { BidDetails } from '../../../api/ApiGenerated.ts'
+import useLocalDate from '../../useLocalDate.ts'
 
 interface BidListProps {
   bids: BidDetails[]
 }
 
 export default function BidList({ bids }: BidListProps) {
+  const { formatDateWithTime } = useLocalDate()
+
   if (bids.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -63,8 +66,7 @@ export default function BidList({ bids }: BidListProps) {
                   ${bid.amount.toFixed(2)}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {new Date(bid.bidDate).toLocaleDateString()}{' '}
-                  {new Date(bid.bidDate).toLocaleTimeString()}
+                  {formatDateWithTime(bid.bidDate)}
                 </p>
               </div>
             </div>

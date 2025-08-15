@@ -4,15 +4,17 @@ import {
 } from '../auctionsApiSlice.ts'
 import Loading from '../../../components/Loading.tsx'
 import ErrorMessage from '../../../components/ErrorMessage.tsx'
-import formatTimeRemaining from '../formatTimeRemaining.ts'
 import BidList from './BidList.tsx'
 import AddBid from './AddBid.tsx'
 import { Link, useParams } from 'react-router'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated } from '../../usercontext/userContextSlice.ts'
+import AuctionTimeRemaining from '../AuctionTImeRemaining/AuctionTimeRemaining.tsx'
+import useLocalDate from '../../useLocalDate.ts'
 
 export default function Auction() {
   const { id } = useParams() as { id: string }
+  const { formatDateWithTime } = useLocalDate()
   const {
     data: auction,
     isLoading,
@@ -127,11 +129,10 @@ export default function Auction() {
                   Time Remaining
                 </h3>
                 <p className="mt-1 text-3xl font-bold text-gray-900">
-                  {formatTimeRemaining(auction.endDate)}
+                  <AuctionTimeRemaining endDate={auction.endDate} />
                 </p>
                 <p className="mt-1 text-sm text-gray-600">
-                  Ends: {new Date(auction.endDate).toLocaleDateString()} at{' '}
-                  {new Date(auction.endDate).toLocaleTimeString()}
+                  Ends: {formatDateWithTime(auction.endDate)}
                 </p>
               </div>
             )}
@@ -143,8 +144,8 @@ export default function Auction() {
                 </h3>
                 <p className="mt-1 text-sm text-gray-600">
                   {auction.isCancelled && auction.cancelledDate
-                    ? `Cancelled: ${new Date(auction.cancelledDate).toLocaleDateString()} at ${new Date(auction.cancelledDate).toLocaleTimeString()}`
-                    : `Ended: ${new Date(auction.endDate).toLocaleDateString()} at ${new Date(auction.endDate).toLocaleTimeString()}`}
+                    ? `Cancelled: ${formatDateWithTime(auction.cancelledDate)}`
+                    : `Ended: ${formatDateWithTime(auction.endDate)}`}
                 </p>
               </div>
             )}

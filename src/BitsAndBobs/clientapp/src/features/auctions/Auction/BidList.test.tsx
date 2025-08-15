@@ -70,7 +70,7 @@ describe('BidList Component', () => {
     expect(screen.getByText('(Current High Bid)')).toBeInTheDocument()
     expect(
       screen.getByText(
-        `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`
+        `${now.toLocaleDateString()} at ${now.toLocaleTimeString()}`
       )
     ).toBeInTheDocument()
 
@@ -79,7 +79,7 @@ describe('BidList Component', () => {
     expect(screen.getByText('$20.00')).toBeInTheDocument()
     expect(
       screen.getByText(
-        `${earlierDate.toLocaleDateString()} ${earlierDate.toLocaleTimeString()}`
+        `${earlierDate.toLocaleDateString()} at ${earlierDate.toLocaleTimeString()}`
       )
     ).toBeInTheDocument()
   })

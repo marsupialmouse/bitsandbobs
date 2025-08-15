@@ -3,7 +3,7 @@ import { useGetAuctionsQuery } from '../auctionsApiSlice'
 import Loading from '../../../components/Loading'
 import ErrorMessage from '../../../components/ErrorMessage'
 import { SummaryAuctionResponse } from '../../../api/ApiGenerated.ts'
-import formatTimeRemaining from '../formatTimeRemaining.ts'
+import AuctionTimeRemaining from '../AuctionTImeRemaining/AuctionTimeRemaining.tsx'
 
 function truncateDescription(description: string, maxLength = 120): string {
   if (description.length <= maxLength) return description
@@ -50,7 +50,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
 
           <div className="text-right">
             <p className="text-sm font-medium text-gray-900">
-              {formatTimeRemaining(auction.endDate)}
+              <AuctionTimeRemaining endDate={auction.endDate} />
             </p>
             <p className="text-xs text-gray-500">remaining</p>
           </div>

@@ -6,10 +6,12 @@ import { userContextApi } from './userContextApiSlice.ts'
 export interface UserContextState {
   emailAddress?: string
   isAuthenticated: boolean
+  localTimeOffset: number
 }
 
 export const initialUserContextState: UserContextState = {
   isAuthenticated: false,
+  localTimeOffset: 0,
 }
 
 export const userContextSlice = createSlice({
@@ -20,8 +22,11 @@ export const userContextSlice = createSlice({
     builder.addMatcher(
       userContextApi.endpoints.getUserContext.matchFulfilled,
       (state, { payload }) => {
-        state.isAuthenticated = payload.isAuthenticated ?? false
+        const l =
+          'localDate' in payload ? new Date(payload.localDate) : new Date()
+        state.isAuthenticated = payload.isAuthenticated
         state.emailAddress = payload.emailAddress
+        state.localTimeOffset = new Date().getTime() - l.getTime()
       }
     )
     builder.addMatcher(
@@ -50,9 +55,7 @@ export const selectIsAuthenticated = (state: RootState) =>
 export const selectCurrentEmailAddress = (state: RootState) =>
   state.userContext.emailAddress
 
-export const selectCurrentUsername = (state: RootState) => {
-  if (!state.userContext.emailAddress) return undefined
-  return state.userContext.emailAddress.split('@')[0]
-}
+export const selectLocalTimeOffset = (state: RootState) =>
+  state.userContext.localTimeOffset
 
 export default userContextSlice.reducer

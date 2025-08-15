@@ -16,7 +16,7 @@ const fakeAuctionsResponse = (overrides = {}) => ({
       id: 'auction-1',
       name: 'Vintage Camera',
       description: '',
-      imageHref: '',
+      imageHref: '/img.png',
       currentPrice: 120.5,
       initialPrice: 100,
       endDate: new Date(),

@@ -81,6 +81,7 @@ function render(isAuthenticated = true) {
   const preloadedState: Partial<RootState> = {
     userContext: {
       isAuthenticated,
+      localTimeOffset: 0,
     },
   }
 

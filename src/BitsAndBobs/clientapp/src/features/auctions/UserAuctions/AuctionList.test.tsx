@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { renderWithProvidersAndRouter } from '../../../testing/test-utils'
 import AuctionList from './AuctionList'
 import { addDays, addHours, subMilliseconds } from 'date-fns'
-import formatTimeRemaining from '../formatTimeRemaining.ts'
+import { AuctionTimeRemainingProps } from '../AuctionTimeRemaining/AuctionTimeRemaining.tsx'
 
 // Mock sample auctions data
 const createMockAuction = (overrides = {}) => ({
@@ -23,6 +23,12 @@ const createMockAuction = (overrides = {}) => ({
   sellerDisplayName: 'PhotoCollector',
   ...overrides,
 })
+
+vi.mock('../AuctionTimeRemaining/AuctionTimeRemaining.tsx', () => ({
+  default: ({ endDate }: AuctionTimeRemainingProps) => (
+    <div data-testid="time-remaining">{`time-remaining(${endDate.toISOString()})`}</div>
+  ),
+}))
 
 describe('AuctionList Component', () => {
   it('shows loading state when loading', () => {
@@ -152,7 +158,7 @@ describe('AuctionList Component', () => {
   })
 
   it('displays open auction correctly', () => {
-    const endDate = subMilliseconds(addDays(new Date(), 2), 1)
+    const endDate = addDays(new Date(), 2)
 
     const auction = createMockAuction({
       name: 'Open Auction',
@@ -174,7 +180,9 @@ describe('AuctionList Component', () => {
     )
 
     expect(screen.getByText('Active')).toBeInTheDocument()
-    expect(screen.getByText(formatTimeRemaining(endDate))).toBeInTheDocument()
+    expect(screen.getByTestId('time-remaining')).toHaveTextContent(
+      `time-remaining(${endDate.toISOString()})`
+    )
     expect(
       screen.getByText(`(ends ${endDate.toLocaleDateString()})`)
     ).toBeInTheDocument()
@@ -208,9 +216,7 @@ describe('AuctionList Component', () => {
     expect(
       screen.getByText(`Ended ${endDate.toLocaleDateString()}`)
     ).toBeInTheDocument()
-    expect(
-      screen.queryByText(formatTimeRemaining(endDate))
-    ).not.toBeInTheDocument()
+    expect(screen.queryByTestId('time-remaining')).not.toBeInTheDocument()
     expect(screen.queryByText('Active')).not.toBeInTheDocument()
     expect(screen.queryByText(/Cancelled/)).not.toBeInTheDocument()
   })
@@ -246,9 +252,7 @@ describe('AuctionList Component', () => {
     expect(
       screen.queryByText(`(ends ${endDate.toLocaleDateString()})`)
     ).not.toBeInTheDocument()
-    expect(
-      screen.queryByText(formatTimeRemaining(endDate))
-    ).not.toBeInTheDocument()
+    expect(screen.queryByTestId('time-remaining')).not.toBeInTheDocument()
     expect(screen.queryByText('Active')).not.toBeInTheDocument()
     expect(screen.queryByText('Ended')).not.toBeInTheDocument()
   })

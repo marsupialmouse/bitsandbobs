@@ -10,7 +10,8 @@
 
 
 export interface UserContextResponse {
-    readonly isAuthenticated?: boolean;
+    readonly localDate: Date;
+    readonly isAuthenticated: boolean;
     readonly username?: string | undefined;
     readonly emailAddress?: string | undefined;
 }
