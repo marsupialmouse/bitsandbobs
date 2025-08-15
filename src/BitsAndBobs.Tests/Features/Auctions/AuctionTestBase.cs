@@ -20,6 +20,7 @@ public class AuctionTestBase : TestBase
         User? seller = null,
         string name = "Slightly used horse",
         string description = "Its mane is mainly mange",
+        string imageExtension = ".jpg",
         decimal initialPrice = 100m,
         decimal bidIncrement = 10m,
         DateTimeOffset? endDate = null,
@@ -27,7 +28,7 @@ public class AuctionTestBase : TestBase
     )
     {
         seller ??= new User { DisplayName = "Puffy Dog" };
-        var image = new AuctionImage(".jpg", seller.Id);
+        var image = new AuctionImage(imageExtension, seller.Id);
         var auction = new Auction(
             seller,
             name,
@@ -55,8 +56,8 @@ public class AuctionTestBase : TestBase
         return addedBids;
     }
 
-    protected Task UpdateStatus(Auction auction, AuctionStatus status, DateTimeOffset endDate) =>
-        UpdateStatus((auction, status, endDate));
+    protected Task UpdateStatus(Auction auction, AuctionStatus status, DateTimeOffset? endDate = null) =>
+        UpdateStatus((auction, status, endDate ?? auction.EndDate));
 
     protected Task UpdateStatus(params (Auction auction, AuctionStatus status, DateTimeOffset endDate)[] auctions)
     {

@@ -182,6 +182,15 @@ export interface AddBidRequest {
     readonly amount: number;
 }
 
+export interface GetAuctionForRelistingResponse {
+    readonly name: string;
+    readonly description: string;
+    readonly imageId: string;
+    readonly imageHref: string;
+    readonly initialPrice: number;
+    readonly bidIncrement: number;
+}
+
 export interface AuctionImageResponse {
     readonly id: string;
     readonly href: string;

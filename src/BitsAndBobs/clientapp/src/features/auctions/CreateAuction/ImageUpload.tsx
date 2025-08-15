@@ -5,16 +5,20 @@ import { useUploadImageMutation } from '../auctionsApiSlice.ts'
 interface ImageUploadProps {
   onImageUploaded: (imageId: string) => void
   onImageRemoved: () => void
+  existingImageHref?: string
   error?: string
 }
 
 export default function ImageUpload({
   onImageUploaded,
   onImageRemoved,
+  existingImageHref,
   error,
 }: ImageUploadProps) {
   const [uploadImage] = useUploadImageMutation()
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    existingImageHref ?? null
+  )
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const displayError = uploadError ?? error
@@ -34,7 +38,7 @@ export default function ImageUpload({
     try {
       const result = await uploadImage({ file }).unwrap()
       onImageUploaded(result.id)
-      setImagePreview(URL.createObjectURL(file))
+      setImagePreview(result.href)
     } catch (error) {
       const validationErrors = error as HttpValidationProblemDetails
       if (validationErrors.errors?.image) {
@@ -50,7 +54,6 @@ export default function ImageUpload({
 
   const handleRemoveImage = () => {
     if (imagePreview) {
-      URL.revokeObjectURL(imagePreview)
       setImagePreview(null)
     }
     setUploadError(null)

@@ -13,9 +13,6 @@ const server = setupServer()
 describe('ImageUpload Component', () => {
   beforeAll(() => {
     server.listen()
-    // Mock URL.createObjectURL and URL.revokeObjectURL
-    global.URL.createObjectURL = vi.fn(() => 'mock-blob-url')
-    global.URL.revokeObjectURL = vi.fn()
   })
 
   afterEach(() => {
@@ -55,7 +52,10 @@ describe('ImageUpload Component', () => {
   it('handles successful image upload', async () => {
     server.use(
       http.post('/api/auctions/images', () => {
-        return HttpResponse.json({ id: 'success-image' })
+        return HttpResponse.json({
+          id: 'success-image',
+          href: '/through-your-window.png',
+        })
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
@@ -71,7 +71,7 @@ describe('ImageUpload Component', () => {
     expect(screen.getByRole('img', { name: 'Preview' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Preview' })).toHaveAttribute(
       'src',
-      'mock-blob-url'
+      '/through-your-window.png'
     )
   })
 
@@ -79,7 +79,10 @@ describe('ImageUpload Component', () => {
     server.use(
       http.post('/api/auctions/images', async () => {
         await new Promise((resolve) => setTimeout(resolve, 100))
-        return HttpResponse.json({ id: 'uploading-state-image' })
+        return HttpResponse.json({
+          id: 'uploading-state-image',
+          href: '/horsie.jpg',
+        })
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
@@ -95,7 +98,10 @@ describe('ImageUpload Component', () => {
   it('clears file input after uploading', async () => {
     server.use(
       http.post('/api/auctions/images', () =>
-        HttpResponse.json({ id: 'clears-file-image' })
+        HttpResponse.json({
+          id: 'clears-file-image',
+          href: 'https://www/www.jpg',
+        })
       )
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
@@ -175,7 +181,7 @@ describe('ImageUpload Component', () => {
   it('allows removing uploaded image', async () => {
     server.use(
       http.post('/api/auctions/images', () => {
-        return HttpResponse.json({ id: 'removing-image' })
+        return HttpResponse.json({ id: 'removing-image', href: 'removed.jpg' })
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
@@ -202,7 +208,10 @@ describe('ImageUpload Component', () => {
     server.use(
       http.post('/api/auctions/images', async () => {
         await new Promise((resolve) => setTimeout(resolve, 100))
-        return HttpResponse.json({ id: 'disables-input-image' })
+        return HttpResponse.json({
+          id: 'disables-input-image',
+          href: 'disabled.webp',
+        })
       })
     )
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })

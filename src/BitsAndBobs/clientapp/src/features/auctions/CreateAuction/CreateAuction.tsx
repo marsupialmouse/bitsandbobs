@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
-import { HttpValidationProblemDetails } from '../../../api/ApiGenerated'
+import {
+  GetAuctionForRelistingResponse,
+  HttpValidationProblemDetails,
+} from '../../../api/ApiGenerated'
 import { useCreateAuctionMutation } from '../auctionsApiSlice.ts'
 import ImageUpload from './ImageUpload.tsx'
 
@@ -15,10 +18,16 @@ interface FormData {
   minutes: number
 }
 
-export default function CreateAuction() {
+interface CreateAuctionProps {
+  relistAuction?: GetAuctionForRelistingResponse
+}
+
+export default function CreateAuction({ relistAuction }: CreateAuctionProps) {
   const navigate = useNavigate()
   const [createAuction] = useCreateAuctionMutation()
-  const [uploadedImageId, setUploadedImageId] = useState<string | null>(null)
+  const [uploadedImageId, setUploadedImageId] = useState<string | null>(
+    relistAuction?.imageId ?? null
+  )
 
   const {
     register: registerField,
@@ -30,10 +39,10 @@ export default function CreateAuction() {
     shouldUseNativeValidation: true,
     mode: 'onSubmit',
     defaultValues: {
-      name: '',
-      description: '',
-      initialPrice: 0,
-      bidIncrement: 0.1,
+      name: relistAuction?.name ?? '',
+      description: relistAuction?.description ?? '',
+      initialPrice: relistAuction?.initialPrice ?? 0,
+      bidIncrement: relistAuction?.bidIncrement ?? 0.1,
       days: 0,
       hours: 0,
       minutes: 10,
@@ -132,6 +141,7 @@ export default function CreateAuction() {
         <ImageUpload
           onImageUploaded={handleImageUploaded}
           onImageRemoved={handleImageRemoved}
+          existingImageHref={relistAuction?.imageHref}
           error={errors.root?.imageId ? errors.root.imageId.message : ''}
         />
 

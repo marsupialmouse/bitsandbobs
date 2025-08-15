@@ -5,6 +5,7 @@ import {
   AuctionImageResponse,
   CreateAuctionRequest,
   CreateAuctionResponse,
+  GetAuctionForRelistingResponse,
   GetAuctionResponse,
   GetAuctionsResponse,
   GetUserAuctionsResponse,
@@ -96,6 +97,19 @@ const auctionsApi = api
             : response.data,
         invalidatesTags: ['Auctions', 'Auction'],
       }),
+      getAuctionForRelisting: builder.mutation<
+        GetAuctionForRelistingResponse | ProblemDetails,
+        string
+      >({
+        query: (id) => ({
+          url: `/auctions/${id}/relist`,
+          method: 'POST',
+        }),
+        // transformErrorResponse: (response) =>
+        //   response.status === 400
+        //     ? (response.data as ProblemDetails)
+        //     : response.data,
+      }),
     }),
     overrideExisting: false,
   })
@@ -110,4 +124,5 @@ export const {
   useCreateAuctionMutation,
   useCancelAuctionMutation,
   useAddBidMutation,
+  useGetAuctionForRelistingMutation,
 } = auctionsApi

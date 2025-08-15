@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { renderWithProvidersAndRouter } from '../../../testing/test-utils'
 import AuctionList from './AuctionList'
-import { addDays, addHours } from 'date-fns'
+import { addDays, addHours, subMilliseconds } from 'date-fns'
 import formatTimeRemaining from '../formatTimeRemaining.ts'
 
 // Mock sample auctions data
@@ -13,7 +13,7 @@ const createMockAuction = (overrides = {}) => ({
   imageHref: 'http://example.com/camera.jpg',
   currentPrice: 120.5,
   initialPrice: 100,
-  endDate: addDays(new Date(), 2),
+  endDate: subMilliseconds(addDays(new Date(), 2), 1),
   numberOfBids: 5,
   isOpen: true,
   isClosed: false,
@@ -152,7 +152,7 @@ describe('AuctionList Component', () => {
   })
 
   it('displays open auction correctly', () => {
-    const endDate = addHours(new Date(), 9)
+    const endDate = subMilliseconds(addDays(new Date(), 2), 1)
 
     const auction = createMockAuction({
       name: 'Open Auction',

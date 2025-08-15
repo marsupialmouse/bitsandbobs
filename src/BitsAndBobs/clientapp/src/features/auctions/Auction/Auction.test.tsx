@@ -322,4 +322,81 @@ describe('Auction Component', () => {
     expect(avatarElement).toBeInTheDocument()
     expect(avatarElement.closest('div')).toHaveClass('rounded-full')
   })
+
+  it('shows relist auction button for sellers of cancelled auctions', async () => {
+    const sellerAuction = {
+      ...mockAuction,
+      isUserSeller: true,
+      isCancelled: true,
+      isOpen: false,
+    }
+    server.use(
+      http.get('/api/auctions/auction-123', () => {
+        return HttpResponse.json(sellerAuction)
+      })
+    )
+
+    render(true)
+
+    expect(
+      await screen.findByRole('button', { name: 'Relist Item' })
+    ).toBeInTheDocument()
+  })
+
+  it('shows relist auction button for sellers of completed auctions', async () => {
+    const sellerAuction = {
+      ...mockAuction,
+      isUserSeller: true,
+      isClosed: true,
+      isOpen: false,
+    }
+    server.use(
+      http.get('/api/auctions/auction-123', () => {
+        return HttpResponse.json(sellerAuction)
+      })
+    )
+
+    render(true)
+
+    expect(
+      await screen.findByRole('button', { name: 'Relist Item' })
+    ).toBeInTheDocument()
+  })
+
+  it('does not show relist auction button for sellers of open auctions', async () => {
+    const sellerAuction = { ...mockAuction, isUserSeller: true }
+    server.use(
+      http.get('/api/auctions/auction-123', () => {
+        return HttpResponse.json(sellerAuction)
+      })
+    )
+
+    render(true)
+
+    expect(await screen.findByText('Test Auction')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Relist Item' })
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not show relist auction button for viewers of completed auctions', async () => {
+    const sellerAuction = {
+      ...mockAuction,
+      isUserSeller: false,
+      isClosed: true,
+      isOpen: false,
+    }
+    server.use(
+      http.get('/api/auctions/auction-123', () => {
+        return HttpResponse.json(sellerAuction)
+      })
+    )
+
+    render(true)
+
+    expect(await screen.findByText('Test Auction')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Relist Item' })
+    ).not.toBeInTheDocument()
+  })
 })

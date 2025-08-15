@@ -10,6 +10,7 @@ import {
 
 const mockUploadResponse = {
   id: 'test-image-id-123',
+  href: '/test-image.png',
 }
 
 const mockCreateAuctionResponse = {
@@ -35,9 +36,6 @@ vi.mock('react-router', async () => {
 describe('CreateAuction Component', () => {
   beforeAll(() => {
     server.listen()
-    // Mock URL.createObjectURL and URL.revokeObjectURL
-    global.URL.createObjectURL = vi.fn(() => 'mock-blob-url')
-    global.URL.revokeObjectURL = vi.fn()
   })
 
   afterEach(() => {
@@ -100,6 +98,37 @@ describe('CreateAuction Component', () => {
     expect(screen.getByLabelText('Days')).toHaveValue(0)
     expect(screen.getByLabelText('Hours')).toHaveValue(0)
     expect(screen.getByLabelText('Minutes')).toHaveValue(10)
+  })
+
+  it('has correct default values for relisting auction', () => {
+    const auction = {
+      name: 'Sounds',
+      description: 'Like Sunset',
+      imageId: 'test-image-id-7000',
+      imageHref: 'https://barry.com/toadfish.png',
+      initialPrice: 874.54,
+      bidIncrement: 8.99,
+    }
+    renderWithProvidersAndRouter(<CreateAuction relistAuction={auction} />)
+
+    expect(screen.getByLabelText('Name')).toHaveValue(auction.name)
+    expect(screen.getByLabelText('Description')).toHaveValue(
+      auction.description
+    )
+    expect(screen.getByLabelText('Initial Price ($)')).toHaveValue(
+      auction.initialPrice
+    )
+    expect(screen.getByLabelText('Bid Increment ($)')).toHaveValue(
+      auction.bidIncrement
+    )
+    expect(screen.getByLabelText('Days')).toHaveValue(0)
+    expect(screen.getByLabelText('Hours')).toHaveValue(0)
+    expect(screen.getByLabelText('Minutes')).toHaveValue(10)
+    expect(screen.getByRole('img', { name: 'Preview' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Preview' })).toHaveAttribute(
+      'src',
+      auction.imageHref
+    )
   })
 
   it('validates required fields', async () => {
@@ -168,6 +197,31 @@ describe('CreateAuction Component', () => {
     )
     renderWithProvidersAndRouter(<CreateAuction />)
     await fillFormWithValidData()
+
+    // Submit the form
+    const submitButton = screen.getByRole('button', { name: 'Create Auction' })
+    await userEvent.click(submitButton)
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/auction/auction-123')
+    })
+  })
+
+  it('successfully relists auction and navigates', async () => {
+    server.use(
+      http.post('/api/auctions', () => {
+        return HttpResponse.json(mockCreateAuctionResponse)
+      })
+    )
+    const auction = {
+      name: 'Sounds',
+      description: 'Like Sunset',
+      imageId: 'test-image-id-7000',
+      imageHref: 'https://barry.com/toadfish.png',
+      initialPrice: 874.54,
+      bidIncrement: 8.99,
+    }
+    renderWithProvidersAndRouter(<CreateAuction relistAuction={auction} />)
 
     // Submit the form
     const submitButton = screen.getByRole('button', { name: 'Create Auction' })

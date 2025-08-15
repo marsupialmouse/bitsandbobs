@@ -238,6 +238,15 @@ export default function Auction() {
                 {isCancelling ? 'Cancelling...' : 'Cancel Auction'}
               </button>
             )}
+            {!auction.isOpen && auction.isUserSeller && (
+              <Link
+                role="button"
+                to={`/auction/${auction.id}/relist`}
+                className="flex-1 rounded-md bg-indigo-600 px-6 py-3 text-center text-base font-medium text-white transition-colors hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Relist Item
+              </Link>
+            )}
           </div>
         </div>
       </div>
