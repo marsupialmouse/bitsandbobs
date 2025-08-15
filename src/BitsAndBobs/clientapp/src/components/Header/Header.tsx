@@ -29,7 +29,7 @@ export const Header = () => {
   }
 
   return (
-    <header className="fixed top-0 w-full bg-linear-to-bl from-indigo-400 to-indigo-700 shadow-md">
+    <header className="fixed top-0 z-50 w-full bg-linear-to-bl from-indigo-400 to-indigo-700 shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="font-logo text-5xl font-bold text-lime-300">
@@ -59,8 +59,8 @@ export const Header = () => {
               </div>
             ) : (
               <div className="flex">
-                <div className="group relative m-0">
-                  <button className="m-0 p-1 text-lime-300 group-hover:rounded-t-md group-hover:bg-lime-300 group-hover:text-indigo-500">
+                <div className="group relative m-0" tabIndex={-1}>
+                  <div className="m-0 p-1 text-lime-300 group-hover:rounded-t-md group-hover:bg-lime-300 group-hover:text-indigo-500 group-focus:rounded-t-md group-focus:bg-lime-300 group-focus:text-indigo-500">
                     <svg
                       className="h-10 w-10 fill-current stroke-current"
                       viewBox="0 0 256 256"
@@ -68,29 +68,62 @@ export const Header = () => {
                     >
                       <path d="M228,128A100,100,0,1,0,60.71,201.90967a3.97048,3.97048,0,0,0,.842.751,99.79378,99.79378,0,0,0,132.8982-.00195,3.96558,3.96558,0,0,0,.83813-.74756A99.76267,99.76267,0,0,0,228,128ZM36,128a92,92,0,1,1,157.17139,64.87207,75.616,75.616,0,0,0-44.50782-34.04053,44,44,0,1,0-41.32714,0,75.61784,75.61784,0,0,0-44.50782,34.04A91.70755,91.70755,0,0,1,36,128Zm92,28a36,36,0,1,1,36-36A36.04061,36.04061,0,0,1,128,156ZM68.86475,198.417a68.01092,68.01092,0,0,1,118.27.00049,91.80393,91.80393,0,0,1-118.27-.00049Z" />
                     </svg>
-                  </button>
-                  <ul className="absolute right-0 m-0 hidden w-60 -translate-y-2 list-none rounded-tl-md rounded-b-md bg-lime-300 text-indigo-500 group-hover:block">
+                  </div>
+                  <ul
+                    className="absolute right-0 m-0 hidden w-60 -translate-y-2 list-none rounded-tl-md rounded-b-md bg-lime-300 text-indigo-500 group-hover:block group-focus:block"
+                    tabIndex={-1}
+                    role="menu"
+                  >
                     <li className="p-2 text-sm">
                       Signed in as:
                       <p className="w-full overflow-hidden font-bold text-nowrap overflow-ellipsis">
                         {emailAddress}
                       </p>
                     </li>
-                    <li className="border-t border-lime-400 p-2 text-sm hover:bg-lime-400">
-                      <Link to="/auctions/my">My Auctions</Link>
+                    <li className="border-t border-lime-400">
+                      <Link
+                        to="/auctions/my"
+                        className="block bg-lime-300 p-2 text-sm hover:bg-lime-400"
+                        role="menuitem"
+                      >
+                        My Auctions
+                      </Link>
                     </li>
-                    <li className="border-t border-lime-400 p-2 text-sm hover:bg-lime-400">
-                      <Link to="/profile">Profile</Link>
+                    <li className="border-t border-lime-400">
+                      <Link
+                        to="/profile"
+                        className="block bg-lime-300 p-2 text-sm hover:bg-lime-400"
+                        role="menuitem"
+                      >
+                        Profile
+                      </Link>
                     </li>
 
-                    <li className="border-t border-lime-400 p-2 text-sm hover:bg-lime-400">
-                      <Link to="/changepassword">Change Password</Link>
+                    <li className="border-t border-lime-400">
+                      <Link
+                        to="/changepassword"
+                        className="block bg-lime-300 p-2 text-sm hover:bg-lime-400"
+                        role="menuitem"
+                      >
+                        Change Password
+                      </Link>
                     </li>
-                    <li className="border-t border-lime-400 p-2 text-sm hover:bg-lime-400">
-                      <Link to="/email/recent/u">Recent Emails</Link>
+                    <li className="border-t border-lime-400">
+                      <Link
+                        to="/email/recent/u"
+                        className="block bg-lime-300 p-2 text-sm hover:bg-lime-400"
+                        role="menuitem"
+                      >
+                        Recent Emails
+                      </Link>
                     </li>
-                    <li className="mb-2 border-t border-b border-lime-400 p-2 text-sm hover:bg-lime-400">
-                      <a href="#" onClick={handleSignOut}>
+                    <li className="mb-2 border-t border-b border-lime-400">
+                      <a
+                        href="#"
+                        onClick={handleSignOut}
+                        className="block bg-lime-300 p-2 text-sm hover:bg-lime-400"
+                        role="menuitem"
+                      >
                         Sign Out
                       </a>
                     </li>
