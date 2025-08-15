@@ -17,8 +17,18 @@ on:
         type: boolean
         default: true
         required: true
+      enableCfDistribution:
+        description: Enable CloudFront distribution
+        type: boolean
+        default: true
+        required: true
       enableCloudFrontLogging:
         description: Enable CloudFront logging
+        type: boolean
+        default: false
+        required: true
+      cfnOnly:
+        description: Only deploy to CFN stack
         type: boolean
         default: false
         required: true
@@ -50,6 +60,7 @@ jobs:
     name: Build and publish UI
     runs-on: ubuntu-latest
     needs: createVersion
+    if: ${{ !inputs.cfnOnly }}
     environment: ${{ inputs.environment }}
     permissions:
       id-token: write
@@ -86,6 +97,7 @@ jobs:
     name: Build and publish API
     runs-on: ubuntu-latest
     needs: [createVersion]
+    if: ${{ !inputs.cfnOnly }}
     environment: ${{ inputs.environment }}
     env:
       tag: ${{ needs.createVersion.outputs.version }}  # can't be named version: dotnet restore craps out if there's an environment variable named "version"
@@ -122,6 +134,7 @@ jobs:
     name: Package Helm chart
     runs-on: ubuntu-latest
     needs: [ createVersion ]
+    if: ${{ !inputs.cfnOnly }}
     env:
       prefix: ${{ needs.createVersion.outputs.version }}
     permissions:
@@ -221,6 +234,7 @@ jobs:
           parameter-overrides: >-
             Environment=${{ inputs.environment }},
             CreateEksCluster=${{ inputs.enableEksCluster }},
+            CreateCfDistribution=${{ inputs.enableCfDistribution }},
             EnableCloudFrontLogging=${{ inputs.enableCloudFrontLogging }},
             EksLoadBalancerArn=${{ env.lbArn }},
             EksLoadBalancerDomainName=${{ env.lbDomain }},
@@ -233,6 +247,7 @@ jobs:
     name: Create tag
     runs-on: ubuntu-latest
     needs: [ createVersion, deployCfn]
+    if: ${{ !inputs.cfnOnly }}
     permissions:
       contents: write
     steps:
@@ -253,7 +268,7 @@ jobs:
     name: Releases the new or requested version
     runs-on: ubuntu-latest
     needs: [ createVersion, deployCfn ]
-    if: ${{ !failure() && !cancelled() }}
+    if: ${{ !failure() && !cancelled() && !inputs.cfnOnly }}
     environment: ${{ inputs.environment }}
     permissions:
       id-token: write

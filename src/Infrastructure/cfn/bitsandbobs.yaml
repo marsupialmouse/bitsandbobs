@@ -27,6 +27,14 @@ Parameters:
       - true
       - false
 
+  CreateCfDistribution:
+    Type: String
+    Default: true
+    Description: Whether the CloudFront distribution should be created
+    AllowedValues:
+      - true
+      - false
+
   EksLoadBalancerArn:
     Type: String
     Description: >
@@ -64,6 +72,7 @@ Mappings:
 
 Conditions:
   CreateEksClusterCondition: !Equals [ !Ref CreateEksCluster, 'true' ]
+  CreateCfDistributionCondition: !Equals [ !Ref CreateCfDistribution, 'true' ]
 
 Resources:
   VpcStack:
@@ -103,6 +112,7 @@ Resources:
 
   CfStack:
     Type: AWS::CloudFormation::Stack
+    Condition: CreateCfDistributionCondition
     Properties:
       TemplateURL: cdn.yaml
       Parameters:

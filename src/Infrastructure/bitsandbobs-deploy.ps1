@@ -10,7 +10,8 @@ param(
     [switch]$CreateEksCluster,
     [switch]$DeployHelm,
     [switch]$DropEksVpcEndpoint,
-    [switch]$EnableCdnLogging
+    [switch]$EnableCdnLogging,
+    [switch]$NoCfDistribution
 )
 
 $ErrorActionPreference = "Stop"
@@ -38,6 +39,7 @@ function Invoke-CfnDeploy {
     param($LbArn = "", $LbDomainName = "")
 
     $parameters = "Environment=$Environment", "CreateEksCluster=$($CreateEksCluster.ToString().ToLower())"
+    $paremeters += "CreateCfDistribution=$((!$NoCfDistribution).ToString().ToLower())"
     $paremeters += "EnableCloudFrontLogging=$($EnableCdnLogging.ToString().ToLower())"
     $parameters += "EksLoadBalancerArn=$LbArn"
     $parameters += "EksLoadBalancerDomainName=$LbDomainName"
