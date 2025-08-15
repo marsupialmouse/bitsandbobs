@@ -60,7 +60,7 @@ export const Header = () => {
             ) : (
               <div className="flex">
                 <div className="group relative m-0" tabIndex={-1}>
-                  <div className="m-0 p-1 text-lime-300 group-hover:rounded-t-md group-hover:bg-lime-300 group-hover:text-indigo-500 group-focus:rounded-t-md group-focus:bg-lime-300 group-focus:text-indigo-500">
+                  <div className="m-0 cursor-pointer p-1 text-lime-300 group-hover:rounded-t-md group-hover:bg-lime-300 group-hover:text-indigo-500 group-focus:rounded-t-md group-focus:bg-lime-300 group-focus:text-indigo-500">
                     <svg
                       className="h-10 w-10 fill-current stroke-current"
                       viewBox="0 0 256 256"
@@ -70,9 +70,11 @@ export const Header = () => {
                     </svg>
                   </div>
                   <ul
-                    className="absolute right-0 m-0 hidden w-60 -translate-y-2 list-none rounded-tl-md rounded-b-md bg-lime-300 text-indigo-500 group-hover:block group-focus:block"
-                    tabIndex={-1}
+                    className="absolute right-0 m-0 hidden w-60 -translate-y-2 list-none rounded-tl-md rounded-b-md bg-lime-300 text-indigo-500 group-focus-within:block group-hover:block group-focus:block"
                     role="menu"
+                    onClick={(e) => {
+                      if (e.target instanceof HTMLElement) e.target.blur()
+                    }}
                   >
                     <li className="p-2 text-sm">
                       Signed in as:
