@@ -17,6 +17,7 @@ export default function ImageUpload({
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const displayError = uploadError ?? error
 
   const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -55,8 +56,6 @@ export default function ImageUpload({
     setUploadError(null)
     onImageRemoved()
   }
-
-  const displayError = error ?? uploadError
 
   return (
     <div>
