@@ -7,6 +7,9 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$AwsProfile,
 
+    [Parameter(Mandatory = $true)]
+    [string]$BucketNamePrefix,
+
     [switch]$CreateEksCluster,
     [switch]$DeployHelm,
     [switch]$DropEksVpcEndpoint,
@@ -43,6 +46,7 @@ function Invoke-CfnDeploy {
         "CreateEksCluster=$($CreateEksCluster.ToString().ToLower())"
         "CreateCfDistribution=$((!$NoCfDistribution).ToString().ToLower())"
         "EnableCloudFrontLogging=$($EnableCdnLogging.ToString().ToLower())"
+        "BucketNamePrefix=$BucketNamePrefix"
         "EksLoadBalancerArn=$LbArn"
         "EksLoadBalancerDomainName=$LbDomainName"
     )

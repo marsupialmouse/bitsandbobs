@@ -11,6 +11,10 @@ Parameters:
       - Staging
       - Production
 
+  BucketNamePrefix:
+    Type: String
+    Description: The name prefix for the S3 buckets (followed by bitsandbobs-env). Bucket names must be globally unique.
+
 Mappings:
   EnvironmentMap:
     Development:
@@ -33,7 +37,7 @@ Resources:
     Properties:
       BucketName:
         !Sub
-        - 'marsupialmouse-bitsandbobs-${PlatformName}'
+        - '${BucketNamePrefix}-bitsandbobs-${PlatformName}'
         - PlatformName: !FindInMap [ EnvironmentMap, !Ref Environment, Moniker ]
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -93,7 +97,7 @@ Resources:
     Properties:
       BucketName:
         !Sub
-        - 'marsupialmouse-bitsandbobs-${PlatformName}-logs'
+        - '${BucketNamePrefix}-bitsandbobs-${PlatformName}-logs'
         - PlatformName: !FindInMap [ EnvironmentMap, !Ref Environment, Moniker ]
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true

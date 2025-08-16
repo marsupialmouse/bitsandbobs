@@ -14,13 +14,18 @@ Parameters:
     Description: The repo(s) these roles will have access to. (Use * for all Org Repos or wildcard)
     Default: "bitsandbobs"
 
+  BucketNamePrefix:
+    Type: String
+    Description: The name prefix for the CFN S3 bucket (followed by bitsandbobs-cfn). Bucket names must be globally unique.
+    Default: "marsupialmouse"
+
 Resources:
   #This is the bucket where CloudFormation templates will be stored when packaged
   S3BucketCfn:
     # checkov:skip=CKV_AWS_18:This is a private bucket for logs, we don't need access logs
     Type: 'AWS::S3::Bucket'
     Properties:
-      BucketName: !Sub '${GitHubOrganization}-${RepositoryName}-cfn'
+      BucketName: !Sub '${BucketNamePrefix}-bitsandbobs-cfn'
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true

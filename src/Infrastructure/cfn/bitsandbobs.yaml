@@ -35,6 +35,10 @@ Parameters:
       - true
       - false
 
+  BucketNamePrefix:
+    Type: String
+    Description: The name prefix for the S3 buckets (followed by bitsandbobs-env). Bucket names must be globally unique.
+
   EksLoadBalancerArn:
     Type: String
     Description: >
@@ -89,6 +93,7 @@ Resources:
       TemplateURL: storage.yaml
       Parameters:
         Environment: !Ref Environment
+        BucketNamePrefix: !Ref BucketNamePrefix
 
   DatabaseStack:
     Type: AWS::CloudFormation::Stack

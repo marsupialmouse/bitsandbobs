@@ -222,9 +222,15 @@ jobs:
               echo "eksLoadBalancerDomainName=$eksLoadBalancerDomainName"
             } >> $GITHUB_OUTPUT
           fi
+      - name: Create bucket prefix
+        id: getBucketNamePrefix
+        run: |
+          bucket_name_prefix=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
+          echo "bucketNamePrefix=$bucket_name_prefix" >> $GITHUB_OUTPUT
       - name: Deploy to CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         env:
+            bucketNamePrefix: ${{ steps.getBucketNamePrefix.outputs.bucketNamePrefix }}
             lbArn: ${{ steps.checkCluster.outputs.eksLoadBalancerArn }}
             lbDomain: ${{ steps.checkCluster.outputs.eksLoadBalancerDomainName }}
         with:
@@ -236,6 +242,7 @@ jobs:
             CreateEksCluster=${{ inputs.enableEksCluster }},
             CreateCfDistribution=${{ inputs.enableCfDistribution }},
             EnableCloudFrontLogging=${{ inputs.enableCloudFrontLogging }},
+            BucketNamePrefix=${{ env.bucketNamePrefix }},
             EksLoadBalancerArn=${{ env.lbArn }},
             EksLoadBalancerDomainName=${{ env.lbDomain }},
             AdminPrincipalArn=${{ env.eksAdminArn }}
