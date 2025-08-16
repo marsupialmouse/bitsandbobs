@@ -38,11 +38,14 @@ function Get-EksLoadBalancerInfo {
 function Invoke-CfnDeploy {
     param($LbArn = "", $LbDomainName = "")
 
-    $parameters = "Environment=$Environment", "CreateEksCluster=$($CreateEksCluster.ToString().ToLower())"
-    $paremeters += "CreateCfDistribution=$((!$NoCfDistribution).ToString().ToLower())"
-    $paremeters += "EnableCloudFrontLogging=$($EnableCdnLogging.ToString().ToLower())"
-    $parameters += "EksLoadBalancerArn=$LbArn"
-    $parameters += "EksLoadBalancerDomainName=$LbDomainName"
+    $parameters = @(
+        "Environment=$Environment"
+        "CreateEksCluster=$($CreateEksCluster.ToString().ToLower())"
+        "CreateCfDistribution=$((!$NoCfDistribution).ToString().ToLower())"
+        "EnableCloudFrontLogging=$($EnableCdnLogging.ToString().ToLower())"
+        "EksLoadBalancerArn=$LbArn"
+        "EksLoadBalancerDomainName=$LbDomainName"
+    )
 
     aws cloudformation deploy `
         --template-file $PackagedTemplate `
