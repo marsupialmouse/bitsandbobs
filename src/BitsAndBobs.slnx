@@ -13,6 +13,7 @@
   <Folder Name="/Infrastructure/">
     <File Path="Infrastructure\index.html" />
     <File Path="Infrastructure\bitsandbobs-deploy.ps1" />
+    <File Path="Infrastructure\bootstrap-deploy.ps1" />
   </Folder>
   <Folder Name="/Infrastructure/cfn/">
     <File Path="Infrastructure\cfn\bitsandbobs.yaml" />

@@ -1,5 +1,4 @@
 ---
-# aws cloudformation deploy --template-file ./src/Infrastructure/cfn/bootstrap.yaml --stack-name BitsAndBobs-Bootstrap --capabilities CAPABILITY_NAMED_IAM
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Bootstrap the environment for CFN deployments from GitHub Actions
 
@@ -7,7 +6,6 @@ Parameters:
   GitHubOrganization:
     Type: String
     Description: This is the root organization where repos are stored (Case Sensitive)
-    Default: "marsupialmouse"
 
   RepositoryName:
     Type: String
@@ -17,7 +15,6 @@ Parameters:
   BucketNamePrefix:
     Type: String
     Description: The name prefix for the CFN S3 bucket (followed by bitsandbobs-cfn). Bucket names must be globally unique.
-    Default: "marsupialmouse"
 
 Resources:
   #This is the bucket where CloudFormation templates will be stored when packaged
