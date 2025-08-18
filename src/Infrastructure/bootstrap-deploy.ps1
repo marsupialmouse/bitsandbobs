@@ -37,7 +37,7 @@ if ([string]::IsNullOrWhiteSpace($GitHubOrganization)) {
 
 if ([string]::IsNullOrWhiteSpace($BucketNamePrefix))
 {
-    $BucketNamePrefix = $GitHubOrganization
+    $BucketNamePrefix = $GitHubOrganization.ToLower()
 }
 
 $parameters = @(
@@ -50,4 +50,10 @@ aws cloudformation deploy `
     --stack-name BitsAndBobs-Bootstrap `
     --capabilities CAPABILITY_NAMED_IAM `
     --parameter-overrides $parameters `
+    --profile $AwsProfile
+
+aws cloudformation describe-stacks `
+    --stack-name BitsAndBobs-Bootstrap `
+    --query 'Stacks[0].Outputs[*].[OutputKey,OutputValue]' `
+    --output table `
     --profile $AwsProfile

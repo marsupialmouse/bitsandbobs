@@ -28,7 +28,7 @@ on:
         default: false
         required: true
       cfnOnly:
-        description: Only deploy to CFN stack
+        description: Only deploy the CFN stack
         type: boolean
         default: false
         required: true

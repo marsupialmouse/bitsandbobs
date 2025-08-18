@@ -453,7 +453,7 @@ Resources:
                 Resource: '*'
 
 Outputs:
-  CfnBuketName:
+  CfnBucketName:
     Description: "The name of the bucket in which CFN templates should be stored"
     Value: !Ref S3BucketCfn
 

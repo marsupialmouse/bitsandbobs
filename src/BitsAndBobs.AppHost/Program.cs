@@ -13,7 +13,8 @@ var databaseStack = builder
 var s3Stack = builder
               .AddAWSCloudFormationTemplate("Dev-BitsAndBobs-Storage", "../Infrastructure/cfn/storage.yaml")
               .WithReference(awsConfig)
-              .WithParameter("Environment", "Development");
+              .WithParameter("Environment", "Development")
+              .WithParameter("BucketNamePrefix", builder.Configuration["Aws:BucketNamePrefix"]!);
 
 var api = builder
           .AddProject<BitsAndBobs>("api")
