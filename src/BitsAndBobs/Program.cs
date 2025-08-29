@@ -171,7 +171,7 @@ public class Program
         builder.Services.AddTransient<RecklessPublishEndpoint>();
 
         builder.Services.AddMvc();
-        builder.Services.AddOpenApi();
+        builder.Services.AddOpenApi();;
         builder.Services.AddOpenApiDocument(o =>
             {
                 o.DocumentProcessors.Add(new ReadOnlyOpenApiDocumentProcessor());
@@ -196,6 +196,13 @@ public class Program
 
         builder.Services.AddHealthChecks().AddCheck<DynamoDbHealthCheck>("dynamodb");
 
+        builder
+            .Services.AddMcpServer()
+            .WithHttpTransport(o => o.Stateless = true)
+            .WithResourcesFromAssembly()
+            .WithToolsFromAssembly();
+
+
         var app = builder.Build();
 
         app.UseResponseCaching();
@@ -211,6 +218,8 @@ public class Program
         endpoints.MapEmailEndpoints();
         endpoints.MapIdentityEndpoints();
         endpoints.MapAuctionEndpoints();
+
+        app.MapMcp("/mcp");
 
        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
