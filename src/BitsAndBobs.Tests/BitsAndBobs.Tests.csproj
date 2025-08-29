@@ -8,8 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.3.4" />
-        <PackageReference Include="AWSSDK.S3" Version="4.0.6.4" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.6" />
+        <PackageReference Include="AWSSDK.S3" Version="4.0.6.10" />
         <PackageReference Include="coverlet.collector" Version="6.0.4">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,7 +21,7 @@
         <PackageReference Include="NUnit3TestAdapter" Version="5.1.0" />
         <PackageReference Include="Shouldly" Version="4.3.0" />
         <PackageReference Include="System.Net.Http.Json" Version="9.0.8" />
-        <PackageReference Include="Testcontainers.DynamoDb" Version="4.6.0" />
+        <PackageReference Include="Testcontainers.DynamoDb" Version="4.7.0" />
         <PackageReference Include="YamlDotNet" Version="16.3.0" />
         <PackageReference Include="NUnit.Analyzers" Version="4.10.0">
           <PrivateAssets>all</PrivateAssets>
