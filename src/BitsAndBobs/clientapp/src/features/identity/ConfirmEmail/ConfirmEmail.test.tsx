@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 import ConfirmEmail from './ConfirmEmail'
@@ -62,7 +62,7 @@ describe('ConfirmEmail', () => {
       initialEntries: ['/confirmemail?userId=hello&code=olleh'],
     })
 
-    await vi.runAllTimersAsync()
+    await act(() => vi.runAllTimersAsync())
 
     const successMessage = await screen.findByText(
       /thanks for confirming your account/i
@@ -80,7 +80,7 @@ describe('ConfirmEmail', () => {
       ],
     })
 
-    await vi.runAllTimersAsync()
+    await act(() => vi.runAllTimersAsync())
 
     const successMessage = await screen.findByText(
       /thanks for confirming your email address/i
@@ -96,7 +96,7 @@ describe('ConfirmEmail', () => {
       initialEntries: ['/confirmemail?userId=hello&code=olleh'],
     })
 
-    await vi.runAllTimersAsync()
+    await act(() => vi.runAllTimersAsync())
 
     const errorMessage = await screen.findByText(/something went wrong/i)
     expect(errorMessage).toBeInTheDocument()
@@ -110,7 +110,7 @@ describe('ConfirmEmail', () => {
       initialEntries: ['/confirmemail?userId=hello&code=olleh'],
     })
 
-    await vi.runAllTimersAsync()
+    await act(() => vi.runAllTimersAsync())
 
     const errorMessage = await screen.findByText(/account confirmation failed/i)
     expect(errorMessage).toBeInTheDocument()
@@ -126,7 +126,7 @@ describe('ConfirmEmail', () => {
       ],
     })
 
-    await vi.runAllTimersAsync()
+    await act(() => vi.runAllTimersAsync())
 
     const errorMessage = await screen.findByText(/email confirmation failed/i)
     expect(errorMessage).toBeInTheDocument()

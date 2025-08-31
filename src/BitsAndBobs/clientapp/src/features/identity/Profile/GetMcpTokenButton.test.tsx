@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { describe, expect, it } from 'vitest'
@@ -130,7 +130,7 @@ describe('GetMCPTokenButton Component', () => {
     })
 
     // Fast-forward time by 5 seconds
-    vi.advanceTimersByTime(5000)
+    await act(() => vi.advanceTimersByTimeAsync(5000))
 
     await waitFor(() => {
       expect(
