@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Security.Claims;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +12,7 @@ public class GetAuctionTool
     [McpServerTool, Description("Gets the details of an auction by auction ID")]
     public static async Task<object> GetAuction(
         string id,
-        ClaimsPrincipal claimsPrincipal,
+        [FromServices] IHttpContextAccessor httpContextAccessor,
         [FromServices] AuctionService auctionService,
         [FromServices] UserStore userStore
     )
@@ -26,6 +25,7 @@ public class GetAuctionTool
         if (auction is null)
             return Results.NotFound();
 
+        var claimsPrincipal = httpContextAccessor.HttpContext?.User!;
         var isAuthenticated = claimsPrincipal.Identity?.IsAuthenticated ?? false;
         var userId = isAuthenticated ? claimsPrincipal.GetUserId() : UserId.Empty;
         var currentBidder = auction.CurrentBidderId;

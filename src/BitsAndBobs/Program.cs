@@ -16,6 +16,7 @@ using BitsAndBobs.Infrastructure.AntiForgery;
 using BitsAndBobs.Infrastructure.DynamoDb;
 using FluentValidation;
 using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
@@ -150,9 +151,10 @@ public class Program
         builder.Services.AddAuthorization();
         builder
             .Services.AddAuthentication(o =>
-            {
-                o.DefaultScheme = IdentityConstants.ApplicationScheme;
-            })
+                {
+                    o.DefaultScheme = IdentityConstants.ApplicationScheme;
+                }
+            )
             .AddCookie(
                 IdentityConstants.ApplicationScheme,
                 o =>
@@ -163,23 +165,26 @@ public class Program
                     o.SlidingExpiration = true;
                 }
             )
-            .AddJwtBearer(o =>
-            {
-                var jwtOptions = jwtConfig.Get<JwtOptions>()!;
-
-                o.RequireHttpsMetadata = false;
-                o.SaveToken = false;
-                o.TokenValidationParameters = new TokenValidationParameters
+            .AddJwtBearer(
+                JwtBearerDefaults.AuthenticationScheme,
+                o =>
                 {
-                    ValidateAudience = true,
-                    ValidateIssuer = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidAudience = jwtOptions.Audience,
-                    ValidIssuer = jwtOptions.Issuer,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
-                };
-            });
+                    var jwtOptions = jwtConfig.Get<JwtOptions>()!;
+
+                    o.RequireHttpsMetadata = false;
+                    o.SaveToken = false;
+                    o.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = true,
+                        ValidateIssuer = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidAudience = jwtOptions.Audience,
+                        ValidIssuer = jwtOptions.Issuer,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+                    };
+                }
+            );
 
         // Identity
         builder.Services.AddScoped<UserStore>();
@@ -233,7 +238,6 @@ public class Program
             .WithResourcesFromAssembly()
             .WithToolsFromAssembly();
 
-
         var app = builder.Build();
 
         app.UseResponseCaching();
@@ -250,7 +254,12 @@ public class Program
         endpoints.MapIdentityEndpoints();
         endpoints.MapAuctionEndpoints();
 
-        app.MapMcp("/mcp");
+        app
+            .MapMcp("/mcp")
+            .RequireAuthorization(o => o
+                                       .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                                       .RequireAuthenticatedUser()
+            );
 
        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
