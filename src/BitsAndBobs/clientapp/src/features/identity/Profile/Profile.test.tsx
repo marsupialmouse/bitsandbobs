@@ -302,4 +302,22 @@ describe('Profile Component', () => {
       )
     ).not.toBeInTheDocument()
   })
+
+  it('renders the Get MCP Token button', async () => {
+    server.use(
+      http.get('/api/identity/details', () => {
+        return HttpResponse.json(mockUserDetails)
+      })
+    )
+
+    renderWithProvidersAndRouter(<Profile />)
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Display name')).toBeInTheDocument()
+    })
+
+    expect(
+      screen.getByRole('button', { name: 'Get MCP Token' })
+    ).toBeInTheDocument()
+  })
 })

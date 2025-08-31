@@ -13,6 +13,7 @@ public static class IdentityEndpoints
         identityEndpoints.MapIdentityApi<User>();
         identityEndpoints.MapGet("/details", GetUserDetailsEndpoint.GetUserDetails).RequireAuthorization();
         identityEndpoints.MapPost("/details", UpdateUserDetailsEndpoint.UpdateUserDetails).RequireAuthorization();
+        identityEndpoints.MapPost("/jwt", GetJwtTokenEndpoint.GetJwtToken).RequireAuthorization();
         identityEndpoints.MapPost(
             "/logout",
             async (SignInManager<User> signInManager) => { await signInManager.SignOutAsync().ConfigureAwait(false); }

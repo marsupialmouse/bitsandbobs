@@ -7,6 +7,7 @@ import {
 } from './../identityApiSlice'
 import Loading from '../../../components/Loading'
 import ErrorMessage from '../../../components/ErrorMessage'
+import GetMcpTokenButton from './GetMcpTokenButton.tsx'
 
 interface ProfileForm {
   firstName: string
@@ -86,9 +87,7 @@ export default function Profile() {
 
         <form
           onSubmit={(e) => {
-            void (async () => {
-              await handleSubmit(onSubmit)(e)
-            })()
+            void handleSubmit(onSubmit)(e)
           }}
           className="space-y-4"
         >
@@ -173,6 +172,9 @@ export default function Profile() {
             {isLoading ? 'Updating profile...' : 'Update profile'}
           </button>
         </form>
+        <div className="mt-6 border-t border-gray-200 pt-6">
+          <GetMcpTokenButton />
+        </div>
       </div>
     </div>
   )

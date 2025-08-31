@@ -116,6 +116,10 @@ export interface UpdateUserDetailsRequest {
     readonly lastName?: string | undefined;
 }
 
+export interface GetJwtTokenResponse {
+    readonly token?: string;
+}
+
 export interface GetAuctionsResponse {
     readonly auctions: SummaryAuctionResponse[];
 }

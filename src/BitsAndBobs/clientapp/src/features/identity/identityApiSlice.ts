@@ -1,6 +1,7 @@
 import { api } from '../../api/apiSlice'
 import {
   ForgotPasswordRequest,
+  GetJwtTokenResponse,
   GetUserDetailsResponse,
   HttpValidationProblemDetails,
   LoginRequest,
@@ -139,6 +140,12 @@ export const identityApi = api
             : response.data,
         invalidatesTags: ['Identity'],
       }),
+      getJwtToken: builder.mutation<GetJwtTokenResponse, void>({
+        query: () => ({
+          url: '/identity/jwt',
+          method: 'POST',
+        }),
+      }),
     }),
     overrideExisting: false,
   })
@@ -154,4 +161,5 @@ export const {
   useResetPasswordMutation,
   useGetDetailsQuery,
   useUpdateDetailsMutation,
+  useGetJwtTokenMutation,
 } = identityApi
