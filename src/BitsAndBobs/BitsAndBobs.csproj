@@ -51,7 +51,9 @@
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
         <PackageReference Include="MassTransit" Version="8.5.2" />
         <PackageReference Include="MassTransit.AmazonSQS" Version="8.5.2" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.8" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
+        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
         <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
         <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4" />
         <PackageReference Include="NSwag.AspNetCore" Version="14.5.0" />
@@ -69,7 +71,7 @@
       <ProjectReference Include="..\BitsAndBobs.Contracts\BitsAndBobs.Contracts.csproj" />
       <ProjectReference Include="..\BitsAndBobs.ServiceDefaults\BitsAndBobs.ServiceDefaults.csproj" />
     </ItemGroup>
-  
+
     <ItemGroup>
       <AdditionalFiles Include="Infrastructure/DynamoDb/dynamodb-itemid.typedid" />
     </ItemGroup>
@@ -77,7 +79,7 @@
     <PropertyGroup>
       <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     </PropertyGroup>
-  
+
     <ItemGroup>
       <ApiFiles Include="**/*.cs" Exclude="clientapp/**;obj/**;bin**" />
       <ApiFiles Include="nswag.json" />
@@ -86,7 +88,7 @@
     <!-- Run NSwag on build, but only when files that may affect the generated types have changed -->
     <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Debug' " Inputs="$(MSBuildProjectFile);@(ApiFiles)" Outputs="clientapp/src/api/ApiGenerated.ts">
 
-      <Exec WorkingDirectory="$(ProjectDir)" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;AWS_ACCESS_KEY_ID=dummy;AWS_SECRET_ACCESS_KEY=dummy;NSWAG=1" Command="$(NSwagExe_Net90) run nswag.json /variables:Configuration=$(Configuration),WorkingDirectory=$(ProjectDir)" />
+      <Exec WorkingDirectory="$(ProjectDir)" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;AWS_ACCESS_KEY_ID=dummy;AWS_SECRET_ACCESS_KEY=dummy;Jwt__Key=dummy;NSWAG=1" Command="$(NSwagExe_Net90) run nswag.json /variables:Configuration=$(Configuration),WorkingDirectory=$(ProjectDir)" />
 
       <!-- NSwag doesn't modify the file if there are no changes, but we update the timestamp so that MSBuild knows not to regenerate it next time -->
       <Touch Files="clientapp/src/api/ApiGenerated.ts" />

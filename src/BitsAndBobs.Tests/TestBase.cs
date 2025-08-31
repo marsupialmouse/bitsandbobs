@@ -20,7 +20,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.Extensions;
-using Shouldly;
 
 namespace BitsAndBobs.Tests;
 
@@ -52,7 +51,8 @@ public abstract class TestBase
         /// </summary>
         public Dictionary<string, string?> Settings { get; } = new(StringComparer.OrdinalIgnoreCase)
         {
-            { "AWS:Resources:AppBucketName", "grandpa-joe" }
+            { "AWS:Resources:AppBucketName", "grandpa-joe" },
+            { "Jwt:Key", "grandpa-george" },
         };
 
         /// <summary>

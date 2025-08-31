@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
@@ -18,6 +19,7 @@ using MassTransit;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using NJsonSchema.Generation;
 using StronglyTypedIds;
 
@@ -61,7 +63,15 @@ public class Program
             .Bind(builder.Configuration.GetSection(AwsResourceOptions.SectionName))
             .ValidateDataAnnotations();
 
-        // Add services to the container.
+        var jwtConfig = builder.Configuration.GetSection(JwtOptions.SectionName);
+
+        builder
+            .Services.AddOptions<JwtOptions>()
+            .Bind(jwtConfig)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        // Add AWS services to the container.
         var tablePrefix = $"{builder.Environment.EnvironmentName}-";
         builder.Services.AddAWSService<IAmazonS3>();
         builder.Services.AddAWSService<IAmazonDynamoDB>();
@@ -137,16 +147,12 @@ public class Program
             );
         }
 
-        // Identity
-        builder.Services.AddScoped<UserStore>();
-        builder.Services.AddScoped<IUserStore<User>>(services => services.GetRequiredService<UserStore>());
-        builder.Services.AddScoped<IUserEmailStore<User>>(services => services.GetRequiredService<UserStore>());
-        builder.Services.AddScoped<IUserPasswordStore<User>>(services => services.GetRequiredService<UserStore>());
-        builder.Services.AddScoped<IUserSecurityStampStore<User>>(services => services.GetRequiredService<UserStore>());
-        builder.Services.AddScoped<IUserLockoutStore<User>>(services => services.GetRequiredService<UserStore>());
         builder.Services.AddAuthorization();
         builder
-            .Services.AddAuthentication()
+            .Services.AddAuthentication(o =>
+            {
+                o.DefaultScheme = IdentityConstants.ApplicationScheme;
+            })
             .AddCookie(
                 IdentityConstants.ApplicationScheme,
                 o =>
@@ -156,7 +162,32 @@ public class Program
                     o.ExpireTimeSpan = TimeSpan.FromDays(7);
                     o.SlidingExpiration = true;
                 }
-            );
+            )
+            .AddJwtBearer(o =>
+            {
+                var jwtOptions = jwtConfig.Get<JwtOptions>()!;
+
+                o.RequireHttpsMetadata = false;
+                o.SaveToken = false;
+                o.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidAudience = jwtOptions.Audience,
+                    ValidIssuer = jwtOptions.Issuer,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+                };
+            });
+
+        // Identity
+        builder.Services.AddScoped<UserStore>();
+        builder.Services.AddScoped<IUserStore<User>>(services => services.GetRequiredService<UserStore>());
+        builder.Services.AddScoped<IUserEmailStore<User>>(services => services.GetRequiredService<UserStore>());
+        builder.Services.AddScoped<IUserPasswordStore<User>>(services => services.GetRequiredService<UserStore>());
+        builder.Services.AddScoped<IUserSecurityStampStore<User>>(services => services.GetRequiredService<UserStore>());
+        builder.Services.AddScoped<IUserLockoutStore<User>>(services => services.GetRequiredService<UserStore>());
         builder.Services.AddIdentityCore<User>().AddDefaultTokenProviders().AddApiEndpoints();
         builder.Services.Configure<IdentityOptions>(options =>
             {
@@ -171,7 +202,7 @@ public class Program
         builder.Services.AddTransient<RecklessPublishEndpoint>();
 
         builder.Services.AddMvc();
-        builder.Services.AddOpenApi();;
+        builder.Services.AddOpenApi();
         builder.Services.AddOpenApiDocument(o =>
             {
                 o.DocumentProcessors.Add(new ReadOnlyOpenApiDocumentProcessor());
