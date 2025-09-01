@@ -105,10 +105,6 @@ const auctionsApi = api
           url: `/auctions/${id}/relist`,
           method: 'POST',
         }),
-        // transformErrorResponse: (response) =>
-        //   response.status === 400
-        //     ? (response.data as ProblemDetails)
-        //     : response.data,
       }),
     }),
     overrideExisting: false,
