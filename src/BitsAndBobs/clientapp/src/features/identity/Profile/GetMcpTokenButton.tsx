@@ -8,13 +8,23 @@ export default function GetMcpTokenButton() {
   const handleGetMCPToken = async () => {
     try {
       const result = await getJwtToken().unwrap()
+
       if (result.token) {
-        await navigator.clipboard.writeText(result.token)
-        setTokenRetrieved(true)
-        // Reset the state after 5 seconds
+        // Write to the clipboard without a timeout to avoid upsetting Safari
         setTimeout(() => {
-          setTokenRetrieved(false)
-        }, 5000)
+          navigator.clipboard.writeText(result.token ?? '').then(
+            () => {
+              setTokenRetrieved(true)
+              // Reset the state after 5 seconds
+              setTimeout(() => {
+                setTokenRetrieved(false)
+              }, 5000)
+            },
+            (e: unknown) => {
+              console.error('Failed to copy token to clipboard:', e)
+            }
+          )
+        }, 0)
       }
     } catch (error) {
       console.error('Failed to get MCP token:', error)
