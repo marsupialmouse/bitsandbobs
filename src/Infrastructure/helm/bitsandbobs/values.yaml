@@ -18,6 +18,9 @@ environment: Development
 appBucketName: ""
 appBucketDomainName: ""   # should be empty when deployed with CloudFront
 
+# The signing key for MCP JWT tokens
+jwtSigningKey: ""
+
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""

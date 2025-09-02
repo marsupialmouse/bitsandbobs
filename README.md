@@ -8,6 +8,7 @@ Being a demo application, functionality is basic, limited, and fanciful:
 - **User Dashboard**: Track auctions you're selling, participating in, or have won
 - **Fake Emails**: Rather than sending emails, "emails" are stored in the database and accessed through the UI
 - **Responsive Design**: Mobile-friendly interface built with React and Tailwind CSS
+- **MCP Server**: Includes an MCP server with basic auction tools
 
 ## Technology Stack
 ### Backend
@@ -73,6 +74,21 @@ Thanks to .NET Aspire, getting started with local development is relatively stra
 ``` bash
    dotnet run
 ```
+### MCP Server
+The MCP server exposes basic tools for listing auctions, getting auction details and bidding on auctions. Some tools are user-specific, so the server relies on JWT bearer tokens. To get a totally-insecure long-lived token, sign in, go to the profile page, and click the "Get MCP Token" button. You can then include the token in your MCP config:
+``` json
+{
+  "mcpServers": {
+    "BitsAndBobs": {
+      "url": "http://localhost:5135/mcp",
+      "headers": {
+        "Authorization": "Bearer [insert your token here]"
+      }
+    }
+  }
+}
+```
+
 ### AWS Deployment
 This convoluted process is only required when you first configure deployment, after that you can simply run the Release workflow. However, if you destroy and re-create the EKS cluster (leaving it running costs money), you will need to re-run steps 6 and 7 each time you re-create the cluster.
 
@@ -94,7 +110,9 @@ This convoluted process is only required when you first configure deployment, af
     - `AWS_DEFAULT_REGION`
     - `S3_BUCKET_CFN`
 
-   If you like want to debug the EKS cluster using `kubectl` locally, create an `EKS_ADMIN_ARN` secret using the ARN of your IAM user.
+   Create a secret called `JWT_SECRET` with a random string (this is used as the secret for signing JWTs).
+
+   If you'd like to be able to debug the EKS cluster using `kubectl` locally, create an `EKS_ADMIN_ARN` secret using the ARN of your IAM user.
 
 
 3. **Run Release Workflow**

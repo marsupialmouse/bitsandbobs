@@ -42,6 +42,8 @@ spec:
               value: {{ .Values.appBucketName | quote }}
             - name: Aws__Resources__AppBucketDomainName
               value: {{ .Values.appBucketDomainName | quote }}
+            - name: Jwt__Key
+              value: {{ .Values.jwtSigningKey | quote }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

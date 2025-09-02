@@ -286,6 +286,7 @@ jobs:
       eksLoadBalancerArn: ${{ secrets.EKS_LB_ARN }}
       eksLoadBalancerDomainName: ${{ secrets.EKS_LB_DOMAIN_NAME }}
       appBucketName: ${{ vars.S3_BUCKET_APP }}
+      jwtSecret: ${{ secrets.JWT_SECRET }}
     outputs:
       # These outputs should really be encrypted and saved to secrets...
       # For now, save them manually to secrets and re-run the workflow with the same version to finish CF setup
@@ -313,7 +314,7 @@ jobs:
         run: aws s3 cp s3://${{ env.CfnBucket }}/${{ env.version }}/helm/bitsandbobs.tgz bitsandbobs.tgz
       - name: Deploy Helm chart
         if: ${{ inputs.enableEksCluster }}
-        run: helm upgrade bitsandbobs bitsandbobs.tgz --install --wait --set "environment=${{ inputs.environment }}" --set "image.tag=${{ env.version }}" --set "appBucketName=${{ env.appBucketName }}"
+        run: helm upgrade bitsandbobs bitsandbobs.tgz --install --wait --set "environment=${{ inputs.environment }}" --set "image.tag=${{ env.version }}" --set "appBucketName=${{ env.appBucketName }}" --set "jwtSigningKey=${{ env.jwtSecret }}"
       - name: Get load balancer details
         if: ${{ inputs.enableEksCluster }}
         id: get_lb_details
