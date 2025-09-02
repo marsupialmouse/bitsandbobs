@@ -52,7 +52,7 @@ public static class GetAuctionForRelistingEndpoint
             return TypedResults.Problem(statusCode: (int)HttpStatusCode.BadRequest, title: "Cannot relist open auction");
 
         var imageExtension = auction.Image.Split('.').Last();
-        var image = new AuctionImage(imageExtension, userId);
+        var image = new AuctionImage($".{imageExtension}", userId);
 
         await dynamo.SaveItem(image);
 

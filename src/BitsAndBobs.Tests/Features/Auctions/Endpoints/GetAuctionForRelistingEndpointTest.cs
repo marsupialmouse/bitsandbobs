@@ -94,6 +94,7 @@ public class GetAuctionForRelistingEndpointTest : AuctionTestBase
         response.ShouldNotBeNull();
         var image = await GetImageFromDb(response.ImageId);
         image.ShouldNotBeNull();
+        image.FileName.ShouldBe($"{image.Id.FriendlyValue}.webp");
         response.ImageHref.ShouldBe($"/auctionimages/{image.FileName}");
         await S3Client
               .Received(1)

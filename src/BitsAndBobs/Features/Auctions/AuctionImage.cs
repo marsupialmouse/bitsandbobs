@@ -26,6 +26,9 @@ public class AuctionImage : BitsAndBobsTable.VersionedEntity
     /// </summary>
     public AuctionImage(string fileExtension, UserId userId)
     {
+        if (!fileExtension.StartsWith("."))
+            throw new ArgumentException("File extension must start with a dot", nameof(fileExtension));
+
         Id = AuctionImageId.Create();
         FileName = $"{Id.FriendlyValue}{fileExtension}";
         UserId = userId;
