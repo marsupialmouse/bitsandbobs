@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using BitsAndBobs.Features.Auctions.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ModelContextProtocol.Server;
 
@@ -10,22 +11,32 @@ public class GetAuctionsTool
     [McpServerTool, Description("Gets a list of current auctions")]
     public static async Task<object> GetAuctions([FromServices] AuctionService auctionService)
     {
-        var auctions = await auctionService.GetActiveAuctions();
+        using var diagnostics = new GetAuctionsDiagnostics();
 
-        var auctionResponses = auctions
-        .OrderBy(a => a.EndDate)
-        .Select(auction => new
-            {
-                Id = auction.Id.FriendlyValue,
-                auction.Name,
-                auction.Description,
-                auction.CurrentPrice,
-                auction.NumberOfBids,
-                auction.EndDate,
-                auction.SellerDisplayName
-            }
-        );
+        try
+        {
+            var auctions = await auctionService.GetActiveAuctions();
 
-        return new { auctions = auctionResponses };
+            var auctionResponses = auctions
+                                   .OrderBy(a => a.EndDate)
+                                   .Select(auction => new
+                                       {
+                                           Id = auction.Id.FriendlyValue,
+                                           auction.Name,
+                                           auction.Description,
+                                           auction.CurrentPrice,
+                                           auction.NumberOfBids,
+                                           auction.EndDate,
+                                           auction.SellerDisplayName
+                                       }
+                                   );
+
+            return new { auctions = auctionResponses };
+        }
+        catch (Exception e)
+        {
+            diagnostics.Failed(e);
+            throw;
+        }
     }
 }

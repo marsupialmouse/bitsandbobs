@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using BitsAndBobs.Features.Auctions.Diagnostics;
 using BitsAndBobs.Features.Identity;
 using BitsAndBobs.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.AI;
 using ModelContextProtocol.Server;
 
 namespace BitsAndBobs.Features.Auctions.Mcp;
@@ -18,42 +20,61 @@ public class GetAuctionTool
     )
     {
         if (!AuctionId.TryParse(id, out var auctionId))
-            return Results.NotFound();
-
-        var auction = await auctionService.GetAuctionWithBids(auctionId);
-
-        if (auction is null)
-            return Results.NotFound();
-
-        var claimsPrincipal = httpContextAccessor.HttpContext?.User!;
-        var isAuthenticated = claimsPrincipal.Identity?.IsAuthenticated ?? false;
-        var userId = isAuthenticated ? claimsPrincipal.GetUserId() : UserId.Empty;
-        var currentBidder = auction.CurrentBidderId;
-        var isUserCurrentBidder = userId == currentBidder;
-        var bidderNames = await GetBidderDisplayNames(auction, userStore);
-
-        return new
         {
-            Id = auction.Id.FriendlyValue,
-            auction.Name,
-            auction.Description,
-            auction.SellerDisplayName,
-            auction.IsOpen,
-            auction.IsClosed,
-            auction.IsCancelled,
-            IsUserSeller = userId == auction.SellerId,
-            IsUserCurrentBidder = isUserCurrentBidder,
-            CurrentBidderDisplayName = bidderNames.CurrentBidderName,
-            auction.InitialPrice,
-            auction.CurrentPrice,
-            MinimumBid = isUserCurrentBidder
-                             ? Math.Max(auction.MinimumBid, auction.CurrentBid!.Amount + 0.01m)
-                             : auction.MinimumBid,
-            auction.NumberOfBids,
-            auction.EndDate,
-            auction.CancelledDate,
-            Bids = auction.Bids.Select(bid => Bid(bid, auction, userId, bidderNames))
-        };
+            GetAuctionDiagnostics.InvalidId(id);
+            return new ErrorContent("Invalid ID");
+        }
+
+        using var diagnostics = new GetAuctionDiagnostics(auctionId);
+
+        try
+        {
+            var auction = await auctionService.GetAuctionWithBids(auctionId);
+
+            if (auction is null)
+            {
+                diagnostics.NotFound();
+                return new ErrorContent("Auction not found");
+            }
+
+            var claimsPrincipal = httpContextAccessor.HttpContext?.User!;
+            var isAuthenticated = claimsPrincipal.Identity?.IsAuthenticated ?? false;
+            var userId = isAuthenticated ? claimsPrincipal.GetUserId() : UserId.Empty;
+            var currentBidder = auction.CurrentBidderId;
+            var isUserCurrentBidder = userId == currentBidder;
+            var bidderNames = await GetBidderDisplayNames(auction, userStore);
+
+            diagnostics.Succeeded();
+
+            return new
+            {
+                Id = auction.Id.FriendlyValue,
+                auction.Name,
+                auction.Description,
+                auction.SellerDisplayName,
+                auction.IsOpen,
+                auction.IsClosed,
+                auction.IsCancelled,
+                IsUserSeller = userId == auction.SellerId,
+                IsUserCurrentBidder = isUserCurrentBidder,
+                CurrentBidderDisplayName = bidderNames.CurrentBidderName,
+                auction.InitialPrice,
+                auction.CurrentPrice,
+                MinimumBid =
+                    isUserCurrentBidder
+                        ? Math.Max(auction.MinimumBid, auction.CurrentBid!.Amount + 0.01m)
+                        : auction.MinimumBid,
+                auction.NumberOfBids,
+                auction.EndDate,
+                auction.CancelledDate,
+                Bids = auction.Bids.Select(bid => Bid(bid, auction, userId, bidderNames))
+            };
+        }
+        catch (Exception e)
+        {
+            diagnostics.Failed(e);
+            throw;
+        }
     }
 
     private static async Task<BidderDisplayNames> GetBidderDisplayNames(Auction auction, UserStore userStore)
