@@ -8,6 +8,7 @@ using MassTransit;
 using MassTransit.Testing;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -18,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using ModelContextProtocol.Client;
 using NSubstitute;
 using NSubstitute.Extensions;
 
@@ -52,7 +54,7 @@ public abstract class TestBase
         public Dictionary<string, string?> Settings { get; } = new(StringComparer.OrdinalIgnoreCase)
         {
             { "AWS:Resources:AppBucketName", "grandpa-joe" },
-            { "Jwt:Key", "grandpa-george" },
+            { "Jwt:Key", "grandpa-george-needs-128-bits-of-encryption-power" },
         };
 
         /// <summary>
@@ -119,7 +121,14 @@ public abstract class TestBase
     }
 
     private Lazy<HttpClient> _httpClient = null!;
+    private Lazy<IMcpClient> _mcpClient = null!;
     private Lazy<ITestHarness> _messagingHarness = null!;
+
+    private static readonly SseClientTransportOptions McpTransportOptions = new()
+    {
+        Endpoint = new Uri("http://localhost/mcp"),
+        TransportMode = HttpTransportMode.StreamableHttp
+    };
 
     /// <summary>
     /// Settings for <see cref="HttpClient"/>. This property allows tests to control how the HttpClient works. For example, you may wish to
@@ -132,6 +141,7 @@ public abstract class TestBase
 
     protected ApplicationFactory AppFactory { get; private set; } = null!;
     protected HttpClient HttpClient => _httpClient.Value;
+    protected IMcpClient McpClient => _mcpClient.Value;
     protected ITestHarness Messaging => _messagingHarness.Value;
 
     protected static IAmazonDynamoDB DynamoClient => Testing.Dynamo.Client;
@@ -145,12 +155,38 @@ public abstract class TestBase
         AppFactory = new ApplicationFactory();
         _httpClient = new Lazy<HttpClient>(() => AppFactory.CreateClient(HttpClientOptions));
         _messagingHarness = new Lazy<ITestHarness>(() => AppFactory.Services.GetRequiredService<ITestHarness>());
+        _mcpClient = new Lazy<IMcpClient>(() =>
+            {
+                var user = AppFactory.Services.GetService<TestAuthHandler.AuthenticatedUser>();
+
+                if (user is not null)
+                {
+                    var jwtTokenFactory = AppFactory.Services.GetRequiredService<JwtTokenFactory>();
+                    var identity = new ClaimsIdentity(user.Claims, JwtBearerDefaults.AuthenticationScheme);
+                    var token = jwtTokenFactory.CreateFor(new ClaimsPrincipal(identity));
+
+                    HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+                }
+
+                return McpClientFactory
+                       .CreateAsync(new SseClientTransport(McpTransportOptions, HttpClient, ownsHttpClient: false))
+                       .ConfigureAwait(false)
+                       .GetAwaiter()
+                       .GetResult();
+            }
+        );
     }
 
     [TearDown]
-    public void TearDownApplicationFactory()
+    public async Task TearDownApplicationFactory()
     {
-        AppFactory.Dispose();
+        if (_mcpClient.IsValueCreated)
+        {
+            await _mcpClient.Value.DisposeAsync();
+            _mcpClient = null!;
+        }
+
+        await AppFactory.DisposeAsync();
         AppFactory = null!;
         _httpClient = null!;
     }

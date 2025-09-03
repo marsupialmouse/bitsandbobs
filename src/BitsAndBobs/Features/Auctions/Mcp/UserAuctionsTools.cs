@@ -1,6 +1,8 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using BitsAndBobs.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
 namespace BitsAndBobs.Features.Auctions.Mcp;
@@ -11,14 +13,14 @@ public static class UserAuctionsTools
     public sealed record GetUserAuctionsResponse(IReadOnlyList<UserAuction> Auctions);
 
     public sealed record UserAuction(
-        string Id,
-        string Name,
-        decimal CurrentPrice,
-        int NumberOfBids,
-        DateTimeOffset EndDate,
-        bool IsOpen,
-        bool IsClosed,
-        bool IsCancelled,
+        [property: Required] string Id,
+        [property: Required] string Name,
+        [property: Required] decimal CurrentPrice,
+        [property: Required] int NumberOfBids,
+        [property: Required] DateTimeOffset EndDate,
+        [property: Required] bool IsOpen,
+        [property: Required] bool IsClosed,
+        [property: Required] bool IsCancelled,
         DateTimeOffset? CancelledDate
     )
     {
@@ -41,7 +43,7 @@ public static class UserAuctionsTools
         public decimal? UserMaximumBid { get; init; }
     }
 
-    [McpServerTool, Description("Gets the user's auctions")]
+    [McpServerTool(ReadOnly = true, UseStructuredContent = true), Description("Gets the user's auctions")]
     public static async Task<GetUserAuctionsResponse> GetSellerAuctions(
         [FromServices] IHttpContextAccessor httpContextAccessor,
         [FromServices] AuctionService auctionService
@@ -53,7 +55,7 @@ public static class UserAuctionsTools
         return new GetUserAuctionsResponse(auctionResponses);
     }
 
-    [McpServerTool, Description("Gets auctions the user has won")]
+    [McpServerTool(ReadOnly = true, UseStructuredContent = true), Description("Gets auctions the user has won")]
     public static async Task<GetUserAuctionsResponse> GetWonAuctions(
         [FromServices] IHttpContextAccessor httpContextAccessor,
         [FromServices] AuctionService auctionService
@@ -68,7 +70,7 @@ public static class UserAuctionsTools
         return new GetUserAuctionsResponse(auctionResponses);
     }
 
-    [McpServerTool, Description("Gets auctions the user has participated in")]
+    [McpServerTool(ReadOnly = true, UseStructuredContent = true), Description("Gets auctions the user has participated in")]
     public static async Task<GetUserAuctionsResponse> GetParticipantAuctions(
         [FromServices] IHttpContextAccessor httpContextAccessor,
         [FromServices] AuctionService auctionService

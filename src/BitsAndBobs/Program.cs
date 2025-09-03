@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
@@ -21,6 +23,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using ModelContextProtocol;
 using NJsonSchema.Generation;
 using StronglyTypedIds;
 
@@ -200,6 +203,7 @@ public class Program
                 options.User.RequireUniqueEmail = true;
             }
         );
+        builder.Services.AddTransient<JwtTokenFactory>();
         builder.Services.AddTransient<IEmailSender<User>, EmailStore>();
         builder.Services.AddTransient<EmailStore>();
         builder.Services.AddTransient<AuctionService>();
@@ -232,11 +236,19 @@ public class Program
 
         builder.Services.AddHealthChecks().AddCheck<DynamoDbHealthCheck>("dynamodb");
 
+        // We need to include all properties regardless of whether they have a value because the schema generator marks
+        // everything as required.
+        var mcpSerializationOptions =
+            new JsonSerializerOptions(McpJsonUtilities.DefaultOptions)
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.Never
+            };
+
         builder
             .Services.AddMcpServer()
             .WithHttpTransport(o => o.Stateless = true)
             .WithResourcesFromAssembly()
-            .WithToolsFromAssembly();
+            .WithToolsFromAssembly(serializerOptions: mcpSerializationOptions);
 
         var app = builder.Build();
 
