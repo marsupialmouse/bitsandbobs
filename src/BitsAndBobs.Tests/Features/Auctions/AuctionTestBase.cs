@@ -16,6 +16,14 @@ public class AuctionTestBase : TestBase
     protected static Task<Auction?> GetAuctionFromDb(AuctionId id) =>
         DynamoContext.LoadAsync<Auction>(id.Value, Auction.SortKey)!;
 
+    protected static Task<List<Bid>> GetBidsFromDb(Auction auction) => GetBidsFromDb(auction.Id);
+
+    protected static async Task<List<Bid>> GetBidsFromDb(AuctionId id)
+    {
+        var items = await DynamoContext.QueryAsync<BitsAndBobsTable.Item>(id.Value).GetRemainingAsync();
+        return items.OfType<Bid>().ToList();
+    }
+
     protected static async Task<Auction> CreateAuction(
         User? seller = null,
         string name = "Slightly used horse",
