@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Amazon.DynamoDBv2;
@@ -124,6 +125,8 @@ public abstract class TestBase
     private Lazy<IMcpClient> _mcpClient = null!;
     private Lazy<ITestHarness> _messagingHarness = null!;
 
+    private static readonly MediaTypeWithQualityHeaderValue AcceptJsonHeader = new("application/json");
+    private static readonly MediaTypeWithQualityHeaderValue AcceptEventStreamHeader = new("text/event-stream");
     private static readonly SseClientTransportOptions McpTransportOptions = new()
     {
         Endpoint = new Uri("http://localhost/mcp"),
@@ -167,6 +170,9 @@ public abstract class TestBase
 
                     HttpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
                 }
+
+                HttpClient.DefaultRequestHeaders.Accept.Add(AcceptJsonHeader);
+                HttpClient.DefaultRequestHeaders.Accept.Add(AcceptEventStreamHeader);
 
                 return McpClientFactory
                        .CreateAsync(new SseClientTransport(McpTransportOptions, HttpClient, ownsHttpClient: false))
