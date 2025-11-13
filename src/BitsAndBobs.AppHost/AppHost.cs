@@ -23,7 +23,8 @@ var api = builder
           .WithExternalHttpEndpoints();
 
 var ui = builder
-    .AddViteApp("ui", "../BitsAndBobs/clientapp", packageManager: "yarn")
+    .AddViteApp("ui", "../BitsAndBobs/clientapp")
+    .WithYarn()
     .WithReference(api)
     .WaitFor(api);
 
