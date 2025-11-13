@@ -47,7 +47,7 @@ In addition, a release workflow:
 
 ## Getting Started
 ### Prerequisites
-- .NET 9.0 SDK
+- .NET 10.0 SDK
 - Node.js 22.x
 - AWS Account (for deployment)
 - AWS CLI configured with a profile called "dev"
