@@ -15,7 +15,6 @@ public class Auction : BitsAndBobsTable.VersionedEntity
 {
     public const string SortKey = "Auction";
 
-    private Bid? _currentBid;
     private List<Bid> _bids = [];
 
     [Obsolete("This constructor is for DynamoDB only and is none of your business.")]
@@ -193,20 +192,20 @@ public class Auction : BitsAndBobsTable.VersionedEntity
     {
         get
         {
-            if (_currentBid == null && CurrentBidId != null)
+            if (field == null && CurrentBidId != null)
             {
                 if (Bids.Count == 0)
                     throw new ArgumentException("No bids have been set.");
 
-                _currentBid = Bids.FirstOrDefault(b => b.BidId == CurrentBidId);
+                field = Bids.FirstOrDefault(b => b.BidId == CurrentBidId);
             }
 
-            return _currentBid;
+            return field;
         }
         private set
         {
-            ArgumentNullException.ThrowIfNull(value, nameof(value));
-            _currentBid = value;
+            ArgumentNullException.ThrowIfNull(value);
+            field = value;
             CurrentBidId = value.BidId;
             CurrentBidderId = value.BidderId;
         }

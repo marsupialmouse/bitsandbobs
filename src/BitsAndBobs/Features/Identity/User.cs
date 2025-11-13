@@ -15,8 +15,6 @@ public class User : BitsAndBobsTable.VersionedEntity
 {
     public const string SortKey = "Profile";
 
-    private string? _displayName;
-
     /// <summary>
     /// Gets the user ID.
     /// </summary>
@@ -84,8 +82,8 @@ public class User : BitsAndBobsTable.VersionedEntity
     /// </summary>
     public string DisplayName
     {
-        get => _displayName ?? EmailAddress.Split('@')[0];
-        set => _displayName = value;
+        get => field ?? EmailAddress.Split('@')[0];
+        set;
     }
 
     /// <summary>
