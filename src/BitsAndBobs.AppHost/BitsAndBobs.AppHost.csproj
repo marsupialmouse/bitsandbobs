@@ -10,8 +10,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Aspire.Hosting.AWS" Version="9.3.0" />
-        <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.0.0" />
+        <PackageReference Include="Aspire.Hosting.AppHost" Version="13.2.2" />
+        <PackageReference Include="Aspire.Hosting.AWS" Version="13.0.0" />
+        <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.2.2" />
     </ItemGroup>
 
     <ItemGroup>
