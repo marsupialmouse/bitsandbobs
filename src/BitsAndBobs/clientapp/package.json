@@ -11,7 +11,8 @@
     "lint:fix": "tsc --noEmit && eslint . --color --fix",
     "lint-staged": "lint-staged",
     "format": "prettier --write ./src",
-    "test": "vitest"
+    "test": "vitest",
+    "preinstall": "npx only-allow pnpm"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
@@ -54,8 +55,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx,css,json,js}": [
-      "yarn lint",
-      "yarn format"
+      "pnpm run lint",
+      "pnpm run format"
     ]
   }
 }

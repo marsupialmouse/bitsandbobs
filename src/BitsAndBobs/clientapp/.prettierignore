@@ -4,6 +4,5 @@ public
 coverage
 default.conf.template
 .husky
-yarn.lock
 .prettierignore
 src/api/ApiGenerated.ts

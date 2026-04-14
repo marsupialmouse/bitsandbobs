@@ -18,14 +18,12 @@
       <ProjectReference Include="..\BitsAndBobs\BitsAndBobs.csproj" />
     </ItemGroup>
 
-  <Target Name="RestoreNpm" BeforeTargets="Build" Condition=" '$(DesignTimeBuild)' != 'true' ">
+  <Target Name="RestoreNpm" BeforeTargets="Build" Condition=" '$(DesignTimeBuild)' != 'true' And '$(GITHUB_ACTIONS)' != 'true' ">
     <ItemGroup>
-      <PackageJsons Include="..\*\package.json" />
+      <PackageJsons Include="..\**\package.json" Exclude="..\**\node_modules\**\package.json"  />
     </ItemGroup>
-
-    <!-- Install npm packages if node_modules is missing -->
-    <Message Importance="Normal" Text="Installing npm packages for %(PackageJsons.RelativeDir)" Condition="!Exists('%(PackageJsons.RootDir)%(PackageJsons.Directory)/node_modules')" />
-    <Exec Command="yarn" WorkingDirectory="%(PackageJsons.RootDir)%(PackageJsons.Directory)" Condition="!Exists('%(PackageJsons.RootDir)%(PackageJsons.Directory)/node_modules')" />
+    <Message Importance="high" Text="Installing npm packages for: %(PackageJsons.RelativeDir)" />
+    <Exec Command="pnpm install" WorkingDirectory="%(PackageJsons.RelativeDir)"  />
   </Target>
 
 </Project>

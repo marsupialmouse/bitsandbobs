@@ -21,7 +21,7 @@ declare GIT_ROOT="$(git rev-parse --show-toplevel)"
 if git diff --cached --name-only --diff-filter=ADMR HEAD | grep -qiE '^src/BitsAndBobs/clientapp/'; then
 
     pushd "${GIT_ROOT}/src/BitsAndBobs/clientapp" > /dev/null
-    yarn lint-staged -q
+    pnpm exec lint-staged -q
 fi
 
 # Validate CFN templates

@@ -24,7 +24,7 @@ var api = builder
 
 var ui = builder
     .AddViteApp("ui", "../BitsAndBobs/clientapp")
-    .WithYarn()
+    .WithPnpm()
     .WithReference(api)
     .WaitFor(api);
 
