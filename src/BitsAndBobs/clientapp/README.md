@@ -52,3 +52,24 @@ export default tseslint.config({
   },
 })
 ```
+
+
+## Install & Run (pnpm)
+
+Install dependencies:
+
+    pnpm install
+
+Dev server:
+
+    pnpm run dev
+
+Build:
+
+    pnpm run build
+
+Test:
+
+    pnpm run test
+
+Note: lint-staged in package.json updated to use `pnpm run lint` and `pnpm run format`.

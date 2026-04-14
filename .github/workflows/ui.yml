@@ -25,13 +25,13 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '22.x'
-        cache: 'yarn'
-        cache-dependency-path: src/BitsAndBobs/clientapp/yarn.lock
+        cache: 'pnpm'
+        cache-dependency-path: src/BitsAndBobs/clientapp/pnpm-lock.yaml
     - name: Install Node.js dependencies
-      run: yarn install --immutable --immutable-cache --check-cache
+      run: pnpm install --frozen-lockfile
     - name: Run eslint
-      run: yarn eslint src/ --max-warnings=0
+      run: pnpm run lint
     - name: Build
-      run: yarn build
+      run: pnpm run build
     - name: Run tests
-      run: yarn test
+      run: pnpm run test

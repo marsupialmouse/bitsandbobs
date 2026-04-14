@@ -74,3 +74,6 @@ yarn-error.log*
 .vscode
 *.suo
 *.user
+
+# Sandbox
+.sbx/

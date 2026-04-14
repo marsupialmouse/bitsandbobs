@@ -54,8 +54,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx,css,json,js}": [
-      "yarn lint",
-      "yarn format"
+      "pnpm run lint",
+      "pnpm run format"
     ]
   }
 }
