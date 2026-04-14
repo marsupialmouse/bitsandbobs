@@ -25,7 +25,7 @@ public class AntiForgeryTokenMiddleware(RequestDelegate next)
     {
         var tokens = antiForgery.GetAndStoreTokens(context);
 
-        // Axios (React HTTP client) looks for this cookie and, if it exists, uses its value for the X-XSRF-TOKEN header for all HTTP requests.
+        // The front end looks for this cookie and, if it exists, uses its value for the X-XSRF-TOKEN header for all HTTP requests.
         context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!, new CookieOptions { HttpOnly = false, SameSite = SameSiteMode.Strict });
     }
 }
