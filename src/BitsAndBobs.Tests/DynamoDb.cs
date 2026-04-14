@@ -38,7 +38,7 @@ public sealed class DynamoDb : IAsyncDisposable
 
     public static async Task<DynamoDb> Create(CancellationToken token)
     {
-        var containerBuilder = new DynamoDbBuilder();
+        var containerBuilder = new DynamoDbBuilder("amazon/dynamodb-local:3.3.0");
 
         #if DEBUG
         // On developer machines, leave the container running for faster testing
