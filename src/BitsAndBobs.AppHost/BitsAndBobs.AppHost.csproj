@@ -18,7 +18,7 @@
       <ProjectReference Include="..\BitsAndBobs\BitsAndBobs.csproj" />
     </ItemGroup>
 
-  <Target Name="RestoreNpm" BeforeTargets="Build" Condition=" '$(DesignTimeBuild)' != 'true' ">
+  <Target Name="RestoreNpm" BeforeTargets="Build" Condition=" '$(DesignTimeBuild)' != 'true' And '$(GITHUB_ACTIONS)' != 'true' ">
     <ItemGroup>
       <PackageJsons Include="..\**\package.json" Exclude="..\**\node_modules\**\package.json"  />
     </ItemGroup>
